@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form" model="ir.ui.view">
+        <field name="name">res.partner.view.form.inherit.vendor</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <field name="function" position="before">
+                <field name="state" decoration-success="state=='approved'" decoration-danger="state=='rejected'"
+                invisible="supplier_rank==0"/>
+            </field>
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_sent" string="Send" type="object"
+                      icon="fa-paper-plane"
+                      class="oe_highlight"
+                      invisible="state not in ('draft', 'rejected') or supplier_rank==0"/>
+                    <button name="action_approve" string="Approve" type="object"
+                      class="btn btn-success"
+                      icon="fa-thumbs-up"
+                      invisible="state not in ('sent') or supplier_rank==0"/>
+                    <button name="action_reject" string="Reject" type="object"
+                      class="btn btn-danger"
+                      icon="fa-thumbs-down"
+                      invisible="state not in ('sent') or supplier_rank==0"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+</odoo>

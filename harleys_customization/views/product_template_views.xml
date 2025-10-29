@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bon_product_template_only_form_view" model="ir.ui.view">
+        <field name="name">view.product.template.form.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//label[@for='list_price']" position="before">
+              <field name="state" string="Status" decoration-success="state=='approved'" decoration-danger="state=='rejected'"/>
+            </xpath>
+
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_sent" string="Send" type="object"
+                      icon="fa-paper-plane"
+                      class="oe_highlight"
+                      invisible="state not in ('draft', 'rejected')"/>
+                    <button name="action_approve" string="Approve" type="object"
+                      class="btn btn-success"
+                      icon="fa-thumbs-up"
+                      invisible="state not in ('sent')"/>
+                    <button name="action_reject" string="Reject" type="object"
+                      class="btn btn-danger"
+                      icon="fa-thumbs-down"
+                      invisible="state not in ('sent')"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+</odoo>

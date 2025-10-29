@@ -1,0 +1,4 @@
+from . import indent_request
+from . import indent_request_templates
+from . import res_partner
+from . import product_template

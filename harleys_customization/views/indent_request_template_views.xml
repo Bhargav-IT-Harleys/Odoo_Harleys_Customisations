@@ -1,0 +1,97 @@
+<odoo>
+  <data>
+    <record id="view_indent_request_templates_form" model="ir.ui.view">
+        <field name="name">indent.request.templates.form</field>
+        <field name="model">indent.request.templates</field>
+        <field name="arch" type="xml">
+            <form string="Indent Request Templates">
+                <sheet>
+                    <div class="oe_edit_only">
+                        <label for="name" class="oe_inline"/>
+                    </div>
+                    <h1>
+                        <field name="name" class="oe_inline"/>
+                    </h1>
+                    <group>
+                        <group>
+                            <field name="current_date"/>
+                            <field name="delivery_from"/>
+                            <field name="company_id" groups="base.group_multi_company" widget="selection"/>
+                        </group>
+                        <group>
+                            <field name="delivery_to"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Products" name="line_ids">
+                            <field name="line_ids">
+                                <list string="Indent Request Lines Templates" editable="bottom" limit="200">
+                                    <field name="request_id" column_invisible="True"/>
+                                    <field name="product_id"  options="{'no_create': True}"/>
+                                    <field name="name"/>
+                                    <field name="default_code"/>
+                                    <field name="hsn_code"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="product_qty"/>
+                                    <field name="comments"/>
+                                    <field
+                                            name="company_id"
+                                            groups="base.group_multi_company"
+                                            widget="selection"
+                                    />
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="view_indent_request_templates_tree" model="ir.ui.view">
+        <field name="name">indent.request.templates.list</field>
+        <field name="model">indent.request.templates</field>
+        <field name="arch" type="xml">
+            <list
+                    name="Indent Request Templates"
+            >
+                <field name="name"/>
+                <field name="delivery_from"/>
+                <field name="delivery_to"/>
+                <field
+                        name="company_id"
+                        groups="base.group_multi_company"
+                        widget="selection"
+                />
+                <field name="activity_ids" widget="list_activity" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+
+    <record model="ir.actions.act_window" id="indent_request_templates_form_action">
+        <field name="name">Indent Requests Template</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">indent.request.templates</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to start a new Indent request template process.
+            </p>
+            <!-- <p>
+                A Indent request is an instruction to Manufacturing to procure
+                a certain quantity of materials services, so that they are
+                available at a certain point in time.
+            </p> -->
+        </field>
+    </record>
+
+
+    <menuitem name="Configuration" id="menu_indent_request_template" parent="harleys_customization.menu_indent_request_root"/>
+    <menuitem name="Indent Requests Template" id="harleys_customization.menu_sub_indent_request_template" parent="harleys_customization.menu_indent_request_template"
+              action="harleys_customization.indent_request_templates_form_action"/>
+
+  </data>
+</odoo>

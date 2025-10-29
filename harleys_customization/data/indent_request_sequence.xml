@@ -1,0 +1,8 @@
+<odoo noupdate="1">
+    <record id="seq_indent_request" model="ir.sequence">
+        <field name="name">Indent Request</field>
+        <field name="code">indent.request</field>
+        <field name="prefix">IND</field>
+        <field name="padding">5</field>
+    </record>
+</odoo>
