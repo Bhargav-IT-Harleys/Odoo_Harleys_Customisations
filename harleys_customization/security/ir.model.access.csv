@@ -16,3 +16,4 @@ access_indent_make_mo_admin,Indent Make MO Admin,model_indent_request_line_make_
 
 access_indent_wizard_user,Indent Wizard User,model_indent_request_line_wizard,harleys_customization.group_indent_user,1,0,0,0
 access_indent_wizard_admin,Indent Wizard Admin,model_indent_request_line_wizard,harleys_customization.group_indent_admin,1,1,1,1
+

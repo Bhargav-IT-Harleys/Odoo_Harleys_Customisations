@@ -1,6 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-from datetime import date
+from datetime import date, timedelta
 
 _STATES = [
     ("draft", "Draft"),
@@ -66,7 +66,8 @@ class IndentRequest(models.Model):
     )
 
     received_date = fields.Date(
-        string='Received Date'
+        string='Receiving Date',
+        default=lambda self: date.today() + timedelta(days=2),
     )
 
     company_id = fields.Many2one(
@@ -144,6 +145,8 @@ class IndentRequest(models.Model):
     @api.onchange("indent_template")
     def _onchange_indent_template(self):
         if self.indent_template:
+            self.delivery_from = self.indent_template.delivery_from
+            self.delivery_to = self.indent_template.delivery_to
             self.line_ids = False
             for template_line in self.indent_template.line_ids:
                 self.line_ids = [(0, 0, {

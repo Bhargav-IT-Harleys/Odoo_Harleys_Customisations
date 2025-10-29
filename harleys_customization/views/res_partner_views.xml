@@ -25,6 +25,11 @@
                       invisible="state not in ('sent') or supplier_rank==0"/>
                 </header>
             </xpath>
+            <field name="ref" position="replace">
+            </field>
+            <field name="category_id" position="after">
+                <field name="ref"/>
+            </field>
         </field>
     </record>
 </odoo>

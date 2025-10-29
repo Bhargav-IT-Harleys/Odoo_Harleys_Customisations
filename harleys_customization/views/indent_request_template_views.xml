@@ -4,22 +4,21 @@
         <field name="name">indent.request.templates.form</field>
         <field name="model">indent.request.templates</field>
         <field name="arch" type="xml">
-            <form string="Indent Request Templates">
+            <form string="Outlet Wise Indent Template">
                 <sheet>
                     <div class="oe_edit_only">
                         <label for="name" class="oe_inline"/>
                     </div>
                     <h1>
-                        <field name="name" class="oe_inline"/>
+                        <field name="name" class="oe_inline" readonly="1" force_save="1"/>
                     </h1>
                     <group>
                         <group>
-                            <field name="current_date"/>
-                            <field name="delivery_from"/>
+                            <field name="delivery_from" required="1"/>
                             <field name="company_id" groups="base.group_multi_company" widget="selection"/>
                         </group>
                         <group>
-                            <field name="delivery_to"/>
+                            <field name="delivery_to" required="1"/>
                         </group>
                     </group>
                     <notebook>
@@ -89,8 +88,7 @@
     </record>
 
 
-    <menuitem name="Configuration" id="menu_indent_request_template" parent="harleys_customization.menu_indent_request_root"/>
-    <menuitem name="Indent Requests Template" id="harleys_customization.menu_sub_indent_request_template" parent="harleys_customization.menu_indent_request_template"
+    <menuitem name="Outlet Wise Indent Template" id="harleys_customization.menu_sub_indent_request_template" parent="harleys_customization.menu_indent_request"
               action="harleys_customization.indent_request_templates_form_action"/>
 
   </data>

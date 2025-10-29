@@ -25,3 +25,23 @@ class ResPartner(models.Model):
         if self.state in ('sent'):
             self.state = 'rejected'
 
+
+    @api.constrains('ref')
+    def _check_ref_unique(self):
+        for record in self:
+            if record.ref:
+                duplicate = self.env['res.partner'].search([
+                    ('ref', '=', record.ref),
+                    ('id', '!=', record.id)
+                ], limit=1)
+                if duplicate:
+                    raise ValidationError(f'Reference "{record.ref}" already exists. Reference field must be unique.')
+
+
+
+    def _get_complete_name(self):
+        self.ensure_one()
+        name = self.name or ''
+        if self.ref:
+            name = f"{self.ref}, {name}"
+        return name.strip()

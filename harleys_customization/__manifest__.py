@@ -17,6 +17,7 @@
         'wizard/indent_request_line_make_manufacturing_orders_views.xml',
         'views/res_partner_views.xml',
         'views/product_template_views.xml',
+        'views/contact_views.xml',
     ],
     'installable': True,
     'application': True,

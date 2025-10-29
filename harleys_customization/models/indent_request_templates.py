@@ -13,8 +13,8 @@ class IndentRequestTemplates(models.Model):
 
     name = fields.Char(
         string="Template Name",
-        required=True,
         tracking=True,
+        store=True
     )
 
     current_date = fields.Date(
@@ -56,6 +56,11 @@ class IndentRequestTemplates(models.Model):
         self.ensure_one()
         return super().copy(default)
 
+    @api.onchange("delivery_to")
+    def _onchange_delivery_to(self):
+        if self.delivery_to:
+            self.name = f"{self.delivery_to.name} Indent Template" 
+        
 
 class IndentRequestLineTemplates(models.Model):
     _name = 'indent.request.line.templates'
