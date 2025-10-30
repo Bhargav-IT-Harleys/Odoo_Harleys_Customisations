@@ -1,0 +1,199 @@
+<odoo>
+  <data>
+    <record id="view_indent_request_form" model="ir.ui.view">
+        <field name="name">indent.request.form</field>
+        <field name="model">indent.request</field>
+        <field name="arch" type="xml">
+            <form string="Indent Request">
+                <header>
+                    <button
+                            type="object"
+                            string="Send"
+                            name="action_sent"
+                            icon="fa-paper-plane"
+                            class="oe_highlight"
+                            invisible="state in ('sent', 'locked')"
+                    />
+                    <field
+                            name="state"
+                            widget="statusbar"
+                            statusbar_visible="draft,sent,locked"
+                            statusbar_colors='{"sent":"blue"}'
+                    />
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                    </div>
+                    <div class="oe_edit_only">
+                        <label for="name" class="oe_inline"/>
+                    </div>
+                    <h1>
+                        <field name="name" class="oe_inline" readonly="1"/>
+                        <field name="is_editable" invisible="1"/>
+                    </h1>
+                    <group>
+                        <group>
+                            <field name="indent_template" readonly="is_editable == False" options="{'no_create': True}"/>
+                            <field name="current_date" readonly="1"/>
+                            <field name="delivery_from" readonly="1"/>
+                            <field name="delivery_to" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company" widget="selection" readonly="is_editable == False"/>
+                        </group>
+                        <group>
+                            <field name="requested_by" readonly="1"/>
+                            <field name="received_date" readonly="is_editable == False"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Products" name="line_ids">
+                            <field name="line_ids">
+                                <list string="Indent Request Lines" editable="bottom" limit="200">
+                                    <field name="request_id" column_invisible="True"/>
+                                    <field name="product_id" readonly="state not in ['draft']" options="{'no_create': True}"/>
+                                    <field name="name" readonly="state not in ['draft']"/>
+                                    <field name="default_code"/>
+                                    <field name="hsn_code"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="product_qty"/>
+                                    <field name="comments"/>
+                                    <field
+                                            name="company_id"
+                                            groups="base.group_multi_company"
+                                            widget="selection"
+                                    />
+                                    <field name="is_editable" column_invisible="1" width="150px"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="view_indent_request_tree" model="ir.ui.view">
+        <field name="name">indent.request.list</field>
+        <field name="model">indent.request</field>
+        <field name="arch" type="xml">
+            <list
+                    decoration-muted="state in ('draft')"
+                    decoration-success="state in ('sent')"
+                    decoration-info="state in ('locked')"
+                    name="Indent Request"
+            >
+                <field name="name"/>
+                <field name="delivery_from"/>
+                <field name="delivery_to"/>
+                <field name="requested_by" widget="many2one_avatar_user"/>
+                <field name="received_date"/>
+                <field
+                        name="company_id"
+                        groups="base.group_multi_company"
+                        widget="selection"
+                />
+                <field name="activity_ids" widget="list_activity" optional="show"/>
+                <field
+                        name="state"
+                        widget="badge"
+                        decoration-muted="state in ('draft')"
+                        decoration-success="state in ('sent')"
+                        decoration-info="state in ('locked')"
+                />
+            </list>
+        </field>
+    </record>
+
+
+    <record model="ir.actions.act_window" id="indent_request_form_action">
+        <field name="name">Indent Requests</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">indent.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"search_default_requested_by":uid}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to start a new Indent request process.
+            </p>
+            <p>
+                A Indent request is an instruction to Manufacturing to procure
+                a certain quantity of materials services, so that they are
+                available at a certain point in time.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_indent_request__line_list" model="ir.ui.view">
+        <field name="name">indent.request.list</field>
+        <field name="model">indent.request.line</field>
+        <field name="arch" type="xml">
+            <list
+                    decoration-muted="state in ('draft')"
+                    decoration-success="state in ('sent')"
+                    decoration-info="state in ('locked')"
+                    name="Indent Request"
+            >
+                <field name="product_id" readonly="state not in ['draft']" options="{'no_create': True}"/>
+                <field name="default_code"/>
+                <field name="hsn_code"/>
+                <field name="product_qty"/>
+                <field name="product_uom_id"/>
+                <field name="comments"/>
+                <field name="delivery_from"/>
+                <field name="delivery_to"/>
+                <field name="requested_by" widget="many2one_avatar_user"/>
+                <field name="received_date"/>
+                <field
+                        name="company_id"
+                        groups="base.group_multi_company"
+                        widget="selection"
+                />
+                <field name="name"/>
+                <field
+                        name="state"
+                        widget="badge"
+                        decoration-muted="state in ('draft')"
+                        decoration-success="state in ('sent')"
+                        decoration-info="state in ('locked')"
+                />
+                <field name="activity_ids" widget="list_activity" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+      <record model="ir.actions.act_window" id="indent_request_line_action">
+        <field name="name">Indent Requests Line</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">indent.request.line</field>
+        <field name="view_mode">list</field>
+        <field name="context">{"search_default_requested_by":uid}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to start a new Indent request line process.
+            </p>
+            <p>
+                A Indent request line is an instruction to Manufacturing to procure
+                a certain quantity of materials services, so that they are
+                available at a certain point in time.
+            </p>
+        </field>
+    </record>
+
+
+    <!-- Top menu item -->
+
+    <menuitem name="Indent Request"
+      id="menu_indent_request_root"
+      web_icon="harleys_customization,static/description/icon.png"
+      action="indent_request_form_action"
+      />
+
+    <menuitem name="Indent Request" id="menu_indent_request" parent="harleys_customization.menu_indent_request_root"/>
+    <menuitem name="Indent Requests" id="harleys_customization.menu_sub_indent_request" parent="harleys_customization.menu_indent_request"
+              action="harleys_customization.indent_request_form_action"/>
+    <menuitem name="Indent Request Line" id="harleys_customization.menu_sub_indent_request_line" parent="harleys_customization.menu_indent_request"
+              action="harleys_customization.indent_request_line_action"/>
+
+  </data>
+</odoo>

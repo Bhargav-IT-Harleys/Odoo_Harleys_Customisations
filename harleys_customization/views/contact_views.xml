@@ -1,0 +1,27 @@
+<odoo>
+    <data>
+
+    <!-- <template id="extend_contacts_app_menu" inherit_id="contacts.menu_contacts">
+      <xpath expr="//menuitem[@id='menu_contacts']" position="replace">
+        <menuitem name="Contacts"
+            id="menu_contacts"
+            sequence="20"
+            web_icon="contacts,static/description/icon.png"
+            groups="harleys_customization.group_show_contacts"/>
+      </xpath>
+    </template> -->
+
+    <!-- <template id="extend_contacts_menu" inherit_id="contacts.res_partner_menu_contacts">
+      <xpath expr="//menuitem[@id='res_partner_menu_contacts']" position="replace"> -->
+        <menuitem id="contacts.res_partner_menu_contacts"
+            name="Contacts"
+            action="contacts.action_contacts"
+            parent="contacts.menu_contacts"
+            sequence="2"
+            groups="harleys_customization.group_show_contacts"/>
+      <!-- </xpath> -->
+    <!-- </template> -->
+
+
+    </data>
+</odoo>

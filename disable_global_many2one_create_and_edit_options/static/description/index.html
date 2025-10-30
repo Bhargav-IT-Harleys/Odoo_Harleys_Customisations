@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Disable Many2One Create/Edit Options</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      animation: fadeIn 1s ease-out;
+    }
+    h1, h2, h3 {
+      color: #7c3aed;
+    }
+    p {
+      line-height: 1.6;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    .screenshot {
+      margin: 20px 0;
+      text-align: center;
+    }
+    .screenshot img {
+      max-width: 100%;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    .comparison {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .comparison-block {
+      flex: 1;
+      min-width: 300px;
+      animation: slideIn 1s ease-out;
+    }
+    .author-info {
+      background-color: #f3f0ff;
+      padding: 15px;
+      border-left: 4px solid #7c3aed;
+      margin-top: 30px;
+      border-radius: 6px;
+      animation: fadeIn 1.2s ease-out;
+    }
+    .icon-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+    .icon-link img {
+      height: 18px;
+      width: 18px;
+      object-fit: contain;
+      vertical-align: middle;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Disable Many2One Create/Edit Options</h1>
+    <p>This module globally disables the "Create" and "Create and Edit" options in all many2one fields across Odoo 19 Enterprise. It ensures a cleaner UI and prevents accidental record creation.</p>
+
+    <h2>🔍 Before vs After Comparison</h2>
+    <p>See how this module transforms the user experience by removing clutter and enforcing clean data selection:</p>
+
+    <div class="comparison">
+      <div class="comparison-block">
+        <h3 style="color: #ef4444;">❌ Before Installation</h3>
+        <p>Users can create new records directly from dropdowns, leading to:</p>
+        <ul>
+          <li>Duplicate or incomplete entries</li>
+          <li>Inconsistent data across modules</li>
+          <li>Uncontrolled record creation</li>
+        </ul>
+        <div class="screenshot">
+          <img src="/disable_global_many2one_create_and_edit_options/static/description/before.png" alt="Before Screenshot">
+        </div>
+      </div>
+
+      <div class="comparison-block">
+        <h3 style="color: #10b981;">✅ After Installation</h3>
+        <p>Dropdowns now only show existing records. Benefits include:</p>
+        <ul>
+          <li>Cleaner UI and dropdowns</li>
+          <li>Controlled data entry</li>
+          <li>Improved user experience</li>
+        </ul>
+        <div class="screenshot">
+          <img src="/disable_global_many2one_create_and_edit_options/static/description/after.png" alt="After Screenshot">
+        </div>
+      </div>
+    </div>
+
+    <h2>⚙️ Installed Features</h2>
+    <ul>
+      <li>Globally disables "Create" and "Create and Edit" in many2one fields</li>
+      <li>Works across all modules without modifying views</li>
+      <li>Built using OWL registry patch for clean override</li>
+      <li>No menus, views, or reports added</li>
+    </ul>
+
+    <h2>📜 Changelog</h2>
+    <ul>
+      <li><strong>v1.0.0:</strong> Initial release with global override</li>
+      <li><strong>v1.1.0 (Planned):</strong> Config toggle and theme compatibility</li>
+    </ul>
+
+    <h2>👤 Author Information</h2>
+    <div class="author-info">
+        <p><strong>Name:</strong> Hari Prasath</p>
+        <p><strong>Profession:</strong> Software Developer</p>
+        <p><strong>Experience:</strong> 3+ years in Odoo customization</p>
+        <p>
+            <strong>LinkedIn:</strong>
+            <a href="https://www.linkedin.com/in/hari-prasath-b4266718b/" target="_blank">
+                <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" style="height:20px; vertical-align:middle;"> Visit Profile
+            </a>
+        </p>
+        <p>
+            <strong>Portfolio:</strong>
+            <a href="https://hari1119.github.io/" target="_blank">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Portfolio" style="height:20px; vertical-align:middle;"> View Projects
+            </a>
+        </p>
+    </div>
+  </div>
+</body>
+</html>
