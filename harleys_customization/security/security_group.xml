@@ -30,5 +30,170 @@
       <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
     </record>
 
+    <!-- Multi Company -->
+
+    <record model="ir.rule" id="indent_request_comp_rule">
+        <field name="name">Indent Request multi-company</field>
+        <field name="model_id" ref="model_indent_request" />
+        <field name="global" eval="True" />
+        <field name="domain_force">
+            ['|',('company_id','=',False),('company_id', 'in', company_ids)]
+        </field>
+    </record>
+    <record model="ir.rule" id="indent_request_line_comp_rule">
+        <field name="name">Indent Request Line multi-company</field>
+        <field name="model_id" ref="model_indent_request_line" />
+        <field name="global" eval="True" />
+        <field name="domain_force">
+            ['|',('company_id','=',False),('company_id', 'in', company_ids)]
+        </field>
+    </record>
+    <record id="indent_request_followers_rule" model="ir.rule">
+        <field name="name">Follow Indent Request</field>
+        <field name="model_id" ref="model_indent_request" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">
+            ['|',('request_id.requested_by','=',user.id),
+                                        ('request_id.message_partner_ids', 'in',
+            [user.partner_id.id])]
+        </field>
+    </record>
+    <record id="indent_request_rule" model="ir.rule">
+        <field name="name">Indent Request User</field>
+        <field name="model_id" ref="model_indent_request" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+        <field name="domain_force">[('requested_by','=',user.id)]</field>
+    </record>
+    <record id="indent_request_manager_rule" model="ir.rule">
+        <field name="name">Indent Request Manager</field>
+        <field name="model_id" ref="model_indent_request" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_admin')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+
+    <record id="indent_template_request_line_followers_rule" model="ir.rule">
+        <field name="name">Follow Indent Request Line</field>
+        <field name="model_id" ref="model_indent_request_line" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">
+            ['|',('request_id.requested_by','=',user.id),
+                                        ('request_id.message_partner_ids', 'in',
+            [user.partner_id.id])]
+        </field>
+    </record>
+    <record id="indent_request_line_rule" model="ir.rule">
+        <field name="name">Indent Request Line User</field>
+        <field name="model_id" ref="model_indent_request_line" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+        <field name="domain_force">[('request_id.requested_by','=',user.id)]</field>
+    </record>
+    <record id="indent_request_line_manager_rule" model="ir.rule">
+        <field name="name">Indent Request Line Manager</field>
+        <field name="model_id" ref="model_indent_request_line" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_admin')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+
+    <!-- Multi Company For Indent Template-->
+
+    <record model="ir.rule" id="indent_request_template_comp_rule">
+        <field name="name">Indent Request Template multi-company</field>
+        <field name="model_id" ref="model_indent_request_templates" />
+        <field name="global" eval="True" />
+        <field name="domain_force">
+            ['|',('company_id','=',False),('company_id', 'in', company_ids)]
+        </field>
+    </record>
+    <record model="ir.rule" id="indent_request_line_templates_comp_rule">
+        <field name="name">Indent Request Line Templates multi-company</field>
+        <field name="model_id" ref="model_indent_request_line_templates" />
+        <field name="global" eval="True" />
+        <field name="domain_force">
+            ['|',('company_id','=',False),('company_id', 'in', company_ids)]
+        </field>
+    </record>
+    <record id="indent_request_templates_followers_rule" model="ir.rule">
+        <field name="name">Follow Indent Request Templates</field>
+        <field name="model_id" ref="model_indent_request_templates" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">
+            [('message_partner_ids', 'in', [user.partner_id.id])]
+        </field>
+    </record>
+    <record id="indent_request_templates_rule" model="ir.rule">
+        <field name="name">Indent Request Templates User</field>
+        <field name="model_id" ref="model_indent_request_templates" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+    <record id="indent_request_templates_manager_rule" model="ir.rule">
+        <field name="name">Indent Request Templates Manager</field>
+        <field name="model_id" ref="model_indent_request_templates" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_admin')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+
+    <record id="indent_request_line_templates_followers_rule" model="ir.rule">
+        <field name="name">Follow Indent Request Line Templates</field>
+        <field name="model_id" ref="model_indent_request_line_templates" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">
+            [('request_id.message_partner_ids', 'in', [user.partner_id.id])]
+        </field>
+    </record>
+    <record id="indent_request_line_templates_rule" model="ir.rule">
+        <field name="name">Indent Request Line Templates User</field>
+        <field name="model_id" ref="model_indent_request_line_templates" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+    <record id="indent_request_line_templates_manager_rule" model="ir.rule">
+        <field name="name">Indent Request Line Templates Manager</field>
+        <field name="model_id" ref="model_indent_request_line_templates" />
+        <field name="groups" eval="[(6,0, [ref('group_indent_admin')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
   </data>
 </odoo>

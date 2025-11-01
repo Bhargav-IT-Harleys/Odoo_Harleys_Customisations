@@ -28,20 +28,20 @@
                         <label for="name" class="oe_inline"/>
                     </div>
                     <h1>
-                        <field name="name" class="oe_inline" readonly="1"/>
+                        <field name="name" class="oe_inline" readonly="1" force_save="1"/>
                         <field name="is_editable" invisible="1"/>
                     </h1>
                     <group>
                         <group>
-                            <field name="indent_template" readonly="is_editable == False" options="{'no_create': True}"/>
-                            <field name="current_date" readonly="1"/>
-                            <field name="delivery_from" readonly="1"/>
-                            <field name="delivery_to" readonly="1"/>
-                            <field name="company_id" groups="base.group_multi_company" widget="selection" readonly="is_editable == False"/>
+                            <field name="indent_template" readonly="is_editable == False" options="{'no_create': True}" force_save="1"/>
+                            <field name="current_date" readonly="1" force_save="1"/>
+                            <field name="delivery_from" readonly="1" force_save="1"/>
+                            <field name="delivery_to" readonly="1" force_save="1"/>
+                            <field name="company_id" groups="base.group_multi_company" widget="selection" readonly="is_editable == False" force_save="1"/>
                         </group>
                         <group>
-                            <field name="requested_by" readonly="1"/>
-                            <field name="received_date" readonly="is_editable == False"/>
+                            <field name="requested_by" readonly="1" force_save="1"/>
+                            <field name="received_date" readonly="is_editable == False" force_save="1"/>
                         </group>
                     </group>
                     <notebook>
@@ -49,19 +49,20 @@
                             <field name="line_ids">
                                 <list string="Indent Request Lines" editable="bottom" limit="200">
                                     <field name="request_id" column_invisible="True"/>
-                                    <field name="product_id" readonly="state not in ['draft']" options="{'no_create': True}"/>
-                                    <field name="name" readonly="state not in ['draft']"/>
-                                    <field name="default_code"/>
-                                    <field name="hsn_code"/>
-                                    <field name="product_uom_id"/>
-                                    <field name="product_qty"/>
-                                    <field name="comments"/>
+                                    <field name="product_id" readonly="state not in ['draft']" options="{'no_create': True}" force_save="1"/>
+                                    <field name="name" readonly="state not in ['draft']" force_save="1"/>
+                                    <field name="default_code" force_save="1"/>
+                                    <field name="hsn_code" force_save="1"/>
+                                    <field name="product_uom_id" force_save="1" readonly="0"/>
+                                    <field name="product_qty" force_save="1"/>
+                                    <field name="comments" force_save="1"/>
                                     <field
                                             name="company_id"
                                             groups="base.group_multi_company"
                                             widget="selection"
+                                            force_save="1"
                                     />
-                                    <field name="is_editable" column_invisible="1" width="150px"/>
+                                    <field name="is_editable" column_invisible="1" force_save="1" width="150px"/>
                                 </list>
                             </field>
                         </page>

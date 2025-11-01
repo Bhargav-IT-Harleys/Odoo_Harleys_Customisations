@@ -11,6 +11,7 @@ _STATES = [
 class IndentRequest(models.Model):
     _name = 'indent.request'
     _description = 'Indent Request'
+    _company_id_field = 'company_id'
     _inherit = ["mail.thread", "mail.activity.mixin", "analytic.mixin"]
 
     @api.model
@@ -20,6 +21,10 @@ class IndentRequest(models.Model):
     @api.model
     def _get_default_requested_by(self):
         return self.env["res.users"].browse(self.env.uid)
+    
+    def _get_records(self):
+        return self.search([('company_id', '=', self.env.user.company_id.id)])
+
     
     @api.model
     def _get_default_name(self):
@@ -73,7 +78,7 @@ class IndentRequest(models.Model):
     company_id = fields.Many2one(
         comodel_name="res.company",
         required=False,
-        default=_company_get,
+        default=lambda self: self.env.company,
         tracking=True,
     )
     
@@ -139,6 +144,8 @@ class IndentRequest(models.Model):
         for vals in vals_list:
             if vals.get("name", _("New")) == _("New"):
                 vals["name"] = self._get_default_name()
+            if not vals.get('company_id'):
+                vals['company_id'] = self.env.company.id
         requests = super().create(vals_list)
         return requests
 
@@ -163,6 +170,7 @@ class IndentRequest(models.Model):
 class IndentRequestLine(models.Model):
     _name = 'indent.request.line'
     _description = 'Indent Request Line'
+    _company_id_field = 'company_id'
     _inherit = ["mail.thread", "mail.activity.mixin", "analytic.mixin"]
 
 
@@ -186,9 +194,7 @@ class IndentRequestLine(models.Model):
     hsn_code = fields.Char(string="HSN/SAC Code")
     product_uom_id = fields.Many2one(
         comodel_name="uom.uom",
-        string="UoM",
-        related="product_id.uom_id",
-        domain="[('category_id', '=', product_uom_category_id)]",
+        string="UoM"
     )
     product_qty = fields.Float(
         string="Qty", tracking=True, digits="Product Unit of Measure"

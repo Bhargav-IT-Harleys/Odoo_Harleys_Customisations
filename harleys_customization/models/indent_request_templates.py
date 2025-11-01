@@ -5,6 +5,7 @@ from datetime import date
 class IndentRequestTemplates(models.Model):
     _name = 'indent.request.templates'
     _description = 'Indent Request Templates'
+    _company_id_field = 'company_id'
     _inherit = ["mail.thread", "mail.activity.mixin", "analytic.mixin"]
 
     @api.model
@@ -65,6 +66,7 @@ class IndentRequestTemplates(models.Model):
 class IndentRequestLineTemplates(models.Model):
     _name = 'indent.request.line.templates'
     _description = 'Indent Request Line Templates'
+    _company_id_field = 'company_id'
 
 
     request_id = fields.Many2one(
@@ -87,9 +89,7 @@ class IndentRequestLineTemplates(models.Model):
     hsn_code = fields.Char(string="HSN/SAC Code")
     product_uom_id = fields.Many2one(
         comodel_name="uom.uom",
-        string="UoM",
-        related="product_id.uom_id",
-        domain="[('category_id', '=', product_uom_category_id)]",
+        string="UoM"
     )
     product_qty = fields.Float(
         string="Qty", tracking=True, digits="Product Unit of Measure"
