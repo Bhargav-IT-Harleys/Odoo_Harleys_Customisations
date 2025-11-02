@@ -134,6 +134,7 @@
                     decoration-success="state in ('sent')"
                     decoration-info="state in ('locked')"
                     name="Indent Request"
+                    create="false"
             >
                 <field name="product_id" readonly="state not in ['draft']" options="{'no_create': True}"/>
                 <field name="default_code"/>
