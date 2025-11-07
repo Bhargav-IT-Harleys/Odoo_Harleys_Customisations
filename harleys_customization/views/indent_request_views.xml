@@ -73,6 +73,24 @@
         </field>
     </record>
 
+    <record id="view_indent_request_search" model="ir.ui.view">
+        <field name="name">Indent Requests Search</field>
+        <field name="model">indent.request</field>
+        <field name="arch" type="xml">
+            <search string="Indent Request">
+                <field name="name"/>
+                <field name="delivery_from"/>
+                <field name="delivery_to"/>
+                <field name="requested_by"/>
+                <group>
+                    <filter string="Date" name="current_date" domain="[]" context="{'group_by': 'current_date'}"/>
+                    <filter string="Requested By" name="requested_by" domain="[]" context="{'group_by': 'requested_by'}"/>
+                    <filter string="Delivery From" name="delivery_from" domain="[]" context="{'group_by': 'delivery_from'}"/>
+                    <filter string="Delivery To" name="delivery_to" domain="[]" context="{'group_by': 'delivery_to'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
 
     <record id="view_indent_request_tree" model="ir.ui.view">
         <field name="name">indent.request.list</field>
@@ -125,7 +143,7 @@
         </field>
     </record>
 
-    <record id="view_indent_request__line_list" model="ir.ui.view">
+    <record id="view_indent_request_line_list" model="ir.ui.view">
         <field name="name">indent.request.list</field>
         <field name="model">indent.request.line</field>
         <field name="arch" type="xml">
@@ -164,12 +182,27 @@
         </field>
     </record>
 
+    <record id="view_indent_request_line_search" model="ir.ui.view">
+        <field name="name">Indent Requests Line</field>
+        <field name="model">indent.request.line</field>
+        <field name="arch" type="xml">
+            <search string="Indent Request Lines">
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <field name="hsn_code"/>
+                <group>
+                    <filter string="Date" name="current_date" domain="[]" context="{'group_by': 'current_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
       <record model="ir.actions.act_window" id="indent_request_line_action">
         <field name="name">Indent Requests Line</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">indent.request.line</field>
         <field name="view_mode">list</field>
-        <field name="context">{"search_default_requested_by":uid}</field>
+        <field name="context">{'search_default_requested_by':uid, 'group_by': 'current_date:day'}</field>
         <field name="help" type="html">
             <p class="oe_view_nocontent_create">
                 Click to start a new Indent request line process.
