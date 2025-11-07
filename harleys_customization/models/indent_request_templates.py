@@ -82,7 +82,6 @@ class IndentRequestLineTemplates(models.Model):
     product_id = fields.Many2one(
         comodel_name="product.product",
         string="Product",
-        domain=[("purchase_ok", "=", True)],
         tracking=True,
     )
     default_code = fields.Char(string="Internal Reference", related="product_id.default_code")
