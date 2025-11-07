@@ -15,6 +15,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
     def default_get(self, fields_list):
         res = super(IndentRequestLineMakeManufacturingOrder, self).default_get(fields_list)
         active_ids = self.env.context.get('active_ids', [])
+        route_id = self.env['stock.route'].search([("name", "=", "Manufacture")], limit=1)
         if active_ids:
             records = self.env['indent.request.line'].browse(active_ids)
             res.update({"indent_request_line_ids" : [(0, 0, {"name": record.name, 
@@ -25,7 +26,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                                                 "product_uom_id": record.product_uom_id, 
                                                                 "product_qty": record.product_qty, 
                                                                 "comments": record.comments, 
-                                                                "indent_number": record.indent_number,}) for record in records]
+                                                                "indent_number": record.indent_number,}) for record in records if [route for route in record.product_id.route_ids if route.id == route_id.id]]
                 })
         return res
     
