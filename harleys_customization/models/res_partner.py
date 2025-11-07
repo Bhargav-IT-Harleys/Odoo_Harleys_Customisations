@@ -19,6 +19,7 @@ class ResPartner(models.Model):
     def action_approve(self):
         if self.state in ('sent'):
             self.state = 'approved'
+            self.active = True
             self.approved_by = self.env.user.id
 
     def action_reject(self):
@@ -45,3 +46,12 @@ class ResPartner(models.Model):
         if self.ref:
             name = f"{self.ref}, {name}"
         return name.strip()
+    
+    @api.model
+    def create(self, vals):
+        if isinstance(vals, list):
+            for val in vals:
+                val['active'] = False
+        else:
+            vals['active'] = False 
+        return super(ResPartner, self).create(vals)

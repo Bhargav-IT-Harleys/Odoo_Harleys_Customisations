@@ -19,9 +19,19 @@ class ProductTemplate(models.Model):
     def action_approve(self):
         if self.state in ('sent'):
             self.state = 'approved'
+            self.active = True
             self.approved_by = self.env.user.id
 
     def action_reject(self):
         if self.state in ('sent'):
             self.state = 'rejected'
+
+    @api.model
+    def create(self, vals):
+        if isinstance(vals, list):
+            for val in vals:
+                val['active'] = False
+        else:
+            vals['active'] = False 
+        return super(ProductTemplate, self).create(vals)
 

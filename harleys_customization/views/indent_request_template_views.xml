@@ -26,7 +26,7 @@
                             <field name="line_ids">
                                 <list string="Indent Request Lines Templates" editable="bottom" limit="200">
                                     <field name="request_id" column_invisible="True"/>
-                                    <field name="product_id"  options="{'no_create': True}"/>
+                                    <field name="product_id" options="{'no_create': True}"/>
                                     <field name="name"/>
                                     <field name="default_code"/>
                                     <field name="hsn_code"/>
@@ -54,7 +54,7 @@
         <field name="model">indent.request.templates</field>
         <field name="arch" type="xml">
             <list
-                    name="Indent Request Templates"
+                    name="Outlet Wise Indent Template"
             >
                 <field name="name"/>
                 <field name="delivery_from"/>
@@ -71,7 +71,7 @@
 
 
     <record model="ir.actions.act_window" id="indent_request_templates_form_action">
-        <field name="name">Indent Requests Template</field>
+        <field name="name">Outlet Wise Indent Template</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">indent.request.templates</field>
         <field name="view_mode">list,form</field>
@@ -79,11 +79,6 @@
             <p class="oe_view_nocontent_create">
                 Click to start a new Indent request template process.
             </p>
-            <!-- <p>
-                A Indent request is an instruction to Manufacturing to procure
-                a certain quantity of materials services, so that they are
-                available at a certain point in time.
-            </p> -->
         </field>
     </record>
 

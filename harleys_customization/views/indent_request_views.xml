@@ -49,7 +49,7 @@
                             <field name="line_ids">
                                 <list string="Indent Request Lines" editable="bottom" limit="200">
                                     <field name="request_id" column_invisible="True"/>
-                                    <field name="product_id" readonly="state not in ['draft']" options="{'no_create': True}" force_save="1"/>
+                                    <field name="product_id" options="{'no_create': True}" force_save="1" domain="[('state', '=', 'approved')]"/>
                                     <field name="name" readonly="state not in ['draft']" force_save="1"/>
                                     <field name="default_code" force_save="1"/>
                                     <field name="hsn_code" force_save="1"/>
@@ -136,7 +136,7 @@
                     name="Indent Request"
                     create="false"
             >
-                <field name="product_id" readonly="state not in ['draft']" options="{'no_create': True}"/>
+                <field name="product_id" options="{'no_create': True}"/>
                 <field name="default_code"/>
                 <field name="hsn_code"/>
                 <field name="product_qty"/>
