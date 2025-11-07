@@ -3,8 +3,9 @@ from datetime import datetime
 import pytz
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import get_lang
+
 
 class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
     _name = "indent.request.line.make.manufacturing.order"
@@ -39,13 +40,14 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
     def make_manufacturing_order(self):
         if self.indent_request_line_ids:
             merged = {}
-            internal_transfer_merged = {}
+            internal_transfer_merged = []
             for line in self.indent_request_line_ids:
                 line.source_line_id.state = 'locked'
                 pid = line.product_id.id
                 qty = line.product_qty
                 product_uom = line.product_uom_id.id
                 origin = line.indent_number
+                self.check_product_has_bom(pid)
 
                 if pid in merged:
                     merged[pid]['product_qty'] += qty
@@ -60,23 +62,18 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     }
                 indent_source = self.env['indent.request'].search([('id', '=', line.source_line_id.request_id.id)], limit=1)
                 if indent_source:
-                    if pid in internal_transfer_merged:
-                        internal_transfer_merged[pid]['product_qty'] += qty
-                        if origin:
-                            internal_transfer_merged[pid]['origin'] += f",{origin}"
-                    else:
-                        internal_transfer_merged[pid] = {
-                            'product_id': pid,
-                            'product_qty': qty,
-                            'origin': origin,
-                            'product_uom_id': product_uom,
-                            'delivery_from' : indent_source.delivery_from.lot_stock_id.id,
-                            'delivery_to' : indent_source.delivery_to.lot_stock_id.id
-                        }
+                    internal_transfer_merged += [{
+                        'product_id': pid,
+                        'product_qty': qty,
+                        'origin': origin,
+                        'product_uom_id': product_uom,
+                        'delivery_from' : indent_source.delivery_from.lot_stock_id.id,
+                        'delivery_to' : indent_source.delivery_to.lot_stock_id.id
+                    }]
                 indent_source.state_checker()
 
             data_dict = list(merged.values())
-            internal_transfer_data = list(internal_transfer_merged.values())
+            internal_transfer_data = internal_transfer_merged
             self.make_internal_transfer_draft(internal_transfer_data)
             return self.env['mrp.production'].create(data_dict)
         
@@ -125,6 +122,23 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
         return True
 
 
+    def check_product_has_bom(self, product_id):
+        """Raise ValidationError if the product has no BoM in current company or globally shared."""
+        product = self.env['product.product'].browse(product_id)
+        company = self.env.company
+
+        has_bom = self.env['mrp.bom'].search([
+            '|',
+            ('product_id', '=', product.id),
+            ('product_tmpl_id', '=', product.product_tmpl_id.id),
+            ('company_id', 'in', [company.id, False])
+        ], limit=1)
+
+        if not has_bom:
+            raise ValidationError(
+                "Product '%s' does not have a Bill of Materials defined for company '%s' or globally." %
+                (product.display_name, company.name)
+            )
 
 
 
