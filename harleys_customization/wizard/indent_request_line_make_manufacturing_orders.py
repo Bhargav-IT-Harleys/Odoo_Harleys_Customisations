@@ -108,7 +108,6 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 raise UserError("No internal picking type found for your current company: %s" % current_company.name)
 
 
-            print("QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQq", internal_transfer_data)
             picking = self.env['stock.picking'].create({
                 'picking_type_id': picking_type.id,
                 'location_id': source_location.id,
