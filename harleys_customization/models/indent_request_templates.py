@@ -120,6 +120,8 @@ class IndentRequestLineTemplates(models.Model):
             self.product_uom_id = self.product_id.uom_id.id
             self.product_qty = 1
             self.name = name
+            self.hsn_code = self.product_id.l10n_in_hsn_code
+
 
     @api.depends('product_qty')
     def _compute_forecasted_issue(self):

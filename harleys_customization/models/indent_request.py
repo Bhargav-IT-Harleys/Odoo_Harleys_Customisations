@@ -107,6 +107,45 @@ class IndentRequest(models.Model):
         tracking=True,
     )
 
+    internal_transfer_count = fields.Integer(
+        string="Internal Transfer Count",
+        compute="_compute_internal_transfer_count"
+    )
+
+    def _compute_internal_transfer_count(self):
+        for rec in self:
+            rec.internal_transfer_count = self.env['stock.picking'].search_count([
+                ('origin', '=', rec.name),
+                ('picking_type_code', '=', 'internal')
+            ])
+
+
+    def action_get_internal_transfers(self):
+        self.ensure_one()
+        picking = self.env['stock.picking'].search([('origin', '=', self.name)], limit=1)
+        if picking:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': _("Internal Transfers"),
+                'res_model': 'stock.picking',
+                'res_id': picking.id,
+                'domain': [
+                    ('origin', '=', self.name),
+                    ('picking_type_code', '=', 'internal'),
+                    ('company_id', 'in', self.env.company.ids),
+                ],
+                'views': [
+                    (self.env.ref('stock.view_picking_form').id, 'form'),
+                ],
+                'context': {'default_origin': self.name},
+                'target': 'current',
+            }
+        else:
+            return {
+                'type': 'ir.actions.act_window_close',
+            }
+
+    
     def action_sent(self):
         if self.state == 'draft':
             self.state = 'sent'
@@ -272,6 +311,7 @@ class IndentRequestLine(models.Model):
             self.product_uom_id = self.product_id.uom_id.id
             self.product_qty = 1
             self.name = name
+            self.hsn_code = self.product_id.l10n_in_hsn_code
 
     @api.depends('product_qty')
     def _compute_forecasted_issue(self):
