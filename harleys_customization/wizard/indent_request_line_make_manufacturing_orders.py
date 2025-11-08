@@ -41,7 +41,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
     def make_manufacturing_order(self):
         if self.indent_request_line_ids:
             merged = {}
-            internal_transfer_merged = []
+            internal_transfer_merged = {}
             for line in self.indent_request_line_ids:
                 line.source_line_id.state = 'locked'
                 pid = line.product_id.id
@@ -63,19 +63,24 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     }
                 indent_source = self.env['indent.request'].search([('id', '=', line.source_line_id.request_id.id)], limit=1)
                 if indent_source:
-                    internal_transfer_merged += [{
-                        'product_id': pid,
-                        'product_qty': qty,
-                        'origin': origin,
-                        'product_uom_id': product_uom,
-                        'delivery_from' : indent_source.delivery_from.lot_stock_id.id,
-                        'delivery_to' : indent_source.delivery_to.lot_stock_id.id
-                    }]
+                    if origin in internal_transfer_merged:
+                        internal_transfer_merged[origin]['lines'] += [{'product_id': pid,
+                                                                        'product_qty': qty,
+                                                                        'origin': origin,
+                                                                        'product_uom_id': product_uom,
+                                                                    }]
+                    else:
+                        internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
+                                                            'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
+                                                            'lines': [{'product_id': pid,
+                                                                        'product_qty': qty,
+                                                                        'origin': origin,
+                                                                        'product_uom_id': product_uom,
+                                                                    }]}
                 indent_source.state_checker()
 
             data_dict = list(merged.values())
-            internal_transfer_data = internal_transfer_merged
-            self.make_internal_transfer_draft(internal_transfer_data)
+            self.make_internal_transfer_draft(internal_transfer_merged)
             return self.env['mrp.production'].create(data_dict)
         
 
@@ -86,8 +91,8 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
         current_company = self.env.company
 
         for data in internal_transfer_data:
-            source_location = self.env['stock.location'].sudo().browse(data['delivery_from'])
-            dest_location = self.env['stock.location'].sudo().browse(data['delivery_to'])
+            source_location = self.env['stock.location'].sudo().browse(internal_transfer_data[data]['delivery_from'])
+            dest_location = self.env['stock.location'].sudo().browse(internal_transfer_data[data]['delivery_to'])
 
             for loc in [source_location, dest_location]:
                 if loc.company_id and loc.company_id.id != current_company.id:
@@ -102,23 +107,24 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
             if not picking_type:
                 raise UserError("No internal picking type found for your current company: %s" % current_company.name)
 
+
             picking = self.env['stock.picking'].create({
                 'picking_type_id': picking_type.id,
                 'location_id': source_location.id,
                 'location_dest_id': dest_location.id,
-                'origin': data.get('origin', ''),
+                'origin': data,
                 'company_id': current_company.id,
             })
-
-            self.env['stock.move'].create({
-                'product_id': data['product_id'],
-                'product_uom_qty': data['product_qty'],
-                'product_uom': data['product_uom_id'],
-                'picking_id': picking.id,
-                'location_id': source_location.id,
-                'location_dest_id': dest_location.id,
-                'company_id': current_company.id,
-            })
+            for line_data in internal_transfer_data[data]['lines']:
+                self.env['stock.move'].create({
+                    'product_id': line_data['product_id'],
+                    'product_uom_qty': line_data['product_qty'],
+                    'product_uom': line_data['product_uom_id'],
+                    'picking_id': picking.id,
+                    'location_id': source_location.id,
+                    'location_dest_id': dest_location.id,
+                    'company_id': current_company.id,
+                })
 
         return True
 
