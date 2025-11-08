@@ -23,6 +23,14 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
+                        <button name="action_get_internal_transfers"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-exchange">
+                            <field name="internal_transfer_count"
+                                widget="statinfo"
+                                string="Internal Transfers"/>
+                        </button>
                     </div>
                     <div class="oe_edit_only">
                         <label for="name" class="oe_inline"/>
@@ -213,6 +221,13 @@
                 available at a certain point in time.
             </p>
         </field>
+    </record>
+
+    <record id="action_internal_transfers_from_origin" model="ir.actions.act_window">
+        <field name="name">Internal Transfers</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('origin', '=', active_id.name), ('picking_type_code', '=', 'internal')]</field>
     </record>
 
 
