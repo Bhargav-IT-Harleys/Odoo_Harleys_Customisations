@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_payslip_details" name="Payslip"
+              customize_show="True" inherit_id="portal.portal_my_home">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/employee_portal/static/src/img/payslip_icon.svg'"/>
+                <t t-set="title">My Payslip</t>
+                <t t-set="url" t-value="'/my/payslips'"/>
+                <t t-set="text">Follow or view your Payslips</t>
+                <t t-set="placeholder_count" t-value="'payslip_count'"/>
+
+            </t>
+        </xpath>
+    </template>
+
+<template id="payslip_template" name="Employee Payslip Portal">
+    <t t-call="portal.portal_layout">
+        <div class="container">
+            <h5>Employee Payslips</h5>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Employee</th>
+                        <th>Company</th>
+                        <th>Basic Wage</th>
+                        <th>Gross Wage</th>
+                        <th>Net Wage</th>
+                        <th>Payslip</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="grouped_payslips.items()" t-as="batch">
+                        <tr>
+                            <td colspan="8" style="font-weight: bold; background-color: #f0f0f0;">
+                                <t t-esc="batch[0]"/>
+                            </td>
+                        </tr>
+                        <tr t-foreach="batch[1]" t-as="payslip">
+                            <td t-esc="payslip.name"/>
+                            <td t-esc="payslip.employee_id.name"/>
+                            <td t-esc="payslip.company_id.name"/>
+                            <td t-esc="payslip.basic_wage"/>
+                            <td t-esc="payslip.gross_wage"/>
+                            <td t-esc="payslip.net_wage"/>
+                            <td>
+                                <a t-att-href="'/report/pdf/l10n_in_hr_payroll.report_payslip/%s' % payslip.id" class="btn btn-secondary btn-sm">
+                                    <i class="fa fa-download"/>
+                                </a>
+                            </td>
+                            <td t-esc="payslip.state"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+</template>
+</odoo>

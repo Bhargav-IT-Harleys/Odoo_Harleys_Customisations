@@ -1,0 +1,27 @@
+# -*- coding: utf-8 -*-
+{
+    'name': "Employee Portal",
+    'version': '19.0.0.0.0',
+    'summary': "Adding Hr Portal",
+    'depends': [
+        'base',
+        'mrp',
+        'portal',
+        'hr_holidays',
+        'hr',
+        'hr_expense',
+        'hr_payroll',
+        'hr_attendance',
+        'web'
+    ],
+    'category': 'Human Resources',
+    'description': """Adding HR portal functionality to the employee""",
+    'data': [
+        'views/employee_timeoff_portal_view.xml',
+        'views/employee_payslip_portal_view.xml',
+        'security/payslip_portal_access.xml',
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}

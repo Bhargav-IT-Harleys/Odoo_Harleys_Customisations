@@ -1,0 +1,10 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clock Icon -->
+  <circle cx="26" cy="20" r="8" fill="#F4B400"/>
+  <path d="M26 16V20L29 22" stroke="#9A4523" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Person Icon -->
+  <circle cx="42" cy="26" r="4" fill="#9A4523"/>
+  <path d="M20 36C20 32 24 28 32 28C40 28 44 32 44 36V40H20V36Z" fill="#F4B400"/>
+  <path d="M32 28C40 28 44 32 44 36V40H32V28Z" fill="#9A4523"/>
+</svg>

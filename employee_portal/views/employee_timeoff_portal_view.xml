@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_timeoff_details" name="TimeOff"
+              customize_show="True" inherit_id="portal.portal_my_home">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/employee_portal/static/src/img/time_off_icon.svg'"/>
+                <t t-set="title">My TimeOff</t>
+                <t t-set="url" t-value="'/my/timeoff'"/>
+                <t t-set="text">Follow or view your TimeOffs</t>
+                <t t-set="placeholder_count" t-value="'timeoff_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_timeoff_request_form" name="Request Time Off">
+        <t t-call="portal.portal_layout">
+            <div class="container">
+                <h3>Request Time Off</h3>
+                <form method="POST" action="/my/timeoff/request">
+                    <!-- CSRF Token -->
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                    <div class="form-group">
+                        <label for="holiday_status_id">Time Off Type</label>
+                        <select name="holiday_status_id" class="form-control" required="1">
+                            <t t-foreach="timeoff_types" t-as="timeoff_type">
+                                <option t-att-value="timeoff_type.id">
+                                    <t t-out="timeoff_type.name"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date_from">Start Date</label>
+                        <input type="date" name="date_from" class="form-control" required="1"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date_to">End Date</label>
+                        <input type="date" name="date_to" class="form-control" required="1"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="number_of_days">Number of Days</label>
+                        <input type="number" name="number_of_days" class="form-control" step="0.5" required="1"/>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </form>
+            </div>
+        </t>
+    </template>
+    <template id="portal_timeoff_success" name="Time Off Request Success">
+        <t t-call="portal.portal_layout">
+            <div class="container mt-4">
+                <!-- Success Message -->
+                <t t-if="alert_type == 'success'">
+                    <div class="alert alert-success" role="alert">
+                        <strong>Success!</strong>
+                        <t t-out="message"/>
+                    </div>
+                </t>
+
+                <!-- Error Message (Danger Alert) -->
+                <t t-if="alert_type == 'danger'">
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Error!</strong>
+                        <t t-out="message"/>
+                    </div>
+                </t>
+
+                <div class="card shadow-sm p-4">
+                    <h3 class="mb-3">Time Off Request</h3>
+                    <p>Your request has been processed. Please check your email or contact HR for further details.</p>
+                    <a href="/my/timeoff/request" class="btn btn-primary mt-3">Request Another Time Off</a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_employee_timeoff_details" name="My Timeoff">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">
+                    <i class="fa-solid fa-calendar-days"/>
+                    Time Offs
+                </t>
+            </t>
+
+            <!-- Create Time Off Request Button -->
+            <div class="mb-3">
+                <a href="/my/timeoff/request" class="btn btn-primary">
+                    <i class="fa fa-plus-circle mr-1"></i>
+                    Request Time Off
+                </a>
+            </div>
+
+            <t t-if="not timeoffs">
+                <p>There are currently no Allocations in your account.</p>
+            </t>
+
+            <t t-if="timeoffs" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th class='text-center'>Time Off Type</th>
+                        <th class='text-center'>Start Date</th>
+                        <th class='text-center'>End Date</th>
+                        <th class='text-center'>Duration</th>
+                    </tr>
+                </thead>
+                <t t-foreach="timeoffs" t-as="timeoff">
+                    <tr>
+                        <td class='text-center'>
+                            <t t-out="timeoff.holiday_status_id.name"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="timeoff.date_from"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="timeoff.date_to"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="timeoff.duration_display"/>
+                        </td>
+                    </tr>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="view_users_form_inherit_share" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.share</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert after company_id -->
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="share" readonly="0"/>
+                <!-- If you want other related fields -->
+            </xpath>
+        </field>
+    </record>
+</odoo>
