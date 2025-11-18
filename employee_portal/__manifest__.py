@@ -19,6 +19,7 @@
     'data': [
         'views/employee_timeoff_portal_view.xml',
         'views/employee_payslip_portal_view.xml',
+        'views/res_users_view.xml',
         'security/payslip_portal_access.xml',
     ],
     'installable': True,

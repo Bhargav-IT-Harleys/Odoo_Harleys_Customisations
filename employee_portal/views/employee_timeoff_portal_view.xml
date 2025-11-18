@@ -110,6 +110,7 @@
                         <th class='text-center'>Start Date</th>
                         <th class='text-center'>End Date</th>
                         <th class='text-center'>Duration</th>
+                        <th class='text-center'>Status</th>
                     </tr>
                 </thead>
                 <t t-foreach="timeoffs" t-as="timeoff">
@@ -126,22 +127,13 @@
                         <td class="text-center">
                             <span t-field="timeoff.duration_display"/>
                         </td>
+                        <td class="text-center">
+                            <span t-field="timeoff.state"/>
+                        </td>
                     </tr>
                 </t>
             </t>
         </t>
     </template>
 
-    <record id="view_users_form_inherit_share" model="ir.ui.view">
-        <field name="name">res.users.form.inherit.share</field>
-        <field name="model">res.users</field>
-        <field name="inherit_id" ref="base.view_users_form"/>
-        <field name="arch" type="xml">
-            <!-- Insert after company_id -->
-            <xpath expr="//field[@name='company_id']" position="after">
-                <field name="share" readonly="0"/>
-                <!-- If you want other related fields -->
-            </xpath>
-        </field>
-    </record>
 </odoo>
