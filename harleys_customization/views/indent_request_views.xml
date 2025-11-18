@@ -109,16 +109,19 @@
                     decoration-success="state in ('sent')"
                     decoration-info="state in ('locked')"
                     name="Indent Request"
+                    editable="bottom"
             >
-                <field name="name"/>
-                <field name="delivery_from"/>
-                <field name="delivery_to"/>
-                <field name="requested_by" widget="many2one_avatar_user"/>
-                <field name="received_date"/>
+                <field name="name" readonly="1"/>
+                <field name="delivery_from" readonly="0"/>
+                <field name="delivery_to" readonly="0"/>
+                <field name="requested_by" widget="many2one_avatar_user" readonly="0"/>
+                <field name="received_date" readonly="0"/>
+                <field name="create_date" readonly="1"/>
                 <field
                         name="company_id"
                         groups="base.group_multi_company"
                         widget="selection"
+                        optional="hide"
                 />
                 <field name="activity_ids" widget="list_activity" optional="show"/>
                 <field
@@ -161,23 +164,26 @@
                     decoration-info="state in ('locked')"
                     name="Indent Request"
                     create="false"
+                    editable="bottom"
             >
-                <field name="product_id" options="{'no_create': True}"/>
-                <field name="default_code"/>
-                <field name="hsn_code"/>
-                <field name="product_qty"/>
-                <field name="product_uom_id"/>
-                <field name="comments"/>
-                <field name="delivery_from"/>
-                <field name="delivery_to"/>
-                <field name="requested_by" widget="many2one_avatar_user"/>
-                <field name="received_date"/>
+                <field name="product_id" options="{'no_create': True}" readonly="0"/>
+                <field name="default_code" readonly="0"/>
+                <field name="hsn_code" readonly="0"/>
+                <field name="product_qty" readonly="0"/>
+                <field name="product_uom_id" readonly="0"/>
+                <field name="comments" readonly="0"/>
+                <field name="delivery_from" readonly="0"/>
+                <field name="delivery_to" readonly="0"/>
+                <field name="requested_by" widget="many2one_avatar_user" readonly="0"/>
+                <field name="received_date" readonly="0"/>
+                <field name="create_date" readonly="1"/>
                 <field
                         name="company_id"
                         groups="base.group_multi_company"
                         widget="selection"
+                        optional="hide"
                 />
-                <field name="name"/>
+                <field name="name" readonly="0"/>
                 <field
                         name="state"
                         widget="badge"
@@ -244,6 +250,18 @@
               action="harleys_customization.indent_request_form_action"/>
     <menuitem name="Indent Request Line" id="harleys_customization.menu_sub_indent_request_line" parent="harleys_customization.menu_indent_request"
               action="harleys_customization.indent_request_line_action"/>
+
+
+    <record id="view_mrp_production_tree_editable" model="ir.ui.view">
+      <field name="name">mrp.production.tree.editable</field>
+      <field name="model">mrp.production</field>
+      <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
+      <field name="arch" type="xml">
+        <list position="attributes">
+          <attribute name="editable">bottom</attribute>
+        </list>
+      </field>
+    </record>
 
   </data>
 </odoo>
