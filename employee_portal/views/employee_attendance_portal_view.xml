@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_attendance_details" name="Allocations"
+              customize_show="True" inherit_id="portal.portal_my_home">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/employee_portal/static/src/img/attendance_icon.svg'"/>
+                <t t-set="title">My Attendance</t>
+                <t t-set="url" t-value="'/my/attendances'"/>
+                <t t-set="text">Follow or view your attendance</t>
+                <t t-set="placeholder_count" t-value="'attendance_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_attendance_template" name="Employee Attendance Portal">
+        <t t-call="portal.portal_layout">
+            <div class="container">
+                <h2>My Attendances</h2>
+                <!-- <div class="my-3">
+                    <a href="/my/attendance/check_in" class="btn btn-success">Check In</a>
+                    <a href="/my/attendance/check_out" class="btn btn-danger">Check Out</a>
+                </div> -->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Work Hours</th>
+                            <th>Over Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="attendances" t-as="attendance">
+                            <tr>
+                                <td t-esc="attendance.check_in or '-'"/>
+                                <td t-esc="attendance.check_out or '-'"/>
+                                <td t-esc="'%.2f' % (attendance.worked_hours or 0)"/>
+                                <td t-esc="attendance.overtime_hours or '00:00'"/>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+</odoo>
