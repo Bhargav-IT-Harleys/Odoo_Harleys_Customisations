@@ -17,6 +17,7 @@
     'category': 'Human Resources',
     'description': """Adding HR portal functionality to the employee""",
     'data': [
+        'views/employee_attendance_portal_view.xml',
         'views/employee_timeoff_portal_view.xml',
         'views/employee_payslip_portal_view.xml',
         'views/res_users_view.xml',
