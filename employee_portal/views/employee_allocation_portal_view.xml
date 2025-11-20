@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_employee_details" name="Allocations"
+              customize_show="True" inherit_id="portal.portal_my_home">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/employee_portal/static/src/img/allocation_icon.svg'"/>
+                <t t-set="title">My TimeOff Allocation</t>
+                <t t-set="url" t-value="'/my/allocations'"/>
+                <t t-set="text">Follow or view your TimeOff Allocations</t>
+                <t t-set="placeholder_count" t-value="'lv_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_employee_details" name="My Timeoff">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">
+                    <i class="fa-solid fa-calendar-days"/>
+                    Allocations
+                </t>
+            </t>
+            <t t-if="not allocations">
+                <p>There are currently no Allocations in your account.</p>
+            </t>
+            <t t-if="allocations" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th class='text-center'>Name</th>
+                        <th class='text-center'>Time Off Type</th>
+                        <th class='text-center'>Validity Period</th>
+                        <th class='text-center'>Allocation in Days</th>
+                    </tr>
+                </thead>
+                <t t-foreach="allocations" t-as="allocation">
+                    <tr>
+                        <td class='text-center'>
+                            <t t-out="allocation.name"/>
+                        </td>
+                        <td class='text-center'>
+                            <t t-out="allocation.holiday_status_id.name"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="allocation.date_from"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="allocation.number_of_days_display"/>
+                        </td>
+                    </tr>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
