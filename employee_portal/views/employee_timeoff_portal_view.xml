@@ -38,14 +38,23 @@
                     </div>
 
                     <div class="form-group">
+                        <h><t t-esc="o"/></h>
                         <label for="date_to">End Date</label>
                         <input type="date" name="date_to" class="form-control" required="1"/>
                     </div>
+                    <div class="form-group">
+                        <label for="request_hour_from">Hour From</label>
+                        <input type="time" name="request_hour_from" class="form-control" required="1"/>
+                    </div>
 
                     <div class="form-group">
+                        <label for="request_hour_to">Hour To</label>
+                        <input type="time" name="request_hour_to" class="form-control" required="1"/>
+                    </div>
+                    <!-- <div class="form-group">
                         <label for="number_of_days">Number of Days</label>
                         <input type="number" name="number_of_days" class="form-control" step="0.5" required="1"/>
-                    </div>
+                    </div> -->
 
                     <button type="submit" class="btn btn-primary">Submit Request</button>
                 </form>

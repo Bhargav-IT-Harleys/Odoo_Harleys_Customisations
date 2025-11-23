@@ -33,6 +33,7 @@
                         <th class='text-center'>Time Off Type</th>
                         <th class='text-center'>Validity Period</th>
                         <th class='text-center'>Allocation in Days</th>
+                        <th class='text-center'>Balance Days</th>
                     </tr>
                 </thead>
                 <t t-foreach="allocations" t-as="allocation">
@@ -48,6 +49,9 @@
                         </td>
                         <td class="text-center">
                             <span t-field="allocation.number_of_days_display"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="allocation.virtual_remaining_leaves"/>
                         </td>
                     </tr>
                 </t>

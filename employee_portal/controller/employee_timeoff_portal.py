@@ -74,14 +74,23 @@ class EmployeePortal(Controller):
                     'message': message
                 })
 
+            time_float = lambda t: int(t.split(":")[0]) + int(t.split(":")[1]) / 60
+
+            from datetime import datetime
+
+            days = (datetime.strptime(date_to,"%Y-%m-%d") - datetime.strptime(date_from,"%Y-%m-%d")).days
+
             # Creating the Time Off request
-            request.env['hr.leave'].sudo().create({
+            hr_leave = request.env['hr.leave'].sudo().create({
                 'employee_id': employee.id,
                 'holiday_status_id': int(post.get('holiday_status_id')),
                 'request_date_from': date_from,
                 'request_date_to': date_to,
-                'number_of_days': float(post.get('number_of_days', 0)),
+                'request_hour_from':time_float(post.get('request_hour_from')), 
+                'request_hour_to': time_float(post.get('request_hour_to')),
+                'number_of_days': float(days),
             })
+
 
             return request.render('employee_portal.portal_timeoff_success', {
                 'alert_type': 'success',
@@ -94,6 +103,7 @@ class EmployeePortal(Controller):
         return request.render('employee_portal.portal_timeoff_request_form', {
             'employee': employee,
             'timeoff_types': timeoff_types,
+            'time_visible': True, #if leave.holiday_status_id.request_unit_hours else False,
         })
 
 
