@@ -107,6 +107,9 @@ class IndentRequest(models.Model):
         tracking=True,
     )
 
+    employee_id = fields.Many2one('hr.employee', string="Employee")
+    password = fields.Char(string="Password")
+
     internal_transfer_count = fields.Integer(
         string="Internal Transfer Count",
         compute="_compute_internal_transfer_count"
@@ -119,6 +122,19 @@ class IndentRequest(models.Model):
                 ('picking_type_code', '=', 'internal')
             ])
 
+
+    @api.constrains('indent_template', 'employee_id', 'password')
+    def _check_template_credentials(self):
+        for rec in self:
+            if rec.indent_template:
+
+                # Check employee
+                if rec.employee_id != rec.indent_template.employee_id:
+                    raise UserError("Provided employee/password is wrong.")
+
+                # Check password
+                if rec.password != rec.indent_template.password:
+                    raise UserError("Provided employee/password is wrong.")
 
     def action_get_internal_transfers(self):
         self.ensure_one()
