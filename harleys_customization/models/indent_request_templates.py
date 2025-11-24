@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from datetime import date
+from odoo.exceptions import UserError
 
 
 class IndentRequestTemplates(models.Model):
@@ -42,6 +43,9 @@ class IndentRequestTemplates(models.Model):
         tracking=True,
     )
     
+    employee_id = fields.Many2one('hr.employee', string="Employee")
+    password = fields.Char(string="Password")
+    retype_password = fields.Char(string="Re-Enter Password")
 
     line_ids = fields.One2many(
         comodel_name="indent.request.line.templates",
@@ -56,6 +60,13 @@ class IndentRequestTemplates(models.Model):
         default = dict(default or {})
         self.ensure_one()
         return super().copy(default)
+
+    @api.constrains('password', 'retype_password')
+    def _check_password_match(self):
+        for rec in self:
+            if rec.password and rec.retype_password:
+                if rec.password != rec.retype_password:
+                    raise UserError("Password and Re-Enter Password do not match.")
 
     @api.onchange("delivery_to")
     def _onchange_delivery_to(self):
