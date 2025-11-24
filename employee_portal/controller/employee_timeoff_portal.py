@@ -98,7 +98,11 @@ class EmployeePortal(Controller):
             })
 
         # Fetch available time-off types
-        timeoff_types = request.env['hr.leave.type'].sudo().search([])
+        timeoff_types = request.env['hr.leave.type'].search([
+            '|',
+                ('requires_allocation', '=', False),
+                ('has_valid_allocation', '=', True),
+        ])
 
         return request.render('employee_portal.portal_timeoff_request_form', {
             'employee': employee,
