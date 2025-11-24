@@ -107,8 +107,8 @@ class IndentRequest(models.Model):
         tracking=True,
     )
 
-    employee_id = fields.Many2one('hr.employee', string="Employee")
-    password = fields.Char(string="Password")
+    employee_id = fields.Many2one('hr.employee', string="Requested Employee")
+    password = fields.Char(string="Enter Password")
 
     internal_transfer_count = fields.Integer(
         string="Internal Transfer Count",
@@ -129,7 +129,7 @@ class IndentRequest(models.Model):
             if rec.indent_template:
 
                 # Check employee
-                if rec.employee_id != rec.indent_template.employee_id:
+                if rec.employee_id not in rec.indent_template.employee_ids:
                     raise UserError("Provided employee/password is wrong.")
 
                 # Check password

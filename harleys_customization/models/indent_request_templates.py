@@ -43,7 +43,7 @@ class IndentRequestTemplates(models.Model):
         tracking=True,
     )
     
-    employee_id = fields.Many2one('hr.employee', string="Employee")
+    employee_ids = fields.Many2many('hr.employee', string="Employee")
     password = fields.Char(string="Password")
     retype_password = fields.Char(string="Re-Enter Password")
 
