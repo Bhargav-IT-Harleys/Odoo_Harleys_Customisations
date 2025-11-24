@@ -37,7 +37,7 @@
                         <input type="date" name="date_from" class="form-control" required="1"/>
                     </div>
                     <div class="form-group">
-                        <label for="request_hour_from">Hour From</label>
+                        <label for="request_hour_from">From Hour</label>
                         <input type="time" name="request_hour_from" class="form-control" required="1"/>
                     </div>
                     <div class="form-group">
@@ -45,7 +45,7 @@
                         <input type="date" name="date_to" class="form-control" required="1"/>
                     </div>
                     <div class="form-group">
-                        <label for="request_hour_to">Hour To</label>
+                        <label for="request_hour_to">To Hour</label>
                         <input type="time" name="request_hour_to" class="form-control" required="1"/>
                     </div>
                     <!-- <div class="form-group">
