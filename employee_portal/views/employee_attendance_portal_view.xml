@@ -21,6 +21,22 @@
                     <a href="/my/attendance/check_in" class="btn btn-success">Check In</a>
                     <a href="/my/attendance/check_out" class="btn btn-danger">Check Out</a>
                 </div> -->
+                    <div t-if="searchbar_groupby" class="ms-lg-2">
+                        <span class="small me-1 navbar-text">Group By:</span>
+                        <div class="btn-group">
+                            <button id="portal_searchbar_groupby" data-bs-toggle="dropdown" class="btn btn-light dropdown-toggle">
+                                <t t-esc="searchbar_groupby[groupby].get('label', 'None')"/>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="portal_searchbar_groupby">
+                                <t t-foreach="searchbar_groupby" t-as="option">
+                                    <a t-att-href="(default_url or '')+ '?' + keep_query('*', groupby=option)"
+                                       t-attf-class="dropdown-item#{groupby == option and ' active' or ''}">
+                                        <span t-esc="searchbar_groupby[option].get('label')"/>
+                                    </a>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -31,13 +47,45 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <t t-foreach="attendances" t-as="attendance">
-                            <tr>
-                                <td t-esc="attendance.check_in or '-'"/>
-                                <td t-esc="attendance.check_out or '-'"/>
-                                <td t-esc="'%.2f' % (attendance.worked_hours or 0)"/>
-                                <td t-esc="attendance.overtime_hours or '00:00'"/>
-                            </tr>
+                        <t t-if="grouped_by_month">
+                            <t t-foreach="grouped_by_month" t-as="grouped_month">
+                                <tr>
+                                    <th colspan="4"><span t-esc="grouped_month"/></th>
+                                </tr>
+                               <t t-foreach="grouped_by_month[grouped_month]" t-as="month">
+                                    <tr>
+                                        <td t-esc="month['check_in'] or '-'"/>
+                                        <td t-esc="month['check_out'] or '-'"/>
+                                        <td t-esc="'%.2f' % (month['worked_hours'] or 0)"/>
+                                        <td t-esc="month['overtime_hours'] or '00:00'"/>
+                                    </tr>
+                                </t>
+                            </t>
+                        </t>
+                        <t t-elif="grouped_by_year">
+                            <t t-foreach="grouped_by_year" t-as="grouped_year">
+                                <tr>
+                                    <th colspan="4"><span t-esc="grouped_year"/></th>
+                                </tr>
+                               <t t-foreach="grouped_by_year[grouped_year]" t-as="year">
+                                    <tr>
+                                        <td t-esc="year['check_in'] or '-'"/>
+                                        <td t-esc="year['check_out'] or '-'"/>
+                                        <td t-esc="'%.2f' % (year['worked_hours'] or 0)"/>
+                                        <td t-esc="year['overtime_hours'] or '00:00'"/>
+                                    </tr>
+                                </t>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <t t-foreach="attendances" t-as="attendance">
+                                <tr>
+                                    <td t-esc="attendance.check_in or '-'"/>
+                                    <td t-esc="attendance.check_out or '-'"/>
+                                    <td t-esc="'%.2f' % (attendance.worked_hours or 0)"/>
+                                    <td t-esc="attendance.overtime_hours or '00:00'"/>
+                                </tr>
+                            </t>
                         </t>
                     </tbody>
                 </table>
