@@ -90,12 +90,12 @@
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
 
-            <t t-call="portal.portal_searchbar">
+            <!-- <t t-call="portal.portal_searchbar">
                 <t t-set="title">
                     <i class="fa-solid fa-calendar-days"/>
                     Time Offs
                 </t>
-            </t>
+            </t> -->
 
             <!-- Create Time Off Request Button -->
             <div class="mb-3">
@@ -109,6 +109,23 @@
                 <p>There are currently no Allocations in your account.</p>
             </t>
 
+            <div t-if="searchbar_groupby" class="ms-lg-2">
+                <span class="small me-1 navbar-text">Group By:</span>
+                <div class="btn-group">
+                    <button id="portal_searchbar_groupby" data-bs-toggle="dropdown" class="btn btn-light dropdown-toggle">
+                        <t t-esc="searchbar_groupby[groupby].get('label', 'None')"/>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="portal_searchbar_groupby">
+                        <t t-foreach="searchbar_groupby" t-as="option">
+                            <a t-att-href="(default_url or '')+ '?' + keep_query('*', groupby=option)"
+                                t-attf-class="dropdown-item#{groupby == option and ' active' or ''}">
+                                <span t-esc="searchbar_groupby[option].get('label')"/>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
             <t t-if="timeoffs" t-call="portal.portal_table">
                 <thead>
                     <tr class="active">
@@ -119,25 +136,79 @@
                         <th class='text-center'>Status</th>
                     </tr>
                 </thead>
-                <t t-foreach="timeoffs" t-as="timeoff">
-                    <tr>
-                        <td class='text-center'>
-                            <t t-out="timeoff.holiday_status_id.name"/>
-                        </td>
-                        <td class="text-center">
-                            <span t-field="timeoff.date_from"/>
-                        </td>
-                        <td class="text-center">
-                            <span t-field="timeoff.date_to"/>
-                        </td>
-                        <td class="text-center">
-                            <span t-field="timeoff.duration_display"/>
-                        </td>
-                        <td class="text-center">
-                            <span t-field="timeoff.state"/>
-                        </td>
-                    </tr>
-                </t>
+                        <t t-if="grouped_by_month">
+                            <t t-foreach="grouped_by_month" t-as="grouped_month">
+                                <tr>
+                                    <th colspan="5"><span t-esc="grouped_month"/></th>
+                                </tr>
+                               <t t-foreach="grouped_by_month[grouped_month]" t-as="month">
+                                    <tr>
+                                        <td class='text-center'>
+                                            <t t-esc="month['holiday_status_id']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="month['date_from']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="month['date_to']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="month['duration_display']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="month['state']"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </t>
+                        <t t-elif="grouped_by_year">
+                            <t t-foreach="grouped_by_year" t-as="grouped_year">
+                                <tr>
+                                    <th colspan="5"><span t-esc="grouped_year"/></th>
+                                </tr>
+                               <t t-foreach="grouped_by_year[grouped_year]" t-as="year">
+                                    <tr>
+                                        <td class='text-center'>
+                                            <t t-esc="year['holiday_status_id']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="year['date_from']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="year['date_to']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="year['duration_display']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="year['state']"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <t t-foreach="timeoffs" t-as="timeoff">
+                                <tr>
+                                    <td class='text-center'>
+                                        <t t-out="timeoff.holiday_status_id.name"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="timeoff.date_from"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="timeoff.date_to"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="timeoff.duration_display"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="timeoff.state"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </t>
             </t>
         </t>
     </template>

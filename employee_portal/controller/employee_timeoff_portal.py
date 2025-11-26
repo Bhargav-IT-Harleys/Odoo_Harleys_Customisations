@@ -3,18 +3,32 @@
 from odoo.addons.portal.controllers import portal
 from odoo.http import Controller, route, request
 from odoo.exceptions import UserError
-
+from odoo.tools.translate import _
+from collections import defaultdict
 
 class EmployeePortal(Controller):
     """Class for Employee details"""
 
+
+    def _timeoff_get_searchbar_groupby(self):
+        return {
+            'none': {'label': _('None'), 'sequence': 10},
+            'month': {'label': _('Month'), 'sequence': 20},
+            'year': {'label': _('Year'), 'sequence': 30},
+        }
+
     @route('/my/timeoff', auth='user', website=True)
-    def get_time_off(self, **post):
+    def get_time_off(self, groupby='none', **post):
         """Function to get the Allocated Time Off and submit requests"""
 
         employee = request.env['hr.employee'].sudo().search([
             ('user_id', '=', request.env.uid)
         ], limit=1)
+
+        grouped_by_month = defaultdict(list)
+        grouped_by_year = defaultdict(list)
+
+        searchbar_groupby = dict(sorted(self._timeoff_get_searchbar_groupby().items(), key=lambda item: item[1]['sequence']))
 
         # Handle Time Off Creation
         if post.get('create_timeoff'):
@@ -35,11 +49,37 @@ class EmployeePortal(Controller):
             ('employee_id', '=', employee.id)
         ])
 
+        if groupby == 'month':
+            for time_offs_month in time_offs:
+                month_key = time_offs_month.create_date.strftime("%B %Y")
+                grouped_by_month[month_key].append({
+                    'holiday_status_id': time_offs_month.holiday_status_id.name,
+                    'date_from': time_offs_month.date_from.strftime("%Y-%m-%d %I:%M:%S %p"),
+                    'date_to': time_offs_month.date_to.strftime("%Y-%m-%d %I:%M:%S %p"),
+                    'duration_display': time_offs_month.duration_display,
+                    'state': time_offs_month.state,
+                })
+
+        if groupby == 'year':
+            for time_offs_year in time_offs:
+                year_key = time_offs_year.create_date.strftime("%Y")
+                grouped_by_year[year_key].append({
+                    'holiday_status_id': time_offs_year.holiday_status_id.name,
+                    'date_from': time_offs_year.date_from.strftime("%Y-%m-%d %I:%M:%S %p"),
+                    'date_to': time_offs_year.date_to.strftime("%Y-%m-%d %I:%M:%S %p"),
+                    'duration_display': time_offs_year.duration_display,
+                    'state': time_offs_year.state,
+                })
+
         leave_types = request.env['hr.leave.type'].sudo().search([])
 
         return request.render('employee_portal.portal_employee_timeoff_details', {
             'timeoffs': time_offs,
-            'leave_types': leave_types
+            'leave_types': leave_types,
+            'searchbar_groupby': searchbar_groupby,
+            'groupby': groupby,
+            'grouped_by_month': grouped_by_month,
+            'grouped_by_year': grouped_by_year,
         })
 
     @route('/my/timeoff/request', auth='user', website=True, methods=['GET', 'POST'], csrf=True)
