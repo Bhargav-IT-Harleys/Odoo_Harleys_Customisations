@@ -71,7 +71,7 @@
                                     <field name="name" readonly="state not in ['draft']" force_save="1"/>
                                     <field name="default_code" force_save="1"/>
                                     <field name="hsn_code" force_save="1"/>
-                                    <field name="product_uom_id" force_save="1" readonly="0"/>
+                                    <field name="product_uom_id" force_save="1" required="1" readonly="0"/>
                                     <field name="product_qty" force_save="1"/>
                                     <field name="comments" force_save="1"/>
                                     <field
@@ -123,7 +123,6 @@
                 <field name="name"/>
                 <field name="delivery_from"/>
                 <field name="delivery_to"/>
-                <!-- <field name="requested_by" widget="many2one_avatar_user" readonly="0"/> -->
                 <field name="employee_id"/>
                 <field name="received_date"/>
                 <field name="create_date"/>

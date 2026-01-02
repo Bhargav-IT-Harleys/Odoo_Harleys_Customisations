@@ -94,7 +94,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     else:
                         internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
                                                             'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
-                                                            # 'scheduled_date': indent_source.received_date,
+                                                            'scheduled_date': indent_source.received_date,
                                                             'lines': [{'product_id': pid,
                                                                         'product_qty': qty,
                                                                         'origin': origin,
@@ -134,12 +134,11 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 'picking_type_id': picking_type.id,
                 'location_id': source_location.id,
                 'location_dest_id': dest_location.id,
-                # 'scheduled_date':False,
+                'scheduled_date': internal_transfer_data[data]['scheduled_date'],
                 'origin': data,
                 'company_id': current_company.id,
             })
 
-            # picking.scheduled_date = internal_transfer_data[data]['scheduled_date']
             for line_data in internal_transfer_data[data]['lines']:
                 self.env['stock.move'].create({
                     'product_id': line_data['product_id'],
