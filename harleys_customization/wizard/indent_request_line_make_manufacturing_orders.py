@@ -41,6 +41,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
     def make_manufacturing_order(self):
         if self.indent_request_line_ids:
             merged = {}
+            origin_merged = {}
             internal_transfer_merged = {}
             for line in self.indent_request_line_ids:
                 line.source_line_id.state = 'locked'
@@ -61,7 +62,28 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                         'origin': origin,
                         'product_uom_id': product_uom,
                     }
-                indent_source = self.env['indent.request'].search([('id', '=', line.source_line_id.request_id.id)], limit=1)
+
+            active_ids = self.env.context.get('active_ids', [])
+            origin_indent_request_line = self.env['indent.request.line'].search([('id', 'in', active_ids)])
+            for origin_line in origin_indent_request_line:
+                origin_line.state = 'locked'
+                pid = origin_line.product_id.id
+                qty = origin_line.product_qty
+                product_uom = origin_line.product_uom_id.id
+                origin = origin_line.indent_number
+
+                if pid in origin_merged:
+                    origin_merged[pid]['product_qty'] += qty
+                    if origin:
+                        origin_merged[pid]['origin'] += f",{origin}"
+                else:
+                    origin_merged[pid] = {
+                        'product_id': pid,
+                        'product_qty': qty,
+                        'origin': origin,
+                        'product_uom_id': product_uom,
+                    }
+                indent_source = self.env['indent.request'].search([('id', '=', origin_line.request_id.id)], limit=1)
                 if indent_source:
                     if origin in internal_transfer_merged:
                         internal_transfer_merged[origin]['lines'] += [{'product_id': pid,
@@ -72,6 +94,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     else:
                         internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
                                                             'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
+                                                            # 'scheduled_date': indent_source.received_date,
                                                             'lines': [{'product_id': pid,
                                                                         'product_qty': qty,
                                                                         'origin': origin,
@@ -107,14 +130,16 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
             if not picking_type:
                 raise UserError("No internal picking type found for your current company: %s" % current_company.name)
 
-
             picking = self.env['stock.picking'].create({
                 'picking_type_id': picking_type.id,
                 'location_id': source_location.id,
                 'location_dest_id': dest_location.id,
+                # 'scheduled_date':False,
                 'origin': data,
                 'company_id': current_company.id,
             })
+
+            # picking.scheduled_date = internal_transfer_data[data]['scheduled_date']
             for line_data in internal_transfer_data[data]['lines']:
                 self.env['stock.move'].create({
                     'product_id': line_data['product_id'],

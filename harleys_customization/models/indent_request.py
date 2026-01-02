@@ -5,7 +5,7 @@ from datetime import date, timedelta
 _STATES = [
     ("draft", "Draft"),
     ("sent", "Sent"),
-    ("locked", "Locked")
+    ("locked", "Approved")
 ]
 
 class IndentRequest(models.Model):
@@ -38,7 +38,7 @@ class IndentRequest(models.Model):
     )
 
     is_editable = fields.Boolean(compute="_compute_is_editable", readonly=True)
-    current_date = fields.Date(
+    indent_date = fields.Date(
         string='Date',
         default=lambda self: date.today()
     )
@@ -122,6 +122,16 @@ class IndentRequest(models.Model):
                 ('picking_type_code', '=', 'internal')
             ])
 
+    manufacturing_order_count = fields.Integer(
+        string="Manufacturing Order Count",
+        compute="_compute_manufacturing_order_count"
+    )
+
+    def _compute_manufacturing_order_count(self):
+        for rec in self:
+            rec.manufacturing_order_count = self.env['mrp.production'].search_count([
+                ('origin', 'ilike', rec.name),
+            ])
 
     @api.constrains('indent_template', 'employee_id', 'password')
     def _check_template_credentials(self):
@@ -136,31 +146,54 @@ class IndentRequest(models.Model):
                 if rec.password != rec.indent_template.password:
                     raise UserError("Provided employee/password is wrong.")
 
+
     def action_get_internal_transfers(self):
         self.ensure_one()
-        picking = self.env['stock.picking'].search([('origin', '=', self.name)], limit=1)
-        if picking:
+        transfers = self.env['stock.picking'].search([
+            ('origin', '=', self.name),
+            ('picking_type_code', '=', 'internal'),
+            ('company_id', '=', self.env.company.id),
+        ])
+
+        if transfers:
             return {
                 'type': 'ir.actions.act_window',
                 'name': _("Internal Transfers"),
                 'res_model': 'stock.picking',
-                'res_id': picking.id,
+                'view_mode': 'list,form',
                 'domain': [
                     ('origin', '=', self.name),
                     ('picking_type_code', '=', 'internal'),
-                    ('company_id', 'in', self.env.company.ids),
-                ],
-                'views': [
-                    (self.env.ref('stock.view_picking_form').id, 'form'),
+                    ('company_id', '=', self.env.company.id),
                 ],
                 'context': {'default_origin': self.name},
                 'target': 'current',
             }
         else:
-            return {
-                'type': 'ir.actions.act_window_close',
-            }
+            return {'type': 'ir.actions.act_window_close'}
 
+    def action_get_manufacturing_order(self):
+        self.ensure_one()
+        mo = self.env['mrp.production'].search([
+            ('origin', 'ilike', self.name),
+            ('company_id', '=', self.env.company.id),
+        ])
+
+        if mo:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': _("Manufacturing Orders"),
+                'res_model': 'mrp.production',
+                'view_mode': 'list,form',
+                'domain': [
+                    ('origin', 'ilike', self.name),
+                    ('company_id', '=', self.env.company.id),
+                ],
+                'context': {'default_origin': self.name},
+                'target': 'current',
+            }
+        else:
+            return {'type': 'ir.actions.act_window_close'}
     
     def action_sent(self):
         if self.state == 'draft':
@@ -273,9 +306,9 @@ class IndentRequestLine(models.Model):
         related="request_id.name",
     )
 
-    current_date = fields.Date(
+    indent_date = fields.Date(
         string='Date',
-        related="request_id.current_date",
+        related="request_id.indent_date",
     )
 
     delivery_from = fields.Many2one(
@@ -347,14 +380,19 @@ class IndentRequestLine(models.Model):
 
         if not selected_lines:
             raise UserError(_("Please select at least one indent request line."))
-        
-        indent_request_lines = self.env['indent.request.line'].search([('id', 'in', selected_lines)])
+        indent_request = self.env['indent.request.line']
+        indent_request_lines = indent_request.search([('id', 'in', selected_lines)])
         for request_line in indent_request_lines:
             if request_line.state == 'draft':
                 raise UserError(_("Selected indent request line is in draft state."))
             
             if request_line.state == 'locked':
                 raise UserError(_("Selected indent request line is in locked state"))
+            indent_request_count = indent_request.search_count([('indent_date', '=', request_line.indent_date)])
+            print(indent_request_count, "==========================", request_line.indent_date,len(selected_lines), "JJJJJJJJJJJJJJJJJJ", selected_lines)
+            if indent_request_count != len(selected_lines):
+                raise UserError(_("Selected lined should be in same date & within the date all the records want to select."))
+
 
         return {
             'type': 'ir.actions.act_window',
