@@ -36,7 +36,7 @@
                 <footer>
                     <button
                         name="make_manufacturing_order"
-                        string="Create Draft MO"
+                        string="Approve"
                         type="object"
                         class="oe_highlight"
                     />
@@ -47,7 +47,7 @@
     </record>
 
     <record id="action_create_mo_with_validation" model="ir.actions.server">
-        <field name="name">Create Draft MO</field>
+        <field name="name">Create Draft MO's and Transfers</field>
         <field name="model_id" ref="harleys_customization.model_indent_request_line"/>
         <field name="binding_model_id" ref="harleys_customization.model_indent_request_line"/>
         <field name="state">code</field>
