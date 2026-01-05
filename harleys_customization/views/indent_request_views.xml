@@ -54,6 +54,8 @@
                             <field name="delivery_from" readonly="1" force_save="1"/>
                             <field name="delivery_to" readonly="1" force_save="1"/>
                             <field name="company_id" groups="base.group_multi_company" widget="selection" readonly="is_editable == False" force_save="1"/>
+                            <field name="internal_transfer_status"/>
+                            <field name="manufacturing_order_status"/>
                         </group>
                         <group>
                             <field name="requested_by" readonly="1" force_save="1"/>
@@ -71,7 +73,7 @@
                                     <field name="name" readonly="state not in ['draft']" force_save="1"/>
                                     <field name="default_code" force_save="1"/>
                                     <field name="hsn_code" force_save="1"/>
-                                    <field name="product_uom_id" force_save="1" readonly="0"/>
+                                    <field name="product_uom_id" force_save="1" required="1" readonly="0"/>
                                     <field name="product_qty" force_save="1"/>
                                     <field name="comments" force_save="1"/>
                                     <field
@@ -123,10 +125,11 @@
                 <field name="name"/>
                 <field name="delivery_from"/>
                 <field name="delivery_to"/>
-                <!-- <field name="requested_by" widget="many2one_avatar_user" readonly="0"/> -->
                 <field name="employee_id"/>
                 <field name="received_date"/>
                 <field name="create_date"/>
+                <field name="internal_transfer_status"/>
+                <field name="manufacturing_order_status"/>
                 <field
                         name="company_id"
                         groups="base.group_multi_company"

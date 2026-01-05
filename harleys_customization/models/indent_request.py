@@ -127,6 +127,54 @@ class IndentRequest(models.Model):
         compute="_compute_manufacturing_order_count"
     )
 
+    internal_transfer_status = fields.Char(
+        string="Internal Transfer Status",
+        compute="_compute_internal_transfer_status",
+        readonly=True,
+    )
+    manufacturing_order_status = fields.Char(
+        string="Manufacturing Orders",
+        compute="_compute_manufacturing_order_status",
+        readonly=True,
+    )
+
+    @api.depends("name")
+    def _compute_manufacturing_order_status(self):
+        state_labels = dict(
+            self.env["mrp.production"]._fields["state"].selection
+        )
+
+        for rec in self:
+            mos = self.env["mrp.production"].search([
+                ("origin", "ilike", rec.name),
+                ("company_id", "=", rec.company_id.id),
+            ])
+
+            values = []
+            for mo in mos:
+                state_name = state_labels.get(mo.state, mo.state)
+                values.append(f"{mo.name} - {state_name}")
+
+            rec.manufacturing_order_status = ", ".join(values)
+
+    def _compute_internal_transfer_status(self):
+        state_labels = dict(
+            self.env["stock.picking"]._fields["state"].selection
+        )
+
+        for rec in self:
+            pickings = self.env["stock.picking"].search([
+                ("origin", "=", rec.name),
+                ("picking_type_code", "=", "internal"),
+                ("company_id", "=", rec.company_id.id),
+            ])
+
+            rec.internal_transfer_status = ", ".join(
+                f"{p.name} - {state_labels.get(p.state, p.state)}"
+                for p in pickings
+            )
+
+
     def _compute_manufacturing_order_count(self):
         for rec in self:
             rec.manufacturing_order_count = self.env['mrp.production'].search_count([
@@ -388,10 +436,9 @@ class IndentRequestLine(models.Model):
             
             if request_line.state == 'locked':
                 raise UserError(_("Selected indent request line is in locked state"))
-            indent_request_count = indent_request.search_count([('indent_date', '=', request_line.indent_date)])
-            print(indent_request_count, "==========================", request_line.indent_date,len(selected_lines), "JJJJJJJJJJJJJJJJJJ", selected_lines)
+            indent_request_count = indent_request.search_count([('indent_date', '=', request_line.indent_date), ('state', '!=', 'locked')])
             if indent_request_count != len(selected_lines):
-                raise UserError(_("Selected lined should be in same date & within the date all the records want to select."))
+                raise UserError(_("Selected lined should be in same date & within the date all the sent records want to select."))
 
 
         return {
