@@ -15,3 +15,15 @@ class StockPicking(models.Model):
                 picking.scheduled_date = default=picking.scheduled_date
             else:
                 picking.scheduled_date = max(moves_dates, default=picking.scheduled_date or fields.Datetime.now())
+
+
+class StockMove(models.Model):
+    _inherit = 'stock.move'
+
+
+    def _prepare_move_line_vals(self, quantity=None, reserved_quant=None):
+        vals = super(StockMove, self)._prepare_move_line_vals(quantity, reserved_quant)
+        # Override quantity to 0 for GRN
+        if self.picking_code == 'incoming':
+            vals['quantity'] = 0
+        return vals

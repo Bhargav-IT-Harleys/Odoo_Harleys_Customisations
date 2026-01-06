@@ -18,6 +18,7 @@
         'views/res_partner_views.xml',
         'views/product_template_views.xml',
         'views/contact_views.xml',
+        'views/mrp_production_views.xml',
     ],
     'installable': True,
     'application': True,
