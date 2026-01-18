@@ -177,7 +177,6 @@
                     decoration-info="state in ('locked')"
                     name="Indent Request"
                     create="false"
-                    editable="bottom"
             >
                 <field name="product_id" options="{'no_create': True}" readonly="0"/>
                 <field name="default_code" readonly="0"/>
