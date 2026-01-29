@@ -51,6 +51,7 @@
                         <group>
                             <field name="indent_template" readonly="is_editable == False" options="{'no_create': True}" force_save="1"/>
                             <field name="indent_date" readonly="1" force_save="1"/>
+                            <field name="picking_type_id" readonly="1" invisible="1" force_save="1"/>
                             <field name="delivery_from" readonly="1" force_save="1"/>
                             <field name="via_location_id" readonly="1" force_save="1"/>
                             <field name="delivery_to" readonly="1" force_save="1"/>

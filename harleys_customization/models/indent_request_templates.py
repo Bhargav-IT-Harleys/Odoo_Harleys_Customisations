@@ -38,6 +38,7 @@ class IndentRequestTemplates(models.Model):
         string='Delivery To',
         required=True
     )
+    picking_type_id = fields.Many2one('stock.picking.type', string="Operation Type")
 
     company_id = fields.Many2one(
         comodel_name="res.company",
