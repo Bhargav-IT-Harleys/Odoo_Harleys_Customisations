@@ -10,6 +10,7 @@ class ProductTemplate(models.Model):
 
     state = fields.Selection(_STATE, default="draft", string="Status", readonly="1", copy=False, tracking=True)
     approved_by = fields.Many2one('res.users', string='Approved By', tracking=True, copy=False)
+    batch_size = fields.Float(string="Batch Size")
 
 
     def action_sent(self):

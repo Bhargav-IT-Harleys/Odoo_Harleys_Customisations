@@ -20,6 +20,8 @@
                             <field name="source_line_id" column_invisible="1" force_save="1"/>
                             <field name="product_id" readonly="1" force_save="1"/>
                             <field name="name" readonly="1" force_save="1" />
+                            <field name="batch_size" readonly="1"/>
+                            <field name="batch_qty"/>
                             <field name="product_qty" readonly="0"/>
                             <field
                                 name="product_uom_id"

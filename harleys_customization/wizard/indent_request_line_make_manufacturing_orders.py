@@ -61,6 +61,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                         'product_qty': qty,
                         'origin': origin,
                         'product_uom_id': product_uom,
+                        'batch_qty': line.batch_qty,
                     }
 
             active_ids = self.env.context.get('active_ids', [])
@@ -93,12 +94,12 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                                                     }]
                     else:
                         internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
-<<<<<<< Updated upstream
+
                                                             'delivery_to' : indent_source.via_location_id.id,
-=======
-                                                            'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
+
+                                                            # 'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
                                                             'picking_type_id' : indent_source.picking_type_id.id,
->>>>>>> Stashed changes
+
                                                             'scheduled_date': indent_source.received_date,
                                                             'lines': [{'product_id': pid,
                                                                         'product_qty': qty,
@@ -217,6 +218,15 @@ class IndentRequestLineWizard(models.TransientModel):
         store=True
     )
     comments = fields.Char(string="Comments", store=True)
+    batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")
+    batch_qty = fields.Float(string="Batch Qty")
+
+    @api.onchange('batch_qty')
+    def _onchange_batch_qty(self):
+        for line in self:
+            # Only recalculate when user enters batch qty
+            if line.batch_qty and line.batch_qty > 0 and line.batch_size:
+                line.product_qty = line.batch_qty * line.batch_size
 
 
     indent_number = fields.Char(
