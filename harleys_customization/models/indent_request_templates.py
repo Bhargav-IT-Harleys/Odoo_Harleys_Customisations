@@ -30,6 +30,9 @@ class IndentRequestTemplates(models.Model):
         required=True
     )
 
+    via_location_id = fields.Many2one('stock.location', string="Delivery Via", required=True, default=lambda self: self.env['stock.location'].search(
+        [('usage', '=', 'transit')], limit=1).id)
+
     delivery_to = fields.Many2one(
         'stock.warehouse',
         string='Delivery To',

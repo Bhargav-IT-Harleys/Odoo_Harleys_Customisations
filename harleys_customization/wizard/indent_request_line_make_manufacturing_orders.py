@@ -93,7 +93,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                                                     }]
                     else:
                         internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
-                                                            'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
+                                                            'delivery_to' : indent_source.via_location_id.id,
                                                             'scheduled_date': indent_source.received_date,
                                                             'lines': [{'product_id': pid,
                                                                         'product_qty': qty,

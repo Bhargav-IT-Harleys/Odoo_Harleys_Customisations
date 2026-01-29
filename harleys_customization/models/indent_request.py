@@ -49,6 +49,9 @@ class IndentRequest(models.Model):
         required=True
     )
 
+    via_location_id = fields.Many2one('stock.location', string="Delivery Via", required=True, store=True)
+
+
     delivery_to = fields.Many2one(
         'stock.warehouse',
         string='Delivery To',
@@ -117,10 +120,20 @@ class IndentRequest(models.Model):
 
     def _compute_internal_transfer_count(self):
         for rec in self:
-            rec.internal_transfer_count = self.env['stock.picking'].search_count([
+            # rec.internal_transfer_count = self.env['stock.picking'].search_count([
+            #     ('origin', '=', rec.name),
+            #     ('picking_type_code', '=', 'internal')
+            # ])
+            transfer = self.env['stock.picking'].search([
                 ('origin', '=', rec.name),
                 ('picking_type_code', '=', 'internal')
             ])
+            transit_transfer = self.env['stock.picking'].search([
+                ('origin', 'in', [trans.name for trans in transfer]),
+                ('picking_type_code', '=', 'internal')
+            ])
+            transfer_ids = [trans.id for trans in transfer] + [transit_trans.id for transit_trans in transit_transfer]
+            rec.internal_transfer_count = self.env['stock.picking'].search_count([('id', 'in', transfer_ids)])
 
     manufacturing_order_count = fields.Integer(
         string="Manufacturing Order Count",
@@ -168,10 +181,15 @@ class IndentRequest(models.Model):
                 ("picking_type_code", "=", "internal"),
                 ("company_id", "=", rec.company_id.id),
             ])
-
+            transit_pickings = self.env["stock.picking"].search([
+                ("origin", "in", [trans.name for trans in pickings]),
+                ("picking_type_code", "=", "internal"),
+                ("company_id", "=", rec.company_id.id),
+            ])
+            trans_picking = pickings + transit_pickings
             rec.internal_transfer_status = ", ".join(
                 f"{p.name} - {state_labels.get(p.state, p.state)}"
-                for p in pickings
+                for p in trans_picking
             )
 
 
@@ -202,7 +220,7 @@ class IndentRequest(models.Model):
             ('picking_type_code', '=', 'internal'),
             ('company_id', '=', self.env.company.id),
         ])
-
+        transfer_names = [trans.name for trans in transfers] + [self.name]
         if transfers:
             return {
                 'type': 'ir.actions.act_window',
@@ -210,11 +228,11 @@ class IndentRequest(models.Model):
                 'res_model': 'stock.picking',
                 'view_mode': 'list,form',
                 'domain': [
-                    ('origin', '=', self.name),
+                    ('origin', 'in', transfer_names),
                     ('picking_type_code', '=', 'internal'),
                     ('company_id', '=', self.env.company.id),
                 ],
-                'context': {'default_origin': self.name},
+                'context': {'default_origin': transfer_names},
                 'target': 'current',
             }
         else:
@@ -290,6 +308,7 @@ class IndentRequest(models.Model):
         if self.indent_template:
             self.delivery_from = self.indent_template.delivery_from
             self.delivery_to = self.indent_template.delivery_to
+            self.via_location_id = self.indent_template.via_location_id
             self.line_ids = False
             for template_line in self.indent_template.line_ids:
                 self.line_ids = [(0, 0, {
@@ -364,6 +383,8 @@ class IndentRequestLine(models.Model):
         string='Delivery From',
         related="request_id.delivery_from",
     )
+
+    via_location_id = fields.Many2one('stock.location', string="Delivery Via", required=True, related="request_id.via_location_id")
 
     delivery_to = fields.Many2one(
         'stock.warehouse',
