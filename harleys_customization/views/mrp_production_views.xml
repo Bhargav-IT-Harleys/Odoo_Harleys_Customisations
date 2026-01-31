@@ -12,15 +12,14 @@
             </xpath>
         </field>
     </record>
-    <record id="mrp_production_form_inherit" model="ir.ui.view">
+    <!-- <record id="mrp_production_form_inherit" model="ir.ui.view">
         <field name="name">mrp.production.form.inherit</field>
         <field name="model">mrp.production</field>
         <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@name='bom_div']" position="after">
-                <field name="batch_size"/>
-                <field name="batch_qty" readonly="1"/>
+            <xpath expr="//field[@name='components_availability']" position="attributes">
+                <attribute name="invisible">state not in ['draft', 'confirmed', 'progress']</attribute>
             </xpath>
         </field>
-    </record>
+    </record> -->
 </odoo>
