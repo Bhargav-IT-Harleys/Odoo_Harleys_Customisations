@@ -93,12 +93,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                                                     }]
                     else:
                         internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
-<<<<<<< Updated upstream
                                                             'delivery_to' : indent_source.via_location_id.id,
-=======
-                                                            'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
-                                                            'picking_type_id' : indent_source.picking_type_id.id,
->>>>>>> Stashed changes
                                                             'scheduled_date': indent_source.received_date,
                                                             'lines': [{'product_id': pid,
                                                                         'product_qty': qty,
@@ -121,20 +116,19 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
         for data in internal_transfer_data:
             source_location = self.env['stock.location'].sudo().browse(internal_transfer_data[data]['delivery_from'])
             dest_location = self.env['stock.location'].sudo().browse(internal_transfer_data[data]['delivery_to'])
-            picking_type = self.env['stock.picking.type'].sudo().browse(internal_transfer_data[data]['picking_type_id'])
 
             for loc in [source_location, dest_location]:
                 if loc.company_id and loc.company_id.id != current_company.id:
                     raise UserError("Location '%s' does not belong to your current company: %s" % (
                         loc.display_name, current_company.name))
 
-            # picking_type = self.env['stock.picking.type'].search([
-            #     ('code', '=', 'internal'),
-            #     ('company_id', '=', current_company.id)
-            # ], limit=1)
+            picking_type = self.env['stock.picking.type'].search([
+                ('code', '=', 'internal'),
+                ('company_id', '=', current_company.id)
+            ], limit=1)
 
-            # if not picking_type:
-            #     raise UserError("No internal picking type found for your current company: %s" % current_company.name)
+            if not picking_type:
+                raise UserError("No internal picking type found for your current company: %s" % current_company.name)
 
             picking = self.env['stock.picking'].create({
                 'picking_type_id': picking_type.id,

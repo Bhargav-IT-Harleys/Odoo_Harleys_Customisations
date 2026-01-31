@@ -58,8 +58,6 @@ class IndentRequest(models.Model):
         required=True
     )
 
-    picking_type_id = fields.Many2one('stock.picking.type', string="Operation Type")
-
     requested_by = fields.Many2one(
         comodel_name="res.users",
         required=True,
@@ -310,11 +308,7 @@ class IndentRequest(models.Model):
         if self.indent_template:
             self.delivery_from = self.indent_template.delivery_from
             self.delivery_to = self.indent_template.delivery_to
-<<<<<<< Updated upstream
             self.via_location_id = self.indent_template.via_location_id
-=======
-            self.picking_type_id = self.indent_template.picking_type_id
->>>>>>> Stashed changes
             self.line_ids = False
             for template_line in self.indent_template.line_ids:
                 self.line_ids = [(0, 0, {
