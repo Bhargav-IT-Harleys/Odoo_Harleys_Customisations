@@ -266,7 +266,7 @@
               action="harleys_customization.indent_request_line_action"/>
 
 
-    <!-- <record id="view_mrp_production_tree_editable" model="ir.ui.view">
+    <record id="view_mrp_production_tree_editable" model="ir.ui.view">
       <field name="name">mrp.production.tree.editable</field>
       <field name="model">mrp.production</field>
       <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
@@ -275,7 +275,7 @@
           <attribute name="editable">bottom</attribute>
         </list>
       </field>
-    </record> -->
+    </record>
 
   </data>
 </odoo>
