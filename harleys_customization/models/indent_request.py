@@ -58,6 +58,8 @@ class IndentRequest(models.Model):
         required=True
     )
 
+    picking_type_id = fields.Many2one('stock.picking.type', string="Operation Type")
+
     requested_by = fields.Many2one(
         comodel_name="res.users",
         required=True,
@@ -308,7 +310,11 @@ class IndentRequest(models.Model):
         if self.indent_template:
             self.delivery_from = self.indent_template.delivery_from
             self.delivery_to = self.indent_template.delivery_to
+
             self.via_location_id = self.indent_template.via_location_id
+
+            self.picking_type_id = self.indent_template.picking_type_id
+
             self.line_ids = False
             for template_line in self.indent_template.line_ids:
                 self.line_ids = [(0, 0, {
@@ -344,6 +350,7 @@ class IndentRequestLine(models.Model):
         string="Product",
         tracking=True,
     )
+    batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")
     default_code = fields.Char(string="Internal Reference", related="product_id.default_code")
     hsn_code = fields.Char(string="HSN/SAC Code")
     product_uom_id = fields.Many2one(
@@ -393,7 +400,7 @@ class IndentRequestLine(models.Model):
     )
 
     received_date = fields.Date(
-        string='Received Date',
+        string='Receiving Date',
         related="request_id.received_date",
     )
 

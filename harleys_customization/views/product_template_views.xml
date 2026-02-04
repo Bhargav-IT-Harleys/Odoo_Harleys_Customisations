@@ -8,6 +8,7 @@
 
             <xpath expr="//label[@for='list_price']" position="before">
               <field name="state" string="Status" decoration-success="state=='approved'" decoration-danger="state=='rejected'"/>
+              <field name="batch_size"/>
             </xpath>
 
             <xpath expr="//sheet" position="before">
