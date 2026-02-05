@@ -16,18 +16,31 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
         res = super(IndentRequestLineMakeManufacturingOrder, self).default_get(fields_list)
         active_ids = self.env.context.get('active_ids', [])
         route_id = self.env['stock.route'].search([("name", "=", "Manufacture")], limit=1)
+        merged = {}
         if active_ids:
             records = self.env['indent.request.line'].browse(active_ids)
-            res.update({"indent_request_line_ids" : [(0, 0, {"name": record.name, 
-                                                                "source_line_id": record.id,
-                                                                "product_id": record.product_id, 
-                                                                "default_code": record.default_code, 
-                                                                "hsn_code": record.hsn_code,
-                                                                "product_uom_id": record.product_uom_id, 
-                                                                "product_qty": record.product_qty, 
-                                                                "comments": record.comments, 
-                                                                "indent_number": record.indent_number,}) for record in records if [route for route in record.product_id.route_ids if route.id == route_id.id]]
-                })
+            for record in records:
+                if route_id not in record.product_id.route_ids:
+                    continue
+
+                pid = record.product_id.id
+
+                if pid in merged:
+                    merged[pid]['product_qty'] += record.product_qty
+                    merged[pid]['indent_number'] += f", {record.indent_number}"
+                else:
+                    merged[pid] = {"name": record.name, 
+                                "source_line_id": record.id,
+                                "product_id": record.product_id, 
+                                "default_code": record.default_code, 
+                                "hsn_code": record.hsn_code,
+                                "product_uom_id": record.product_uom_id, 
+                                "product_qty": record.product_qty, 
+                                "comments": record.comments, 
+                                "indent_number": record.indent_number,}
+            res["indent_request_line_ids"] = [
+            (0, 0, vals) for vals in merged.values()
+        ]
         return res
     
     indent_request_line_ids = fields.One2many(

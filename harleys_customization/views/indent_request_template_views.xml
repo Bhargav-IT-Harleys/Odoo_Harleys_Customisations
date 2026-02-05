@@ -21,7 +21,7 @@
                             <field name="company_id" groups="base.group_multi_company" widget="selection"/>
                         </group>
                         <group>
-                            <field name="employee_ids" widget="many2many_tags"/>
+                            <!-- <field name="employee_ids" widget="many2many_tags"/> -->
                             <field name="password" password="True"/>
                             <field name="retype_password" password="True"/>
                         </group>

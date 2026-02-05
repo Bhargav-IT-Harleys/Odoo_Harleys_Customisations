@@ -201,19 +201,26 @@ class IndentRequest(models.Model):
                 ('origin', 'ilike', rec.name),
             ])
 
-    @api.constrains('indent_template', 'employee_id', 'password')
-    def _check_template_credentials(self):
+    # @api.constrains('indent_template', 'employee_id', 'password')
+    # def _check_template_credentials(self):
+    #     for rec in self:
+    #         if rec.indent_template:
+
+    #             # Check employee
+    #             if rec.employee_id not in rec.indent_template.employee_ids:
+    #                 raise UserError("Provided employee/password is wrong.")
+
+    #             # Check password
+    #             if rec.password != rec.indent_template.password:
+    #                 raise UserError("Provided employee/password is wrong.")
+    @api.constrains('indent_template', 'password')
+    def _check_template_password(self):
         for rec in self:
-            if rec.indent_template:
-
-                # Check employee
-                if rec.employee_id not in rec.indent_template.employee_ids:
-                    raise UserError("Provided employee/password is wrong.")
-
-                # Check password
+            if rec.indent_template and rec.password:
                 if rec.password != rec.indent_template.password:
-                    raise UserError("Provided employee/password is wrong.")
-
+                    raise UserError(
+                        "Invalid password for the selected outlet."
+                    )
 
     def action_get_internal_transfers(self):
         self.ensure_one()

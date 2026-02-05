@@ -62,7 +62,7 @@
                         <group>
                             <field name="requested_by" readonly="1" force_save="1"/>
                             <field name="received_date" readonly="is_editable == False" force_save="1"/>
-                            <field name="employee_id"/>
+                            <!-- <field name="employee_id"/> -->
                             <field name="password" password="True"/>
                         </group>
                     </group>
