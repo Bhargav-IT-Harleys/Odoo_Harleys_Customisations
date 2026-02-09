@@ -26,7 +26,8 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 pid = record.product_id.id
 
                 if pid in merged:
-                    merged[pid]['product_qty'] += record.product_qty
+                    # merged[pid]['product_qty'] += record.product_qty
+                    merged[pid]['demanded_qty'] += record.product_qty
                     merged[pid]['indent_number'] += f", {record.indent_number}"
                 else:
                     merged[pid] = {"name": record.name, 
@@ -35,7 +36,8 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                 "default_code": record.default_code, 
                                 "hsn_code": record.hsn_code,
                                 "product_uom_id": record.product_uom_id, 
-                                "product_qty": record.product_qty, 
+                                # "product_qty": record.product_qty, 
+                                "demanded_qty": record.product_qty, 
                                 "comments": record.comments, 
                                 "indent_number": record.indent_number,}
             res["indent_request_line_ids"] = [
@@ -227,19 +229,27 @@ class IndentRequestLineWizard(models.TransientModel):
         store=True
     )
     product_qty = fields.Float(
-        string="Qty", tracking=True, digits="Product Unit of Measure",
-        store=True
-    )
+        string="Production Qty", tracking=True, digits="Product Unit of Measure", store=True, compute="_compute_product_qty")
+    demanded_qty = fields.Float(string="Demanded Qty", readonly=True, store=True)
     comments = fields.Char(string="Comments", store=True)
     batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")
-    batch_qty = fields.Float(string="Batch Qty")
+    batch_qty = fields.Float(string="No. of Batch's", compute="_compute_no_of_batches", store=True)
 
-    @api.onchange('batch_qty')
-    def _onchange_batch_qty(self):
+    @api.depends('batch_qty', 'batch_size')
+    def _compute_product_qty(self):
         for line in self:
-            # Only recalculate when user enters batch qty
-            if line.batch_qty and line.batch_qty > 0 and line.batch_size:
+            if line.batch_qty > 0 and line.batch_size > 0:
                 line.product_qty = line.batch_qty * line.batch_size
+            else:
+                line.product_qty = 0.0
+
+    @api.depends('demanded_qty','batch_size')
+    def _compute_no_of_batches(self):
+        for record in self:
+            if record.demanded_qty <= record.batch_size:
+                record.batch_qty = 1
+            else:
+                record.batch_qty=(record.demanded_qty - 1) // record.batch_size + 1
 
 
     indent_number = fields.Char(
