@@ -39,6 +39,7 @@ class IndentRequestTemplates(models.Model):
         required=True
     )
     picking_type_id = fields.Many2one('stock.picking.type', string="Operation Type")
+    via_picking_type_id = fields.Many2one('stock.picking.type', string="Via Operation Type")
 
     company_id = fields.Many2one(
         comodel_name="res.company",

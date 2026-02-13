@@ -59,6 +59,7 @@ class IndentRequest(models.Model):
     )
 
     picking_type_id = fields.Many2one('stock.picking.type', string="Operation Type")
+    via_picking_type_id = fields.Many2one('stock.picking.type', string="Via Operation Type")
 
     requested_by = fields.Many2one(
         comodel_name="res.users",
@@ -178,12 +179,12 @@ class IndentRequest(models.Model):
         )
 
         for rec in self:
-            pickings = self.env["stock.picking"].search([
+            pickings = self.env["stock.picking"].sudo().search([
                 ("origin", "=", rec.name),
                 ("picking_type_code", "=", "internal"),
                 ("company_id", "=", rec.company_id.id),
             ])
-            transit_pickings = self.env["stock.picking"].search([
+            transit_pickings = self.env["stock.picking"].sudo().search([
                 ("origin", "in", [trans.name for trans in pickings]),
                 ("picking_type_code", "=", "internal"),
                 ("company_id", "=", rec.company_id.id),
@@ -321,6 +322,7 @@ class IndentRequest(models.Model):
             self.via_location_id = self.indent_template.via_location_id
 
             self.picking_type_id = self.indent_template.picking_type_id
+            self.via_picking_type_id = self.indent_template.via_picking_type_id
 
             self.line_ids = False
             for template_line in self.indent_template.line_ids:

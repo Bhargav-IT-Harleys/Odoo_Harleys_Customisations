@@ -110,10 +110,12 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     else:
                         internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
 
-                                                            'delivery_to' : indent_source.via_location_id.id,
+                                                            'delivery_via' : indent_source.via_location_id.id,
+                                                            'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
 
                                                             # 'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
                                                             'picking_type_id' : indent_source.picking_type_id.id,
+                                                            'via_picking_type_id' : indent_source.via_picking_type_id.id,
 
                                                             'scheduled_date': indent_source.received_date,
                                                             'lines': [{'product_id': pid,
@@ -137,7 +139,9 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
         for data in internal_transfer_data:
             source_location = self.env['stock.location'].sudo().browse(internal_transfer_data[data]['delivery_from'])
             dest_location = self.env['stock.location'].sudo().browse(internal_transfer_data[data]['delivery_to'])
+            via_location = self.env['stock.location'].sudo().browse(internal_transfer_data[data]['delivery_via'])
             picking_type = self.env['stock.picking.type'].sudo().browse(internal_transfer_data[data]['picking_type_id'])
+            via_picking_type = self.env['stock.picking.type'].sudo().browse(internal_transfer_data[data]['via_picking_type_id'])
 
             for loc in [source_location, dest_location]:
                 if loc.company_id and loc.company_id.id != current_company.id:
@@ -155,6 +159,14 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
             picking = self.env['stock.picking'].create({
                 'picking_type_id': picking_type.id,
                 'location_id': source_location.id,
+                'location_dest_id': via_location.id,
+                'scheduled_date': internal_transfer_data[data]['scheduled_date'],
+                'origin': data,
+                'company_id': current_company.id,
+            })
+            picking_next_transfer = self.env['stock.picking'].create({
+                'picking_type_id': via_picking_type.id,
+                'location_id': via_location.id,
                 'location_dest_id': dest_location.id,
                 'scheduled_date': internal_transfer_data[data]['scheduled_date'],
                 'origin': data,
@@ -162,15 +174,29 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
             })
 
             for line_data in internal_transfer_data[data]['lines']:
-                self.env['stock.move'].create({
+                move1 = self.env['stock.move'].create({
                     'product_id': line_data['product_id'],
                     'product_uom_qty': line_data['product_qty'],
                     'product_uom': line_data['product_uom_id'],
                     'picking_id': picking.id,
                     'location_id': source_location.id,
+                    'location_dest_id': via_location.id,
+                    'company_id': current_company.id,
+                })
+                move2 = self.env['stock.move'].create({
+                    'product_id': line_data['product_id'],
+                    'product_uom_qty': line_data['product_qty'],
+                    'product_uom': line_data['product_uom_id'],
+                    'picking_id': picking_next_transfer.id,
+                    'location_id': via_location.id,
                     'location_dest_id': dest_location.id,
                     'company_id': current_company.id,
                 })
+                move1.move_dest_ids = [(4, move2.id)]
+                move2.move_orig_ids = [(4, move1.id)]
+
+            picking.action_confirm()
+            picking_next_transfer.action_confirm()
 
         return True
 
