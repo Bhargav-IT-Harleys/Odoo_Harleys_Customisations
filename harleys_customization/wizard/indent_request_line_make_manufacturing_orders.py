@@ -158,16 +158,16 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
 
             picking = self.env['stock.picking'].create({
                 'picking_type_id': picking_type.id,
-                'location_id': source_location.id,
-                'location_dest_id': via_location.id,
+                # 'location_id': source_location.id,
+                # 'location_dest_id': via_location.id,
                 'scheduled_date': internal_transfer_data[data]['scheduled_date'],
                 'origin': data,
                 'company_id': current_company.id,
             })
             picking_next_transfer = self.env['stock.picking'].create({
                 'picking_type_id': via_picking_type.id,
-                'location_id': via_location.id,
-                'location_dest_id': dest_location.id,
+                # 'location_id': via_location.id,
+                # 'location_dest_id': dest_location.id,
                 'scheduled_date': internal_transfer_data[data]['scheduled_date'],
                 'origin': data,
                 'company_id': current_company.id,
@@ -179,8 +179,8 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     'product_uom_qty': line_data['product_qty'],
                     'product_uom': line_data['product_uom_id'],
                     'picking_id': picking.id,
-                    'location_id': source_location.id,
-                    'location_dest_id': via_location.id,
+                    # 'location_id': source_location.id,
+                    # 'location_dest_id': via_location.id,
                     'company_id': current_company.id,
                 })
                 move2 = self.env['stock.move'].create({
@@ -188,8 +188,8 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     'product_uom_qty': line_data['product_qty'],
                     'product_uom': line_data['product_uom_id'],
                     'picking_id': picking_next_transfer.id,
-                    'location_id': via_location.id,
-                    'location_dest_id': dest_location.id,
+                    # 'location_id': via_location.id,
+                    # 'location_dest_id': dest_location.id,
                     'company_id': current_company.id,
                 })
                 move1.move_dest_ids = [(4, move2.id)]
@@ -245,6 +245,11 @@ class IndentRequestLineWizard(models.TransientModel):
         tracking=True,
         store=True
     )
+    qty_available = fields.Float(
+        string="On Hand QTY",
+        related='product_id.qty_available',
+        readonly=True,
+    )
     default_code = fields.Char(string="Internal Reference", related="product_id.default_code", store=True)
     hsn_code = fields.Char(string="HSN/SAC Code", store=True)
     product_uom_id = fields.Many2one(
@@ -272,11 +277,16 @@ class IndentRequestLineWizard(models.TransientModel):
     @api.depends('demanded_qty','batch_size')
     def _compute_no_of_batches(self):
         for record in self:
-            if record.demanded_qty <= record.batch_size:
-                record.batch_qty = 1
-            else:
-                record.batch_qty=(record.demanded_qty - 1) // record.batch_size + 1
+            if record.batch_size:
 
+                if record.demanded_qty <= record.batch_size:
+                    record.batch_qty = 1
+                else:
+                    record.batch_qty=(record.demanded_qty - 1) // record.batch_size + 1
+            else:
+                raise UserError(_(
+                    "Please provide the batch size for the product:\n %s"
+                ) % record.product_id.name)
 
     indent_number = fields.Char(
         string="Indent Number",

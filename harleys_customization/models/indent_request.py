@@ -359,6 +359,11 @@ class IndentRequestLine(models.Model):
         string="Product",
         tracking=True,
     )
+    qty_available = fields.Float(
+        string="On Hand QTY",
+        related='product_id.qty_available',
+        readonly=True,
+    )
     batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")
     default_code = fields.Char(string="Internal Reference", related="product_id.default_code")
     hsn_code = fields.Char(string="HSN/SAC Code")
