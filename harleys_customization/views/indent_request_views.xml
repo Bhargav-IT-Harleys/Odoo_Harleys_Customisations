@@ -34,6 +34,7 @@
                         <button name="action_get_manufacturing_order"
                                 type="object"
                                 class="oe_stat_button"
+                                groups="mrp.group_mrp_user"
                                 icon="fa-industry">
                             <field name="manufacturing_order_count"
                                 widget="statinfo"

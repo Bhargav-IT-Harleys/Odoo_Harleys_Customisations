@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Operation Type Rule -->
+    <record id="operation_type_rule_users" model="ir.rule">
+        <field name="name">Operation Type Restrict on Users</field>
+        <field name="model_id" ref="stock.model_stock_picking_type"/>
+        <field name="domain_force">['|', ('warehouse_id.user_ids', '=', False), ('warehouse_id.user_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('user_warehouse_restriction.user_warehouse_restriction_group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Stock Location Rule - FIXED -->
+    <record id="stock_location_rule_users" model="ir.rule">
+        <field name="name">Stock Location Restrict on Users</field>
+        <field name="model_id" ref="stock.model_stock_location"/>
+        <field name="domain_force">
+            ['|',
+                ('id', 'not in', user.location_ids.ids),
+                ('id', '=', False)
+            ]
+        </field>
+
+        <field name="groups" eval="[(4, ref('user_warehouse_restriction.user_warehouse_restriction_group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Warehouse Rule -->
+    <record id="stock_warehouse_rule_users" model="ir.rule">
+        <field name="name">Warehouse Restrict on Users</field>
+        <field name="model_id" ref="stock.model_stock_warehouse"/>
+        <field name="domain_force">['|', ('user_ids', '=', False), ('user_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('user_warehouse_restriction.user_warehouse_restriction_group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Stock Picking Rule -->
+    <record id="stock_picking_rule_users" model="ir.rule">
+        <field name="name">Warehouse Transfers Restrict on Users</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="domain_force">['|', ('picking_type_id.warehouse_id.user_ids', '=', False), ('picking_type_id.warehouse_id.user_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('user_warehouse_restriction.user_warehouse_restriction_group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- ADMIN/MANAGER BYPASS RULES -->
+    <record id="operation_type_rule_managers" model="ir.rule">
+        <field name="name">Operation Type - Managers See All</field>
+        <field name="model_id" ref="stock.model_stock_picking_type"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('stock.group_stock_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="stock_location_rule_managers" model="ir.rule">
+        <field name="name">Stock Location - Managers See All</field>
+        <field name="model_id" ref="stock.model_stock_location"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('stock.group_stock_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="stock_warehouse_rule_managers" model="ir.rule">
+        <field name="name">Warehouse - Managers See All</field>
+        <field name="model_id" ref="stock.model_stock_warehouse"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('stock.group_stock_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="stock_picking_rule_managers" model="ir.rule">
+        <field name="name">Warehouse Transfers - Managers See All</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('stock.group_stock_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+</odoo>
