@@ -217,11 +217,12 @@ class IndentRequest(models.Model):
     @api.constrains('indent_template', 'password')
     def _check_template_password(self):
         for rec in self:
+            if bool(rec.indent_template) != bool(rec.password):
+                raise UserError("Invalid password for the selected outlet.")
+
             if rec.indent_template and rec.password:
                 if rec.password != rec.indent_template.password:
-                    raise UserError(
-                        "Invalid password for the selected outlet."
-                    )
+                    raise UserError("Invalid password for the selected outlet.")
 
     def action_get_internal_transfers(self):
         self.ensure_one()
@@ -272,6 +273,7 @@ class IndentRequest(models.Model):
             return {'type': 'ir.actions.act_window_close'}
     
     def action_sent(self):
+        self._check_template_password()
         if self.state == 'draft':
             self.state = 'sent'
         if self.line_ids:

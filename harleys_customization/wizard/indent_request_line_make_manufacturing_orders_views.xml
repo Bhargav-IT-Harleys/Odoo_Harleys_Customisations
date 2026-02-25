@@ -22,7 +22,7 @@
                             <field name="name" readonly="1" force_save="1" optional="hide"/>
                             <field name="qty_available" readonly="1" optional="hide"/>
                             <field name="batch_size" readonly="1"/>
-                            <field name="batch_qty"/>
+                            <field name="batch_qty" readonly="0"/>
                             <field name="product_qty" readonly="0"/>
                             <field name="demanded_qty" readonly="0"/>
                             <field
