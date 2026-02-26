@@ -12,6 +12,7 @@
         'hr_expense',
         'hr_payroll',
         'hr_attendance',
+        'l10n_in_hr_payroll',
         'web'
     ],
     'category': 'Human Resources',
@@ -23,6 +24,8 @@
         'views/employee_payslip_portal_view.xml',
         'views/res_users_view.xml',
         'security/payslip_portal_access.xml',
+        'security/ir.model.access.csv',
+
     ],
     'installable': True,
     'application': False,
