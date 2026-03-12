@@ -47,7 +47,7 @@
                             <td t-esc="payslip.gross_wage"/>
                             <td t-esc="payslip.net_wage"/>
                             <td>
-                                <a t-att-href="'/report/pdf/l10n_in_hr_payroll.report_payslip/%s' % payslip.id" class="btn btn-secondary btn-sm">
+                                <a t-att-href="'/my/payslip/%s/print'%payslip.id" class="btn btn-secondary btn-sm">
                                     <i class="fa fa-download"/>
                                 </a>
                             </td>

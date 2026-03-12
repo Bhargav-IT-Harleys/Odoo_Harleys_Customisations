@@ -136,5 +136,4 @@
         <field name="perm_read" eval="1"/>
     </record>
 
-
 </odoo>

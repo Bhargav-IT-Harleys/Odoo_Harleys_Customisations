@@ -42,4 +42,20 @@ class PayslipCount(portal.CustomerPortal):
         return values
 
 
+    @http.route('/my/payslip/<int:payslip_id>/print', type='http', auth='user', website=True)
+    def portal_print_payslip(self, payslip_id, **kwargs):
+        payslip = request.env['hr.payslip'].sudo().browse(payslip_id)
+        if not payslip or payslip.employee_id.user_id != request.env.user:
+            return request.not_found()
+        pdf_content, content_type = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
+            'hr_payroll.report_payslip_lang',
+            [payslip_id]
+        )
+        return request.make_response(
+            pdf_content,
+            headers=[
+                ('Content-Type', 'application/pdf'),
+                ('Content-Disposition', f'attachment; filename="payslip_{payslip.date_from.strftime("%B_%Y")}.pdf"'),
+            ]
+        )
 

@@ -25,6 +25,7 @@
         'views/res_users_view.xml',
         'security/payslip_portal_access.xml',
         'security/ir.model.access.csv',
+        'views/report_payslip_details_template.xml',
 
     ],
     'installable': True,
