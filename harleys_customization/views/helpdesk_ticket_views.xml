@@ -14,4 +14,20 @@
             </xpath>
         </field>
     </record>
+
+    <record id="view_helpdesk_ticket_tree_inherit" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.tree.inherit.custom</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="inherit_id" ref="helpdesk.helpdesk_tickets_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list/field[@name='name']" position="before">
+                <field name="create_uid"/>
+                <field name="department_id"/>
+                <field name="location_id"/>
+                <field name="service_type_id"/>
+            </xpath>
+        </field>
+    </record>
+
+
 </odoo>

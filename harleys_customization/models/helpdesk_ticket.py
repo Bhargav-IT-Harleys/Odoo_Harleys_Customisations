@@ -7,7 +7,7 @@ class HelpdeskTicket(models.Model):
 
     # ticket_id = fields.Char(string="Ticket ID", compute="_compute_ticket_id", store=True, readonly=True)
     department_id = fields.Many2one('hr.department', "Department", required=True)
-    location_id = fields.Many2one('stock.location', "Location", required=True)
+    location_id = fields.Many2one('stock.warehouse', "Location", required=True)
     service_type_id = fields.Many2one('service.type', "Service Type", required=True)
 
 
