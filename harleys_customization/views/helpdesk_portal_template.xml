@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="portal_helpdesk_ticket_inherit"
+              inherit_id="helpdesk.portal_helpdesk_ticket"
+              name="Portal Helpdesk Ticket">
+
+        <!-- Add new headers after "Assigned to" -->
+        <!-- <xpath expr="//thead/tr/th[@id='ticket_user_header']" position="replace"> -->
+        <xpath expr="//thead/tr" position="replace">
+           <tr>
+            <th class="text-center">Ticket#</th>
+            <th class="text-center">Department</th>
+            <th class="text-center">Employee Name</th>
+            <th class="text-center">Location</th>
+            <th class="text-center">Service Type</th>
+            <th class="text-center">Issue Description</th>
+            <th class="text-center">Priority</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Assigned To</th>
+        </tr>
+        </xpath>
+
+    <xpath expr="//t[@t-foreach='tickets']" position="replace">
+        <!-- Your replacement code goes here -->
+        <t t-foreach="tickets" t-as="ticket">
+            <tr>
+                <!-- <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span t-field="record.name"/>
+                    </t>
+                </td> -->
+
+                <td class="text-start"><a t-attf-href="/helpdesk/ticket/#{ticket.id}"><small>#</small><t t-out="ticket.ticket_ref"/><span class="ms-2" t-att-title="ticket.name" t-field="ticket.name"/></a></td>
+
+                <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span t-field="record.department_id"/>
+                    </t>
+                </td>
+
+                <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span t-field="record.create_uid"/>
+                    </t>
+                </td>
+
+                <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span t-field="record.location_id"/>
+                    </t>
+                </td>
+
+                <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span t-field="record.service_type_id"/>
+                    </t>
+                </td>
+
+                <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span t-field="record.description"/>
+                    </t>
+                </td>
+
+                <td class="text-center">
+                    <t t-set="priority" t-value="int(ticket.priority or 0)"/>
+                    <t t-foreach="range(1, 4)" t-as="i">
+                        <t t-if="i &lt;= priority">
+                            <span class="text-warning" style="font-size: 16px;">&#9733;</span>
+                        </t>
+                        <t t-else="">
+                            <span class="text-secondary" style="font-size: 16px;">&#9734;</span>
+                        </t>
+                    </t>
+                </td>
+
+                <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span t-field="record.stage_id"/>
+                    </t>
+                </td>
+
+                <td class="text-center">
+                    <t t-foreach="ticket" t-as="record">
+                        <span  t-field="record.user_id"/>
+                    </t>
+                </td>
+            </tr>
+        </t>
+    </xpath>
+
+        <!-- Add new columns after "Assigned to" data cells -->
+        <!-- <xpath expr="//tr" position="replace">
+
+            <td class="text-center">
+                <t t-foreach="ticket" t-as="record">
+                    <span t-field="record.name"/>
+                </t>
+            </td>
+
+            <td class="text-center">
+                <t t-foreach="ticket" t-as="record">
+                    <span t-field="record.department_id"/>
+                </t>
+            </td>
+
+            <td class="text-center">
+                <t t-foreach="ticket" t-as="record">
+                    <span t-field="record.location_id"/>
+                </t>
+            </td>
+
+            <td class="text-center">
+                <t t-foreach="ticket" t-as="record">
+                    <span t-field="record.service_type_id"/>
+                </t>
+            </td>
+
+            <td class="text-center">
+                <t t-foreach="ticket" t-as="record">
+                    <span t-field="record.description"/>
+                </t>
+            </td>
+
+            <td class="text-center">
+                <t t-set="priority" t-value="int(ticket.priority or 0)"/>
+                <t t-foreach="range(1, 4)" t-as="i">
+                    <t t-if="i &lt;= priority">
+                        <span class="text-warning" style="font-size: 16px;">&#9733;</span>
+                    </t>
+                    <t t-else="">
+                        <span class="text-secondary" style="font-size: 16px;">&#9734;</span>
+                    </t>
+                </t>
+            </td>
+
+            <td class="text-center">
+                <t t-foreach="ticket" t-as="record">
+                    <span t-field="record.stage_id"/>
+                </t>
+            </td>
+
+            <td class="text-center">
+                <t t-foreach="ticket" t-as="record">
+                    <span  t-field="record.user_id"/>
+                </t>
+            </td>
+
+        </xpath> -->
+
+    </template>   
+</odoo>

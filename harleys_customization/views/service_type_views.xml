@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="service_type_view_tree" model="ir.ui.view">
+        <field name="name">service.type.list</field>
+        <field name="model">service.type</field>
+        <field name="arch" type="xml">
+            <list editable="top" string="Service Type" sample="1" multi_edit="1">
+                <field name="name"/>
+                <field name="priority"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="service_type_view_form" model="ir.ui.view">
+        <field name="name">service.type.form</field>
+        <field name="model">service.type</field>
+        <field name="arch" type="xml">
+            <form string="Service Type">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="priority"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="service_type_action" model="ir.actions.act_window">
+        <field name="name">Service Type</field>
+        <field name="res_model">service.type</field>
+        <field name="path">service-type</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            No service type found. Let's create one!
+          </p><p>
+          </p>
+        </field>
+    </record>
+
+    <menuitem
+        action="service_type_action"
+        id="service_type_menu"
+        name="Service Type"
+        parent="helpdesk.helpdesk_menu_config"
+        sequence="4"/>
+        
+</odoo>

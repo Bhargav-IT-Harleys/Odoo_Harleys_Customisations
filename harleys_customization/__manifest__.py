@@ -7,10 +7,11 @@
            Harleys Customization
     """,
     'category': 'Customizations',
-    'depends': ['base','web', 'stock','mrp'],
+    'depends': ['base','web', 'stock','mrp', 'helpdesk'],
     'data': [
         'security/security_group.xml',
         'security/ir.model.access.csv',
+        'security/helpdesk_tag_portal_access.xml',
         'views/indent_request_views.xml',
         'views/indent_request_template_views.xml',
         'data/indent_request_sequence.xml',
@@ -19,6 +20,9 @@
         'views/product_template_views.xml',
         'views/contact_views.xml',
         'views/mrp_production_views.xml',
+        'views/service_type_views.xml',
+        'views/helpdesk_ticket_views.xml',
+        'views/helpdesk_portal_template.xml',
     ],
     'installable': True,
     'application': True,
