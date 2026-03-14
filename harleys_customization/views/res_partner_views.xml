@@ -32,4 +32,16 @@
             </field>
         </field>
     </record>
+    <record id="hr_employee_form_payroll_page_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form.payroll.page.group</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//page[@name='payroll_information']" position="attributes">
+                <attribute name="groups">hr_payroll.group_hr_payroll_manager</attribute>
+            </xpath>
+
+        </field>
+    </record>
 </odoo>
