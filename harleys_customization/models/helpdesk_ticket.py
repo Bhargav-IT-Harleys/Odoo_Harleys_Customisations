@@ -12,10 +12,10 @@ class HelpdeskTicket(models.Model):
         return team_id
 
     department_id = fields.Many2one('hr.department', "Department", required=True)
-    location_id = fields.Many2one('stock.warehouse', "Location", required=True, )
+    location_id = fields.Many2one('stock.warehouse', "Location", required=True)
     service_type_id = fields.Many2one('service.type', "Service Type", required=True)
 
-    team_id = fields.Many2one('helpdesk.team', string='Helpdesk Team', default=_default_team_id, index=True, tracking=True,  domain=lambda self: [('company_id', '=', self.env.user.company_id.id)])
+    team_id = fields.Many2one('helpdesk.team', string='Helpdesk Team', default=_default_team_id, index=True, tracking=True)
 
     @api.onchange('service_type_id')
     def _onchange_service_type_id(self):
