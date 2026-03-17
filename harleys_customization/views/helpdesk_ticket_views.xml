@@ -12,6 +12,9 @@
             <xpath expr="//field[@name='tag_ids']" position="after">
                 <field name="location_id" options="{'no_create': True, 'no_open': True}"/>
             </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="string">Invoked User</attribute>
+            </xpath>
         </field>
     </record>
 
@@ -21,10 +24,13 @@
         <field name="inherit_id" ref="helpdesk.helpdesk_tickets_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//list/field[@name='name']" position="before">
-                <field name="create_uid"/>
+                <!-- <field name="create_uid"/> -->
                 <field name="department_id"/>
                 <field name="location_id"/>
                 <field name="service_type_id"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="string">Invoked User</attribute>
             </xpath>
         </field>
     </record>
