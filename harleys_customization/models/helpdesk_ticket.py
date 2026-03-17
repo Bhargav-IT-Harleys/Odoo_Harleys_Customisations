@@ -1,6 +1,11 @@
 from odoo import api, fields, models, _
 
-
+TICKET_PRIORITY = [
+    ('0', 'Low priority'),
+    ('1', 'Medium priority'),
+    ('2', 'High priority'),
+    ('3', 'Urgent'),
+]
 
 class HelpdeskTicket(models.Model):
     _inherit = 'helpdesk.ticket'
@@ -10,8 +15,10 @@ class HelpdeskTicket(models.Model):
     service_type_id = fields.Many2one('service.type', "Service Type", required=True)
     partner_id = fields.Many2one('res.partner', string='Customer', tracking=True, index=True)
 
-    @api.onchange('service_type_id')
-    def _onchange_service_type_id(self):
+    priority = fields.Selection(TICKET_PRIORITY, string='Priority', default='0',readonly=True, tracking=True, compute='_compute_priority', store=True)
+
+    @api.depends('service_type_id')
+    def _compute_priority(self):
         if self.service_type_id:
             self.priority = self.service_type_id.priority
 
