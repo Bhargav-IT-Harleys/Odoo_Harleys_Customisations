@@ -41,6 +41,9 @@
             <xpath expr="//page[@name='payroll_information']" position="attributes">
                 <attribute name="groups">hr_payroll.group_hr_payroll_manager</attribute>
             </xpath>
+            <xpath expr="//field[@name='parent_id']" position="attributes">
+                <attribute name="domain">[('active','=',False)]</attribute>
+            </xpath>
 
         </field>
     </record>
