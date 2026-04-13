@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="portal_form_custom" inherit_id="portal.portal_layout" name="Form">
+        <xpath expr="//div[hasclass('o_portal_wrap')]" position="inside">
+
+            <section class="s_website_form pt16 pb16" data-vcss="001" data-snippet="s_website_form">
+                <div class="container-fluid" style="margin: 1px 2px 1px 5px;">
+                    <t t-if="error_message">
+                        <div class="alert alert-danger mb-0 rounded-0 border-start-0 border-end-0" role="alert">
+                            <t t-foreach="error_message" t-as="msg">
+                                <div><i class="fa fa-exclamation-circle me-1"/><t t-esc="msg"/></div>
+                            </t>
+                        </div>
+                    </t>
+
+                    <form action="/website/form/" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-model_name="helpdesk.ticket"  data-success-mode="redirect" data-success-page="/your-ticket-has-been-submitted">
+                        <div class="s_website_form_rows row s_col_no_bgcolor">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="char">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="o20wvdpejf13">
+                                  <span class="s_website_form_label_content">Full Name</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                  <input class="form-control s_website_form_input" type="text" name="partner_name" required="1"  id="o20wvdpejf13" t-att-value="full_name"/>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12" data-type="tel">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="ooqgec3e16m">
+                                  <span class="s_website_form_label_content">Phone Number</span>
+                                </label>
+                                <div class="col-sm">
+                                  <input class="form-control s_website_form_input" type="tel" name="partner_phone" t-att-value="phone_number" id="ooqgec3e16m"/>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="email">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="of63pt9ae2vs">
+                                  <span class="s_website_form_label_content">Email Address</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                  <input class="form-control s_website_form_input" type="email" name="partner_email" required="1" data-fill-with="email" id="of63pt9ae2vs" t-att-value="email"/>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12" data-type="many2one">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="o40snkp07cywew">
+                                  <span class="s_website_form_label_content">Helpdesk Team</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                  <select class="form-select s_website_form_input" name="team_id" id="o40snkp07cywew">
+                                    <t t-foreach="teams" t-as="team">
+                                        <option
+                                            t-att-value="team.id"
+                                            t-att-selected="
+                                                (form_data and str(form_data.get('team_id','')) == str(team.id))
+                                                and 'selected' or None">
+                                            <t t-esc="team.name"/>
+                                        </option>
+                                    </t>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12" data-type="many2one">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="ohd5g1om9byk">
+                                  <span class="s_website_form_label_content">Department</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                  <select class="form-select s_website_form_input" name="department_id" id="ohd5g1om9byk">
+                                    <!-- <option value=""/> -->
+                                    <t t-foreach="departments" t-as="department">
+                                        <option
+                                            t-att-value="department.id"
+                                            t-att-selected="
+                                                (form_data and str(form_data.get('department_id','')) == str(department.id))
+                                                and 'selected' or None">
+                                            <t t-esc="department.name"/>
+                                        </option>
+                                    </t>
+                                  </select>
+                                </div>
+                               </div>
+                            </div>
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12" data-type="many2one">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="opx829cs8es">
+                                  <span class="s_website_form_label_content">Location</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                  <select class="form-select s_website_form_input" name="location_id" id="opx829cs8es">
+                                    <t t-foreach="locations" t-as="location">
+                                        <option
+                                            t-att-value="location.id"
+                                            t-att-selected="
+                                                (form_data and str(form_data.get('location_id','')) == str(location.id))
+                                                and 'selected' or None">
+                                            <t t-esc="location.name"/>
+                                        </option>
+                                    </t>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12" data-type="many2one">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="o40snkp07cyw">
+                                  <span class="s_website_form_label_content">Service Type</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                  <select class="form-select s_website_form_input" name="service_type_id" id="o40snkp07cyw">
+                                    <t t-foreach="service_types" t-as="types">
+                                        <option
+                                            t-att-value="types.id"
+                                            t-att-selected="
+                                                (form_data and str(form_data.get('service_type_id','')) == str(types.id))
+                                                and 'selected' or None">
+                                            <t t-esc="types.name"/>
+                                        </option>
+                                    </t>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+               
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_model_required" data-type="char">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="ojjyc0z27tls">
+                                  <span class="s_website_form_label_content">Message Subject</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                 <input class="form-control s_website_form_input" type="text" name="name" required="" id="ojjyc0z27tls"/>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_required" data-type="text">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="odw7h7ntj5j">
+                                  <span class="s_website_form_label_content">Description</span>
+                                  <span class="s_website_form_mark"> *</span>
+                                </label>
+                                <div class="col-sm">
+                                  <textarea class="form-control s_website_form_input" name="description" required="1" id="odw7h7ntj5j" rows="3"/>
+                                </div>
+                              </div>
+                            </div>
+
+
+                            <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_custom" data-type="binary">
+                              <div class="row s_col_no_resize s_col_no_bgcolor">
+                                <label class="col-sm-auto s_website_form_label" style="width: 200px" for="oz264y813h">
+                                  <span class="s_website_form_label_content">Attach File</span>
+                                </label>
+                                <div class="col-sm">
+                                 <div class="o_files_zone row gx-1"></div>
+                                  <input type="file" class="form-control s_website_form_input" name="Attach File" id="oz264y813h" data-max-files-number="1" data-max-file-size="1"/>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="mb-0 py-2 col-12 s_website_form_submit text-end s_website_form_no_submit_label" data-name="Submit Button">
+                                <div style="width: 200px;" class="s_website_form_label"/>
+                                <span id="s_website_form_result"/>
+                                <a href="#" role="button" class="btn btn-primary s_website_form_send">Submit</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </xpath>
+    </template>
+</odoo>

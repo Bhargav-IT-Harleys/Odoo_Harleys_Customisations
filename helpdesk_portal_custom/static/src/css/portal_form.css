@@ -1,0 +1,143 @@
+/* ============================================================
+   Helpdesk Portal – Custom Form Styles
+   helpdesk_portal_custom/static/src/css/portal_form.css
+   ============================================================ */
+
+/* ── Card shell ─────────────────────────────────────────── */
+.helpdesk-form-card {
+    border-radius: 1rem;
+    background: #ffffff;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07) !important;
+}
+
+/* ── Header icon bubble ─────────────────────────────────── */
+.helpdesk-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #e8f0fe 0%, #d2e3fc 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ── Section badges ─────────────────────────────────────── */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--bs-primary, #3166ef);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.section-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+/* ── Required field asterisk ────────────────────────────── */
+.form-label.required::after {
+    content: ' *';
+    color: #e53e3e;
+}
+
+/* ── Form controls ──────────────────────────────────────── */
+.form-control,
+.form-select {
+    border-radius: 0.5rem;
+    border: 1.5px solid #e2e8f0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--bs-primary, #3166ef);
+    box-shadow: 0 0 0 3px rgba(49, 102, 239, 0.12);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #e53e3e;
+}
+
+/* ── Priority radio buttons ─────────────────────────────── */
+.priority-selector .btn {
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    transition: all 0.18s;
+}
+
+.priority-selector .btn-check:checked + .btn {
+    background: #eef2ff;
+    border-color: var(--bs-primary, #3166ef);
+    color: var(--bs-primary, #3166ef);
+    font-weight: 600;
+}
+
+/* ── Submit button ──────────────────────────────────────── */
+#submit_ticket_btn {
+    border-radius: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+#submit_ticket_btn:active {
+    transform: scale(0.98);
+}
+
+#submit_ticket_btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* ── Character counter ──────────────────────────────────── */
+#desc_counter {
+    font-size: 0.78rem;
+    color: #718096;
+}
+
+/* ── Alert tweaks ───────────────────────────────────────── */
+.alert-danger {
+    border-radius: 0.75rem;
+    border-left: 4px solid #e53e3e;
+    background: #fff5f5;
+    color: #c53030;
+}
+
+/* ── Tips card ──────────────────────────────────────────── */
+.card.bg-light {
+    border-radius: 0.75rem;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 576px) {
+    .helpdesk-form-card .card-body {
+        padding: 1.5rem !important;
+    }
+    .priority-selector {
+        flex-wrap: wrap;
+    }
+}
