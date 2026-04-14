@@ -4,6 +4,7 @@
 <template id="portal_form_custom" inherit_id="portal.portal_layout" name="Form">
         <xpath expr="//div[hasclass('o_portal_wrap')]" position="inside">
 
+         <t t-if="page_name == 'helpdesk_new'">
             <section class="s_website_form pt16 pb16" data-vcss="001" data-snippet="s_website_form">
                 <div class="container-fluid" style="margin: 1px 2px 1px 5px;">
                     <t t-if="error_message">
@@ -187,6 +188,7 @@
                     </form>
                 </div>
             </section>
+         </t>
         </xpath>
     </template>
 </odoo>

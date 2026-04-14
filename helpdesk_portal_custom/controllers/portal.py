@@ -21,7 +21,7 @@ class HelpdeskPortalCustom(CustomerPortal):
         )
 
     def _get_hr_department(self):
-        return request.env['hr.department'].sudo().search([])
+        return request.env['hr.department'].sudo().search(['|',('company_id', '=', False), ('company_id', 'in', [company_id.id for company_id in request.env.user.company_ids]), ("active", "=", True)])
 
     @http.route('/helpdesk', type='http', auth='user', website=True, methods=['GET'])
     def portal_helpdesk_ticket_new(self, **kwargs):
@@ -30,6 +30,7 @@ class HelpdeskPortalCustom(CustomerPortal):
         departments = self._get_hr_department()
         teams = self._get_helpdesk_teams()
         values = {
+            'page_name': 'helpdesk_new',
             'full_name': request.env.user.name,
             'teams': teams,
             'service_types': service_types,

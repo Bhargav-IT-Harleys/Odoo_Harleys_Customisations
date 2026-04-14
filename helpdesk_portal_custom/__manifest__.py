@@ -21,6 +21,7 @@
     'assets': {
         'web.assets_frontend': [
             'helpdesk_portal_custom/static/src/css/portal_form.css',
+            # 'helpdesk_portal_custom/static/src/css/001.css',
         ],
     },
     'installable': True,
