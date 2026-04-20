@@ -72,7 +72,7 @@ class IndentRequest(models.Model):
 
     indent_template = fields.Many2one(
         'indent.request.templates',
-        string='Outlet Wise Indent Template',
+        string='Indent Template',
         required=True
     )
 
@@ -115,6 +115,8 @@ class IndentRequest(models.Model):
 
     employee_id = fields.Many2one('hr.employee', string="Requested Employee")
     password = fields.Char(string="Enter Password")
+    is_valid = fields.Boolean("Is Valid",readonly=True, invisible=True)
+
 
     internal_transfer_count = fields.Integer(
         string="Internal Transfer Count",
@@ -219,10 +221,14 @@ class IndentRequest(models.Model):
         for rec in self:
             if bool(rec.indent_template) != bool(rec.password):
                 raise UserError("Invalid password for the selected outlet.")
+            else:
+                rec.is_valid = True
 
             if rec.indent_template and rec.password:
                 if rec.password != rec.indent_template.password:
                     raise UserError("Invalid password for the selected outlet.")
+                else:
+                    rec.is_valid = True
 
     def action_get_internal_transfers(self):
         self.ensure_one()
@@ -361,6 +367,9 @@ class IndentRequestLine(models.Model):
         string="Product",
         tracking=True,
     )
+
+    categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)
+    
     qty_available = fields.Float(
         string="On Hand QTY",
         related='product_id.qty_available',

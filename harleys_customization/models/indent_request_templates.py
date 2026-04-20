@@ -38,6 +38,7 @@ class IndentRequestTemplates(models.Model):
     delivery_to = fields.Many2one(
         'stock.warehouse',
         string='Delivery To',
+        related='via_picking_type_id.warehouse_id',
         required=True
     )
     picking_type_id = fields.Many2one('stock.picking.type', string="Operation Type")
@@ -65,8 +66,20 @@ class IndentRequestTemplates(models.Model):
 
     def copy(self, default=None):
         default = dict(default or {})
-        self.ensure_one()
-        return super().copy(default)
+        base_name = f"{self.delivery_to.name} Indent Template" if self.delivery_to else "Indent Template"
+
+        existing_templates = self.env['indent.request.templates'].search([
+            ('name', 'ilike', base_name)
+        ])
+
+        if not existing_templates:
+            new_name = base_name
+        else:
+            count = len(existing_templates)
+            new_name = f"{base_name} - {count}"
+
+        default['name'] = new_name
+        return super(IndentRequestTemplates, self).copy(default)
 
     @api.constrains('password', 'retype_password')
     def _check_password_match(self):
@@ -78,8 +91,17 @@ class IndentRequestTemplates(models.Model):
     @api.onchange("delivery_to")
     def _onchange_delivery_to(self):
         if self.delivery_to:
-            self.name = f"{self.delivery_to.name} Indent Template" 
-        
+            base_name = f"{self.delivery_to.name} Indent Template"
+
+            existing_templates = self.env['indent.request.templates'].search([
+                ('name', 'ilike', base_name)
+            ])
+
+            if not existing_templates:
+                self.name = base_name
+            else:
+                count = len(existing_templates)
+                self.name = f"{base_name} - {count}"
 
 class IndentRequestLineTemplates(models.Model):
     _name = 'indent.request.line.templates'
@@ -102,6 +124,7 @@ class IndentRequestLineTemplates(models.Model):
         string="Product",
         tracking=True,
     )
+    categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)
     default_code = fields.Char(string="Internal Reference", related="product_id.default_code")
     hsn_code = fields.Char(string="HSN/SAC Code")
     product_uom_id = fields.Many2one(

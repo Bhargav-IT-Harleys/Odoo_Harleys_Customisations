@@ -65,15 +65,17 @@
                             <field name="requested_by" readonly="1" force_save="1"/>
                             <field name="received_date" readonly="is_editable == False" force_save="1"/>
                             <!-- <field name="employee_id"/> -->
-                            <field name="password" password="True"/>
+                            <label for="password" string="Enter Password" class="text-danger"/>
+                            <field name="password" password="True" nolabel="1"/>                        
                         </group>
                     </group>
                     <notebook>
-                        <page string="Products" name="line_ids">
+                        <page string="Products" name="line_ids" invisible="is_valid == False">
                             <field name="line_ids">
                                 <list string="Indent Request Lines" editable="bottom" limit="200">
                                     <field name="request_id" column_invisible="True"/>
                                     <field name="product_id" options="{'no_create': True}" force_save="1" domain="[('state', '=', 'approved')]"/>
+                                    <field name="categ_id" force_save="1"/>
                                     <field name="name" readonly="state not in ['draft']" force_save="1"/>
                                     <field name="qty_available" readonly="1" optional="hide"/>
                                     <field name="default_code" force_save="1"/>
@@ -184,6 +186,7 @@
                     create="false"
             >
                 <field name="product_id" options="{'no_create': True}" readonly="0"/>
+                <field name="categ_id" force_save="1"/>
                 <field name="default_code" readonly="0"/>
                 <field name="hsn_code" readonly="0"/>
                 <field name="product_qty" readonly="0"/>

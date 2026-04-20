@@ -1,8 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_indent_request_user,Indent Request User,model_indent_request,harleys_customization.group_indent_user,1,0,0,0
+access_indent_request_user,Indent Request User,model_indent_request,harleys_customization.group_indent_user,1,1,1,1
 access_indent_request_admin,Indent Request Admin,model_indent_request,harleys_customization.group_indent_admin,1,1,1,1
 
-access_indent_request_line_user,Indent Request Line User,model_indent_request_line,harleys_customization.group_indent_user,1,0,0,0
+access_indent_request_line_user,Indent Request Line User,model_indent_request_line,harleys_customization.group_indent_user,1,1,1,1
 access_indent_request_line_admin,Indent Request Line Admin,model_indent_request_line,harleys_customization.group_indent_admin,1,1,1,1
 
 access_indent_request_templates_user,Indent Templates User,model_indent_request_templates,harleys_customization.group_indent_user,1,0,0,0

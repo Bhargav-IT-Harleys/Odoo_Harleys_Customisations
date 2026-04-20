@@ -24,7 +24,7 @@
                         <group>
                             <!-- <field name="employee_ids" widget="many2many_tags"/> -->
                             <field name="password" password="True"/>
-                            <field name="retype_password" password="True"/>
+                            <field name="retype_password" decoration-info="True" password="True"/>
                         </group>
                     </group>
                     <notebook>
@@ -33,6 +33,7 @@
                                 <list string="Indent Request Lines Templates" editable="bottom" limit="200">
                                     <field name="request_id" column_invisible="True"/>
                                     <field name="product_id" options="{'no_create': True}"/>
+                                    <field name="categ_id" force_save="1"/>
                                     <field name="name"/>
                                     <field name="default_code"/>
                                     <field name="hsn_code"/>
