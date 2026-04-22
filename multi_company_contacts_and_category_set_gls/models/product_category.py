@@ -11,6 +11,11 @@ class ProductCategory(models.Model):
 
         income_id = vals.get('property_account_income_categ_id')
         expense_id = vals.get('property_account_expense_categ_id')
+        routes = vals.get('route_ids')
+        costing_method = vals.get('property_cost_method')
+        removal_strategy = vals.get('removal_strategy_id')
+        inventory_valuation = vals.get('property_valuation')
+        reserve_packagings = vals.get('packaging_reserve_method')
 
         companies = self.env['res.company'].search([])
         for category in self:
@@ -26,6 +31,16 @@ class ProductCategory(models.Model):
                     sync_vals['property_account_income_categ_id'] = income_id
                 if expense_id is not None:
                     sync_vals['property_account_expense_categ_id'] = expense_id
+                if routes is not None:
+                    sync_vals['route_ids'] = routes
+                if costing_method is not None:
+                    sync_vals['property_cost_method'] = costing_method
+                if removal_strategy is not None:
+                    sync_vals['removal_strategy_id'] = removal_strategy
+                if inventory_valuation is not None:
+                    sync_vals['property_valuation'] = inventory_valuation
+                if reserve_packagings is not None:
+                    sync_vals['packaging_reserve_method'] = reserve_packagings
 
                 target_category.with_company(company).with_context(sync_accounts_done=True).write(sync_vals)
         return res
@@ -48,6 +63,11 @@ class ProductCategory(models.Model):
 
         income_id = vals.get('property_account_income_categ_id')
         expense_id = vals.get('property_account_expense_categ_id')
+        routes = vals.get('route_ids')
+        costing_method = vals.get('property_cost_method')
+        removal_strategy = vals.get('removal_strategy_id')
+        inventory_valuation = vals.get('property_valuation')
+        reserve_packagings = vals.get('packaging_reserve_method')
 
         if not income_id and not expense_id:
             return
@@ -66,6 +86,16 @@ class ProductCategory(models.Model):
                 sync_vals['property_account_income_categ_id'] = income_id
             if expense_id is not None:
                 sync_vals['property_account_expense_categ_id'] = expense_id
+            if routes is not None:
+                sync_vals['route_ids'] = routes
+            if costing_method is not None:
+                sync_vals['property_cost_method'] = costing_method
+            if removal_strategy is not None:
+                sync_vals['removal_strategy_id'] = removal_strategy
+            if inventory_valuation is not None:
+                sync_vals['property_valuation'] = inventory_valuation
+            if reserve_packagings is not None:
+                sync_vals['packaging_reserve_method'] = reserve_packagings
 
             target_category.with_company(company).with_context(sync_accounts_done=True).write(sync_vals)
 
