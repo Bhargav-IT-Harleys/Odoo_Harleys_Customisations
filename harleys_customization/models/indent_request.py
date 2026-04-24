@@ -54,7 +54,7 @@ class IndentRequest(models.Model):
 
     delivery_to = fields.Many2one(
         'stock.warehouse',
-        string='Delivery To',
+        string='Delivery To.',
         required=True
     )
 
