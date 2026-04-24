@@ -51,10 +51,10 @@ class IndentRequest(models.Model):
 
     via_location_id = fields.Many2one('stock.location', string="Delivery Via", required=True, store=True)
 
-
+    "Random Test"
     delivery_to = fields.Many2one(
         'stock.warehouse',
-        string='Delivery To.',
+        string='Delivery To',
         required=True
     )
 
