@@ -51,20 +51,16 @@
         <field name="model">stock.move</field>
         <field name="arch" type="xml">
             <pivot string="Manufacturing Order Lines">
-                <field name="mo_date_start" type="row" interval="day"/>
-                <field name="mo_name" type="row"/>
-                <field name="mo_product_id" type="row"/>
-                <field name="mo_section" type="row"/>
-                <field name="product_id" type="row"/>
-                <field name="categ_id" type="row"/>
-                <field name="product_uom" type="row"/>
-                <field name="mo_product_uom_id" type="row"/>
-                <field name="mo_date_start" type="col" interval="month"/>
-                <field name="mo_product_id" type="col"/>
-                <field name="product_id" type="col"/>
-                <field name="categ_id" type="col"/>
+                <field name="mo_date_start" interval="day" string="MO Schedule Date"/>
+                <field name="mo_name" string="MO Ref."/>
+                <field name="mo_product_id" string="MO Product"/>
+                <field name="mo_product_qty" string="MO Qty"/>
+                <field name="mo_section" string="Prod.Sect."/>
+                <field name="product_id" string="MO line Prod."/>
+                <field name="categ_id" string="MO lines Prod.Catg."/>
+                <field name="product_uom" string="MO line UOM"/>
+                <field name="mo_product_uom_id" string="MO Prod.UOM"/>
                 <field name="product_uom_qty" type="measure"/>
-                <field name="mo_product_qty" type="measure"/>
 
             </pivot>
         </field>
