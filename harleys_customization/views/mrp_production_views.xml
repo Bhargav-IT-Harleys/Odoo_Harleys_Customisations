@@ -21,6 +21,70 @@
                 <field name="batch_size"/>
                 <field name="batch_qty" readonly="1"/>
             </xpath>
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="section"/>
+            </xpath>
         </field>
     </record>
+
+    <record id="view_mrp_order_line_stock_move_tree" model="ir.ui.view">
+        <field name="name">mrp.production.line.stock.move.tree</field>
+        <field name="model">stock.move</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="mo_name"/>
+                <field name="mo_date_start"/>
+                <field name="mo_product_id"/>
+                <field name="mo_section"/>
+                <field name="mo_product_qty"/>
+                <field name="mo_product_uom_id"/>
+                <field name="product_id"/>
+                <field name="categ_id"/>
+                <field name="product_uom_qty"/>
+                <field name="product_uom"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mrp_order_line_stock_move_pivot" model="ir.ui.view">
+        <field name="name">mrp.production.line.stock.move.pivot</field>
+        <field name="model">stock.move</field>
+        <field name="arch" type="xml">
+            <pivot string="Manufacturing Order Lines">
+                <field name="mo_date_start" type="row" interval="day"/>
+                <field name="mo_name" type="row"/>
+                <field name="mo_product_id" type="row"/>
+                <field name="mo_section" type="row"/>
+                <field name="product_id" type="row"/>
+                <field name="categ_id" type="row"/>
+                <field name="product_uom" type="row"/>
+                <field name="mo_product_uom_id" type="row"/>
+                <field name="mo_date_start" type="col" interval="month"/>
+                <field name="mo_product_id" type="col"/>
+                <field name="product_id" type="col"/>
+                <field name="categ_id" type="col"/>
+                <field name="product_uom_qty" type="measure"/>
+                <field name="mo_product_qty" type="measure"/>
+
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_mrp_order_line_stock_move" model="ir.actions.act_window">
+        <field name="name">Manufacturing Order Lines</field>
+        <field name="res_model">stock.move</field>
+        <field name="view_mode">list,pivot</field>
+        <field name="view_id" ref="view_mrp_order_line_stock_move_tree"/>
+        <field name="domain">
+            [('raw_material_production_id','!=',False),
+             ('raw_material_production_id.state','=','confirmed')]
+        </field>
+        <field name="context">
+            {
+                'group_by': ['mo_date_start:day']
+            }
+        </field>
+    </record>
+    
+    <menuitem id="menu_mrp_order_lines" name="Manufacturing Order Lines" parent="mrp.menu_mrp_manufacturing" action="action_mrp_order_line_stock_move" sequence="2"/>
 </odoo>

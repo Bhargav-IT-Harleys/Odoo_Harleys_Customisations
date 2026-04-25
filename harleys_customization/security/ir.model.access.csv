@@ -18,4 +18,5 @@ access_indent_wizard_user,Indent Wizard User,model_indent_request_line_wizard,ha
 access_indent_wizard_admin,Indent Wizard Admin,model_indent_request_line_wizard,harleys_customization.group_indent_admin,1,1,1,1
 
 access_service_type_admin,Service Type Admin,model_service_type,base.group_user,1,1,1,1
+access_production_section,access.production.section,model_production_section,,1,1,1,1
 

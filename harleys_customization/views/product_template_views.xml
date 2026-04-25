@@ -9,6 +9,7 @@
             <xpath expr="//label[@for='list_price']" position="before">
               <field name="state" string="Status" decoration-success="state=='approved'" decoration-danger="state=='rejected'"/>
               <field name="batch_size"/>
+              <field name="section"/>
             </xpath>
 
             <xpath expr="//sheet" position="before">
@@ -29,4 +30,60 @@
             </xpath>
         </field>
     </record>
+
+    <record id="bon_product_product_only_form_view" model="ir.ui.view">
+        <field name="name">view.product.product.form.inherit</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//label[@for='lst_price']" position="before">
+              <field name="section"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_production_section_form" model="ir.ui.view">
+        <field name="name">production.section.form</field>
+        <field name="model">production.section</field>
+        <field name="arch" type="xml">
+            <form string="Production Section">
+            <sheet>
+             <group>
+               <group>
+                <field name="name"/>
+               </group>
+             </group>
+             </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_production_section_tree" model="ir.ui.view">
+        <field name="name">production.section.tree</field>
+        <field name="model">production.section</field>
+        <field name="arch" type="xml">
+            <list string="Production Section">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+    <record model="ir.actions.act_window" id="production_section_menu_action">
+        <field name="name">Production Section</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">production.section</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="production_section_parent_menu"
+              parent="stock.menu_stock_config_settings"
+              name="Production Section"
+              sequence="2"
+              groups="stock.group_stock_manager"/>
+
+    <menuitem id="production_section_menu"
+              parent="production_section_parent_menu"
+              name="Production Section"
+              action="production_section_menu_action"
+              sequence="1"
+              groups="stock.group_stock_manager"/>
 </odoo>

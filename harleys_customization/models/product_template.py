@@ -11,7 +11,7 @@ class ProductTemplate(models.Model):
     state = fields.Selection(_STATE, default="draft", string="Status", readonly="1", copy=False, tracking=True)
     approved_by = fields.Many2one('res.users', string='Approved By', tracking=True, copy=False)
     batch_size = fields.Float(string="Batch Size")
-
+    section = fields.Many2one('production.section', string="Production Section")
 
     def action_sent(self):
         if self.state in ('draft', 'rejected'):
@@ -32,7 +32,65 @@ class ProductTemplate(models.Model):
         if isinstance(vals, list):
             for val in vals:
                 val['active'] = False
+                records = super(ProductTemplate, self).create(vals)
+
+                for rec in records:
+                    if rec.section:
+                        rec.product_variant_ids.write({
+                            'section': rec.section.id
+                        })
+
+                return records
         else:
             vals['active'] = False 
-        return super(ProductTemplate, self).create(vals)
+            rec = super(ProductTemplate, self).create(vals)
+
+            if rec.section:
+                rec.product_variant_ids.write({
+                    'section': rec.section.id
+                })
+
+            return rec
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'section' in vals:
+            for rec in self:
+                rec.product_variant_ids.write({
+                    'section': rec.section.id
+                })
+
+        return res
+
+class ProductProduct(models.Model):
+    _inherit = 'product.product'
+
+    # batch_size = fields.Float(string="Batch Size")
+    section = fields.Many2one('production.section', string="Production Section")
+
+    @api.model
+    def create(self, vals):
+        rec = super().create(vals)
+        if rec.section:
+            rec.product_tmpl_id.write({
+                'section': rec.section.id
+            })
+
+        return rec
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'section' in vals:
+            for rec in self:
+                rec.product_tmpl_id.write({
+                    'section': rec.section.id
+                })
+
+        return res
+
+class ProductionSection(models.Model):
+    _name = "production.section"
+    _description = "Production Section"
+
+    name = fields.Char(string="Production Section")
 
