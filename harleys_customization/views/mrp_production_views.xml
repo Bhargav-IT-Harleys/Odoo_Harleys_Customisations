@@ -81,7 +81,7 @@
         </field>
         <field name="context">
             {
-                'group_by': ['mo_date_start:day']
+                'group_by': ['mo_date_start:day', 'mo_section', 'product_id']
             }
         </field>
     </record>
