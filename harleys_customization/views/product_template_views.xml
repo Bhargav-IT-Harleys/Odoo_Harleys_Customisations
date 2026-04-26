@@ -54,6 +54,16 @@
                 <field name="name"/>
                </group>
              </group>
+             <notebook>
+                    <page string="Products">
+                        <field name="product_ids" readonly="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="categ_id"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
              </sheet>
             </form>
         </field>
@@ -64,6 +74,7 @@
         <field name="arch" type="xml">
             <list string="Production Section">
                 <field name="name"/>
+                <field name="product_ids"/>
             </list>
         </field>
     </record>
