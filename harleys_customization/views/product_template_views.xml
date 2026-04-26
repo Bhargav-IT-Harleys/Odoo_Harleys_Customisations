@@ -56,7 +56,7 @@
              </group>
              <notebook>
                     <page string="Products">
-                        <field name="product_ids" readonly="1">
+                        <field name="product_ids">
                             <list>
                                 <field name="name"/>
                                 <field name="categ_id"/>
