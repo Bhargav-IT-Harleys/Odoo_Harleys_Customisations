@@ -33,7 +33,7 @@
         <field name="arch" type="xml">
             <list>
                 <field name="mo_name" optional="hide"/>
-                <field name="mo_date_start" optional="hide"/>
+                <field name="mo_date_start"/>
                 <field name="mo_product_id" optional="hide"/>
                 <field name="mo_section"/>
                 <field name="mo_product_qty" optional="hide"/>
@@ -84,5 +84,5 @@
         </field>
     </record>
     
-    <menuitem id="menu_mrp_order_lines" name="Manufacturing Order Lines" parent="mrp.menu_mrp_manufacturing" action="action_mrp_order_line_stock_move" sequence="2"/>
+    <menuitem id="menu_mrp_order_lines" name="MO Material Requirments" parent="mrp.menu_mrp_manufacturing" action="action_mrp_order_line_stock_move" sequence="2"/>
 </odoo>
