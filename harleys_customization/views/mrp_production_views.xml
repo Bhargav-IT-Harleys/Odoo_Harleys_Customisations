@@ -32,16 +32,16 @@
         <field name="model">stock.move</field>
         <field name="arch" type="xml">
             <list>
-                <field name="mo_name"/>
-                <field name="mo_date_start"/>
-                <field name="mo_product_id"/>
-                <field name="mo_section"/>
-                <field name="mo_product_qty"/>
-                <field name="mo_product_uom_id"/>
-                <field name="product_id" string="MO line Prod."/>
-                <field name="categ_id"/>
-                <field name="product_uom_qty" string="MO Line Demand"/>
-                <field name="product_uom" string="MO line UOM"/>
+                <field name="mo_name" optional="hide"/>
+                <field name="mo_date_start" optional="hide"/>
+                <field name="mo_product_id" optional="hide"/>
+                <field name="mo_section" optional="hide"/>
+                <field name="mo_product_qty" optional="hide"/>
+                <field name="mo_product_uom_id" optional="hide"/>
+                <field name="product_id" string="MO line Prod." optional="hide"/>
+                <field name="categ_id" optional="hide"/>
+                <field name="product_uom_qty" string="MO Line Demand" optional="hide"/>
+                <field name="product_uom" string="MO line UOM" optional="hide"/>
             </list>
         </field>
     </record>
