@@ -17,3 +17,4 @@ class StockMove(models.Model):
     mo_product_uom_id = fields.Many2one('uom.uom', related='raw_material_production_id.product_uom_id', string="MO Prod.UOM")
     mo_product_id = fields.Many2one('product.product', string="MO Product", related='raw_material_production_id.product_id', store=True, readonly=True)
     categ_id = fields.Many2one('product.category', string="MO lines Prod.Catg.", related='product_id.categ_id', store=True, readonly=True)
+    parent_categ_id = fields.Many2one('product.category', related='product_id.categ_id.parent_id', string="Parent Catg.", store=True)

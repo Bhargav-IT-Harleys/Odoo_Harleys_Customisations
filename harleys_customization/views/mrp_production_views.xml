@@ -40,6 +40,7 @@
                 <field name="mo_product_uom_id" optional="hide"/>
                 <field name="product_id" string="MO line Prod." optional="hide"/>
                 <field name="categ_id" optional="hide"/>
+                <field name="parent_categ_id" optional="hide"/>
                 <field name="product_uom_qty" string="MO Line Demand" optional="hide"/>
                 <field name="product_uom" string="MO line UOM" optional="hide"/>
             </list>
@@ -58,6 +59,7 @@
                 <field name="mo_section" string="Prod.Sect."/>
                 <field name="product_id" string="MO line Prod."/>
                 <field name="categ_id" string="MO lines Prod.Catg."/>
+                <field name="parent_categ_id" string="MO lines Prod.Parent Catg."/>
                 <field name="product_uom" string="MO line UOM"/>
                 <field name="mo_product_uom_id" string="MO Prod.UOM"/>
                 <field name="product_uom_qty" type="measure"/>
