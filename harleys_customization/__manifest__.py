@@ -23,6 +23,7 @@
         'views/service_type_views.xml',
         'views/helpdesk_ticket_views.xml',
         'views/helpdesk_portal_template.xml',
+        'reports/manufacturing_order_lines_views.xml',
     ],
     'installable': True,
     'application': True,

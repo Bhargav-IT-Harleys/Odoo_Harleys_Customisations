@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_report_mo_material_requirements" model="ir.actions.report">
+        <field name="name">MO Material Requirements</field>
+        <field name="model">stock.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">harleys_customization.report_mo_4level</field>
+        <field name="report_file">MO_Material_Requirements</field>
+    </record>
+
+    <template id="report_mo_4level" name="MO 4-Level Hierarchy">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2 class="mb-3" style="text-align:center; font-weight: bold;">MO Material Requirements</h2>
+
+                    <table class="table table-sm mb-0" style="border-collapse: collapse; width: 100%;">
+                        <colgroup>
+                            <col style="width: 80%;"/>
+                            <col style="width: 20%;"/>
+                        </colgroup>
+                            <t t-foreach="docs._get_grouped_4level()" t-as="date_row">
+                                <!-- ════ LEVEL 1 — DATE ════ -->
+                                <tr style="background-color: #d6d6d6; border-top: 3px solid #999;">
+                                    <td style="padding: 6px 8px; font-weight: bold; font-size: 13px;">
+                                        <span style="margin-right: 6px;">▼</span>
+                                        <t t-esc="date_row['date']"/>
+                                        <span style="color: #555; font-weight: normal; margin-left: 4px;">
+                                            (<t t-esc="date_row['total_count']"/>)
+                                        </span>
+                                    </td>
+                                    <td style="padding: 6px 8px; text-align: right; font-weight: bold;"></td>
+                                </tr>
+
+                                <t t-foreach="date_row['sections']" t-as="section">
+
+                                    <!-- ════ LEVEL 2 — SECTION ════ -->
+                                    <tr style="background-color: #ebebeb; border-top: 2px solid #ccc;">
+                                        <td style="padding: 5px 8px 5px 24px; font-weight: bold;">
+                                            <span style="margin-right: 6px; color: #555;">▼</span>
+                                            <t t-esc="section['name']"/>
+                                            <span style="color: #888; font-weight: normal; margin-left: 4px;">
+                                                (<t t-esc="section['total_count']"/>)
+                                            </span>
+                                        </td>
+                                        <td style="padding: 5px 8px; text-align: right; font-weight: bold; color:#444;"></td>
+                                    </tr>
+
+                                    <t t-foreach="section['categories']" t-as="category">
+
+                                        <!-- ════ LEVEL 3 — CATEGORY ════ -->
+                                        <tr style="background-color: #f5f5f5; border-top: 1px solid #ddd;">
+                                            <td style="padding: 4px 8px 4px 48px; font-weight: 600; color: #333;">
+                                                <span style="margin-right: 6px; color: #777;">▼</span>
+                                                <t t-esc="category['name']"/>
+                                                <span style="color: #999; font-weight: normal; margin-left: 4px;">
+                                                    (<t t-esc="category['total_count']"/>)
+                                                </span>
+                                            </td>
+                                            <td style="padding: 4px 8px; text-align: right; color: #555;"></td>
+                                        </tr>
+
+                                        <!-- ════ LEVEL 4 — PRODUCT ════ -->
+                                        <t t-foreach="category['products']" t-as="product" t-foreach-index="product_index">
+                                            <tr style="border-top: 1px solid #f0f0f0;"
+                                                t-attf-style="background-color: {{ '#ffffff' if product_index % 2 == 0 else '#fafafa' }};">
+                                                <td style="padding: 3px 8px 3px 72px; color: #333;">
+                                                    <span style="margin-right: 6px; color: #bbb; font-size: 10px;">▶</span>
+                                                    <span style="color: #666;">[<t t-esc="product['code']"/>]</span>
+                                                    &#160;
+                                                    <t t-esc="product['name']"/>
+                                                    <span style="color: #aaa; margin-left: 4px;">
+                                                        (<t t-esc="product['count']"/>)
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 3px 8px; text-align: right; color: #555;">
+                                                    <t t-esc="product['qty']"/> <t t-esc="product['uom']"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </t>
+                            </t>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

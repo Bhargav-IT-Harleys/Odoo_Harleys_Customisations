@@ -32,6 +32,13 @@
         <field name="model">stock.move</field>
         <field name="arch" type="xml">
             <list>
+                <header>
+                    <button name="action_print_report"
+                            string="Print PDF"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-print"/>
+                </header>
                 <field name="mo_name" optional="hide"/>
                 <field name="mo_date_start"/>
                 <field name="mo_product_id" optional="hide"/>
