@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from datetime import datetime, timedelta
 import pytz
 
 from odoo import _, api, fields, models
@@ -64,6 +63,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 qty = line.product_qty
                 product_uom = line.product_uom_id.id
                 origin = line.indent_number
+                date_start = fields.Date.today() + timedelta(days=1),
                 self.check_product_has_bom(pid)
 
                 if pid in merged:
@@ -76,6 +76,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                         'product_qty': qty,
                         'origin': origin,
                         'product_uom_id': product_uom,
+                        'date_start': date_start[0],
                         'batch_qty': line.batch_qty,
                     }
 
@@ -87,6 +88,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 qty = origin_line.product_qty
                 product_uom = origin_line.product_uom_id.id
                 origin = origin_line.indent_number
+
 
                 if pid in origin_merged:
                     origin_merged[pid]['product_qty'] += qty
