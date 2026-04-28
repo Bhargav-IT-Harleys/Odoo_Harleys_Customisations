@@ -67,4 +67,6 @@ class ProductionSection(models.Model):
     _description = "Production Section"
 
     name = fields.Char(string="Production Section")
+    code = fields.Char(string="Code / Type")
+
     product_ids = fields.One2many('product.template', 'section', string="Products")
