@@ -68,5 +68,3 @@ class ProductionSection(models.Model):
 
     name = fields.Char(string="Production Section")
     code = fields.Char(string="Code / Type")
-
-    product_ids = fields.One2many('product.template', 'section', string="Products")
