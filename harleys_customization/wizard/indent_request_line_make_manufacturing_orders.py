@@ -53,10 +53,10 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
     )
     
     def make_manufacturing_order(self):
+        merged = {}
+        origin_merged = {}
+        internal_transfer_merged = {}
         if self.indent_request_line_ids:
-            merged = {}
-            origin_merged = {}
-            internal_transfer_merged = {}
             for line in self.indent_request_line_ids:
                 line.source_line_id.state = 'locked'
                 pid = line.product_id.id
@@ -80,56 +80,59 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                         'batch_qty': line.batch_qty,
                     }
 
-            active_ids = self.env.context.get('active_ids', [])
-            origin_indent_request_line = self.env['indent.request.line'].search([('id', 'in', active_ids)])
-            for origin_line in origin_indent_request_line:
-                origin_line.state = 'locked'
-                pid = origin_line.product_id.id
-                qty = origin_line.product_qty
-                product_uom = origin_line.product_uom_id.id
-                origin = origin_line.indent_number
+        active_ids = self.env.context.get('active_ids', [])
+        origin_indent_request_line = self.env['indent.request.line'].search([('id', 'in', active_ids)])
+        for origin_line in origin_indent_request_line:
+            origin_line.state = 'locked'
+            pid = origin_line.product_id.id
+            qty = origin_line.product_qty
+            product_uom = origin_line.product_uom_id.id
+            origin = origin_line.indent_number
 
 
-                if pid in origin_merged:
-                    origin_merged[pid]['product_qty'] += qty
-                    if origin:
-                        origin_merged[pid]['origin'] += f",{origin}"
+            if pid in origin_merged:
+                origin_merged[pid]['product_qty'] += qty
+                if origin:
+                    origin_merged[pid]['origin'] += f",{origin}"
+            else:
+                origin_merged[pid] = {
+                    'product_id': pid,
+                    'product_qty': qty,
+                    'origin': origin,
+                    'product_uom_id': product_uom,
+                }
+            indent_source = self.env['indent.request'].search([('id', '=', origin_line.request_id.id)], limit=1)
+            if indent_source:
+                if origin in internal_transfer_merged:
+                    internal_transfer_merged[origin]['lines'] += [{'product_id': pid,
+                                                                    'product_qty': qty,
+                                                                    'origin': origin,
+                                                                    'product_uom_id': product_uom,
+                                                                }]
                 else:
-                    origin_merged[pid] = {
-                        'product_id': pid,
-                        'product_qty': qty,
-                        'origin': origin,
-                        'product_uom_id': product_uom,
-                    }
-                indent_source = self.env['indent.request'].search([('id', '=', origin_line.request_id.id)], limit=1)
-                if indent_source:
-                    if origin in internal_transfer_merged:
-                        internal_transfer_merged[origin]['lines'] += [{'product_id': pid,
-                                                                        'product_qty': qty,
-                                                                        'origin': origin,
-                                                                        'product_uom_id': product_uom,
-                                                                    }]
-                    else:
-                        internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
+                    internal_transfer_merged[origin] = {'delivery_from': indent_source.delivery_from.lot_stock_id.id,
 
-                                                            'delivery_via' : indent_source.via_location_id.id,
-                                                            'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
+                                                        'delivery_via' : indent_source.via_location_id.id,
+                                                        'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
 
-                                                            # 'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
-                                                            'picking_type_id' : indent_source.picking_type_id.id,
-                                                            'via_picking_type_id' : indent_source.via_picking_type_id.id,
+                                                        # 'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
+                                                        'picking_type_id' : indent_source.picking_type_id.id,
+                                                        'via_picking_type_id' : indent_source.via_picking_type_id.id,
 
-                                                            'scheduled_date': indent_source.received_date,
-                                                            'lines': [{'product_id': pid,
-                                                                        'product_qty': qty,
-                                                                        'origin': origin,
-                                                                        'product_uom_id': product_uom,
-                                                                    }]}
-                indent_source.state_checker()
+                                                        'scheduled_date': indent_source.received_date,
+                                                        'lines': [{'product_id': pid,
+                                                                    'product_qty': qty,
+                                                                    'origin': origin,
+                                                                    'product_uom_id': product_uom,
+                                                                }]}
+            indent_source.state_checker()
 
+        self.make_internal_transfer_draft(internal_transfer_merged)
+        if merged:
             data_dict = list(merged.values())
-            self.make_internal_transfer_draft(internal_transfer_merged)
             return self.env['mrp.production'].create(data_dict)
+        else:
+            return True
         
 
     def make_internal_transfer_draft(self, internal_transfer_data):
