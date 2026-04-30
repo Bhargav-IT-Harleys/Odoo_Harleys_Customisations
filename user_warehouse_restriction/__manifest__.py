@@ -33,7 +33,7 @@
         'views/res_config_settings_views.xml',
         'views/stock_warehouse_views.xml',
         'views/res_users_views.xml',
-        'views/mrp_production_views.xml',
+        # 'views/mrp_production_views.xml', #MO line visible based on the user selected warehouse.
     ],
     'images': ['static/description/banner.jpg'],
     'application': False,
