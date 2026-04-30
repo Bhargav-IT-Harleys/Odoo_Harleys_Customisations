@@ -479,6 +479,7 @@ class IndentRequestLine(models.Model):
     def action_create_mo(self):
         selected_lines = self.browse(self.env.context.get('active_ids', []))
 
+
         if not selected_lines:
             raise UserError(_("Please select at least one indent request line."))
         indent_request = self.env['indent.request.line']
@@ -493,7 +494,10 @@ class IndentRequestLine(models.Model):
             # if indent_request_count != len(selected_lines):
             #     raise UserError(_("Selected lined should be in same date & within the date all the sent records want to select."))
 
-
+        delivery_from_values = selected_lines.mapped('delivery_from')
+        if len(delivery_from_values) > 1:
+            raise UserError(_("Select Delivery From not same!"))
+            
         return {
             'type': 'ir.actions.act_window',
             'name': 'Create Draft MO',
