@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="harleys_customization.action_mrp_order_line_stock_move" model="ir.actions.act_window">
+            <field name="domain">
+                [
+                    ('raw_material_production_id', '!=', False),
+                    ('raw_material_production_id.state', '=', 'confirmed'),
+                    ('warehouse_id.user_ids', 'in', [uid])
+                ]
+            </field>
+        </record>
+    </data>
+</odoo>
