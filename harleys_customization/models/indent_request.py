@@ -490,8 +490,8 @@ class IndentRequestLine(models.Model):
             if request_line.state == 'locked':
                 raise UserError(_("Selected indent request line is in locked state"))
             indent_request_count = indent_request.search_count([('indent_date', '=', request_line.indent_date), ('state', '!=', 'locked')])
-            if indent_request_count != len(selected_lines):
-                raise UserError(_("Selected lined should be in same date & within the date all the sent records want to select."))
+            # if indent_request_count != len(selected_lines):
+            #     raise UserError(_("Selected lined should be in same date & within the date all the sent records want to select."))
 
 
         return {
