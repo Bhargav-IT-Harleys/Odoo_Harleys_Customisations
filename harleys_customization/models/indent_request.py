@@ -496,7 +496,7 @@ class IndentRequestLine(models.Model):
 
         delivery_from_values = selected_lines.mapped('delivery_from')
         if len(delivery_from_values) > 1:
-            raise UserError(_("Selected Delivery From is not same"))
+            raise UserError(_('Selected lines "Delivery From" location is not same'))
 
         return {
             'type': 'ir.actions.act_window',
