@@ -14,7 +14,10 @@
             <t t-call="web.external_layout">
                 <div class="page">
                     <h2 class="mb-3" style="text-align:center; font-weight: bold;">MO Material Requirements</h2>
-                    <h5 class="mb-3" style="text-align:left;"><b>Source Location : </b><t t-esc="docs.location_id.complete_name"/></h5>
+                    <h5 class="mb-3" style="text-align:left;">
+                        <b>Source Location : </b>
+                        <t t-esc="', '.join([loc.complete_name for loc in docs.location_id])"/>
+                    </h5>
                     <table class="table table-sm mb-0" style="border-collapse: collapse; width: 100%;">
                         <colgroup>
                             <col style="width: 80%;"/>

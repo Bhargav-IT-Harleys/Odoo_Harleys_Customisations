@@ -37,10 +37,12 @@ class StockMove(models.Model):
 
 
     def _get_grouped_data(self):
+        selected_lines = self.browse(self.env.context.get('active_ids', []))
         StockMove = self.env['stock.move']
         grouped_data = self.env['stock.move'].read_group(
             domain=[('raw_material_production_id','!=',False),
-             ('raw_material_production_id.state','=','confirmed')],
+             ('raw_material_production_id.state','=','confirmed'),
+             ('id', 'in',selected_lines)],
             fields=['mo_date_start', 'parent_categ_id', 'mo_section', 'product_id', 'product_uom_qty', 'packaging_uom_id'],  # only actual fields or aggregates
             groupby=['mo_date_start:day', 'parent_categ_id', 'mo_section', 'product_id'],
             lazy=False
