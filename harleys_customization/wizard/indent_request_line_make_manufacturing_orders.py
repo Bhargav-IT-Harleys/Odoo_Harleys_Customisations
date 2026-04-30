@@ -37,7 +37,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                 "product_uom_id": record.product_uom_id, 
                                 # "product_qty": record.product_qty, 
                                 "demanded_qty": record.product_qty, 
-                                "comments": record.comments, 
+                                "comments": record.comments,
                                 "indent_number": record.indent_number,}
             res["indent_request_line_ids"] = [
             (0, 0, vals) for vals in merged.values()
@@ -63,7 +63,8 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 qty = line.product_qty
                 product_uom = line.product_uom_id.id
                 origin = line.indent_number
-                date_start = fields.Date.today() + timedelta(days=1),
+                received_date = self.env['indent.request'].sudo().search([('name', 'in', line.indent_number.split(','))], limit=1).received_date
+                date_start = received_date - timedelta(days=1),
                 self.check_product_has_bom(pid)
 
                 if pid in merged:
