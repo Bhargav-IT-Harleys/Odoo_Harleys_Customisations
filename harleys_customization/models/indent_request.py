@@ -40,9 +40,8 @@ class IndentRequest(models.Model):
     is_editable = fields.Boolean(compute="_compute_is_editable", readonly=True)
     indent_date = fields.Date(
         string='Date',
-        default=lambda self: date.today()
+        default=lambda self: fields.Date.context_today(self)
     )
-
     delivery_from = fields.Many2one(
         'stock.warehouse',
         string='Delivery From',
@@ -78,7 +77,7 @@ class IndentRequest(models.Model):
 
     received_date = fields.Date(
         string='Receiving Date',
-        default=lambda self: date.today() + timedelta(days=2),
+        default=lambda self: fields.Date.context_today(self) + timedelta(days=2),
     )
 
     company_id = fields.Many2one(
