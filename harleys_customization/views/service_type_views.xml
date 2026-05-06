@@ -47,16 +47,5 @@
         name="Service Type"
         parent="helpdesk.helpdesk_menu_config"
         sequence="4"/>
-
-    <record id="view_employee_form_inherit_hide_wage" model="ir.ui.view">
-        <field name="name">hr.employee.form.inherit.hide.wage</field>
-        <field name="model">hr.employee</field>
-        <field name="inherit_id" ref="hr.view_employee_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='wage']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-        </field>
-    </record>
         
 </odoo>
