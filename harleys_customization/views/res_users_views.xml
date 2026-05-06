@@ -5,9 +5,6 @@
         <field name="model">res.users</field>
         <field name="inherit_id" ref="base.view_users_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='access_rights']/group[@string='Roles']" position="attributes">
-                <attribute name="string"> </attribute>
-            </xpath>
             <xpath expr="//field[@name='role']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
