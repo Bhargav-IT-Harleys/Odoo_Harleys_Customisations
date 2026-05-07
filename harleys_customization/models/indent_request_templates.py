@@ -122,6 +122,7 @@ class IndentRequestLineTemplates(models.Model):
     product_id = fields.Many2one(
         comodel_name="product.product",
         string="Product",
+        required=True,
         tracking=True,
     )
     categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)

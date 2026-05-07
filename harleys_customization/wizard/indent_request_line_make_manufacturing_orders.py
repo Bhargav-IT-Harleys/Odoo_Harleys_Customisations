@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import pytz
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError
 from odoo.tools import get_lang
 
 
@@ -65,7 +65,8 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 origin = line.indent_number
                 received_date = self.env['indent.request'].sudo().search([('name', 'in', line.indent_number.split(','))], limit=1).received_date
                 date_start = received_date - timedelta(days=1),
-                self.check_product_has_bom(pid)
+                if self.env.context.get('check_mo_bom_missing_from_indent'):
+                    self.check_product_has_bom(pid)
 
                 if pid in merged:
                     merged[pid]['product_qty'] += qty
@@ -131,7 +132,9 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
         self.make_internal_transfer_draft(internal_transfer_merged)
         if merged:
             data_dict = list(merged.values())
-            return self.env['mrp.production'].create(data_dict)
+            return self.env['mrp.production'].with_context(
+                check_mo_bom_missing_from_indent=self.env.context.get('check_mo_bom_missing_from_indent')
+            ).create(data_dict)
         else:
             return True
         
@@ -208,22 +211,12 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
 
 
     def check_product_has_bom(self, product_id):
-        """Raise ValidationError if the product has no BoM in current company or globally shared."""
+        """Raise a warning if the product has no BoM in the current company or globally."""
         product = self.env['product.product'].browse(product_id)
-        company = self.env.company
-
-        has_bom = self.env['mrp.bom'].search([
-            '|',
-            ('product_id', '=', product.id),
-            ('product_tmpl_id', '=', product.product_tmpl_id.id),
-            ('company_id', 'in', [company.id, False])
-        ], limit=1)
-
-        if not has_bom:
-            raise ValidationError(
-                "Product '%s' does not have a Bill of Materials defined for company '%s' or globally." %
-                (product.display_name, company.name)
-            )
+        if not self.env['mrp.production']._product_has_bom(product):
+            raise UserError(_(
+                "For the '%s' BOM missing contact your city head"
+            ) % product.display_name)
 
 
 
@@ -305,4 +298,3 @@ class IndentRequestLineWizard(models.TransientModel):
         readonly=True,
         store=True
     )
-

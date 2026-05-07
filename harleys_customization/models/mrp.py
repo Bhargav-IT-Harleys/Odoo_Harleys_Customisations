@@ -1,4 +1,5 @@
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
@@ -6,6 +7,41 @@ class MrpProduction(models.Model):
     batch_size = fields.Float(related="product_id.batch_size", string="Batch Size")
     batch_qty = fields.Float()
     section = fields.Many2one(related="product_id.product_tmpl_id.section", string="Section", store=True)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if self.env.context.get('check_mo_bom_missing_from_indent'):
+            self._check_products_have_bom(vals_list)
+        return super().create(vals_list)
+
+    def _check_products_have_bom(self, vals_list):
+        products_by_company = {}
+        for vals in vals_list:
+            product_id = vals.get('product_id')
+            if not product_id or vals.get('bom_id'):
+                continue
+            company_id = vals.get('company_id') or self.env.company.id
+            products_by_company.setdefault(company_id, set()).add(product_id)
+
+        for company_id, product_ids in products_by_company.items():
+            company = self.env['res.company'].browse(company_id)
+            products = self.env['product.product'].browse(product_ids).exists()
+            for product in products:
+                if not self._product_has_bom(product, company):
+                    raise UserError(_(
+                        "For the '%s' BOM missing contact your city head"
+                    ) % product.display_name)
+
+    def _product_has_bom(self, product, company=None):
+        company = company or self.env.company
+        return bool(self.env['mrp.bom'].search([
+            '|',
+            ('product_id', '=', product.id),
+            '&',
+            ('product_id', '=', False),
+            ('product_tmpl_id', '=', product.product_tmpl_id.id),
+            ('company_id', 'in', [company.id, False]),
+        ], limit=1))
 
 class StockMove(models.Model):
     _inherit = "stock.move"
@@ -131,4 +167,3 @@ class StockMove(models.Model):
                 'total_count': date_total,
             })
         return result
-
