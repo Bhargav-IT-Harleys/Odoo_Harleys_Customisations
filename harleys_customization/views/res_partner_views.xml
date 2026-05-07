@@ -36,6 +36,19 @@
             </field>
         </field>
     </record>
+
+    <record id="bon_res_partner_only_tree_view" model="ir.ui.view">
+        <field name="name">view.res.partner.tree.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='country_id']" position="after">
+                <field name="supplier_rank" invisible="1" column_invisible="1"/>
+                <field name="state" decoration-success="state == 'approved'" invisible="supplier_rank==0" optional="show"/>
+            </xpath>
+       </field>
+    </record>
+
     <record id="hr_employee_form_payroll_page_inherit" model="ir.ui.view">
         <field name="name">hr.employee.form.payroll.page.group</field>
         <field name="model">hr.employee</field>
