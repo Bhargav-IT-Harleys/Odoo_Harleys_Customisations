@@ -10,7 +10,12 @@ class ResPartner(models.Model):
 
     state = fields.Selection(_STATE, default="draft", string="Status", readonly="1", copy=False, tracking=True)
     approved_by = fields.Many2one('res.users', string='Approved By', tracking=True, copy=False)
-
+    approved_date = fields.Datetime(
+        string='Approved Date',
+        readonly=True,
+        tracking=True,
+        copy=False,
+    )
 
     def action_sent(self):
         if self.state in ('draft', 'rejected'):
@@ -21,6 +26,8 @@ class ResPartner(models.Model):
             self.state = 'approved'
             self.active = True
             self.approved_by = self.env.user.id
+            self.approved_date = fields.Datetime.now()
+
 
     def action_reject(self):
         if self.state in ('sent'):
@@ -47,11 +54,11 @@ class ResPartner(models.Model):
             name = f"{self.ref}, {name}"
         return name.strip()
     
-    @api.model
-    def create(self, vals):
-        if isinstance(vals, list):
-            for val in vals:
-                val['active'] = False
-        else:
-            vals['active'] = False 
-        return super(ResPartner, self).create(vals)
+    # @api.model
+    # def create(self, vals):
+    #     if isinstance(vals, list):
+    #         for val in vals:
+    #             val['active'] = False
+    #     else:
+    #         vals['active'] = False 
+    #     return super(ResPartner, self).create(vals)

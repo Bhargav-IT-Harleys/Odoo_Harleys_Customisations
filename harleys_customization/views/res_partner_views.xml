@@ -30,6 +30,10 @@
             <field name="category_id" position="after">
                 <field name="ref"/>
             </field>
+            <field name="state" position="after">
+                <field name="approved_by" invisible="supplier_rank==0"/>
+                <field name="approved_date" invisible="supplier_rank==0"/>
+            </field>
         </field>
     </record>
     <record id="hr_employee_form_payroll_page_inherit" model="ir.ui.view">
