@@ -10,6 +10,12 @@ class ProductTemplate(models.Model):
 
     state = fields.Selection(_STATE, default="draft", string="Status", readonly="1", copy=False, tracking=True)
     approved_by = fields.Many2one('res.users', string='Approved By', tracking=True, copy=False)
+    approved_date = fields.Datetime(
+        string='Approved Date',
+        readonly=True,
+        tracking=True,
+        copy=False,
+    )
     batch_size = fields.Float(string="Batch Size")
     section = fields.Many2one('production.section', string="Production Section")
 
@@ -18,23 +24,24 @@ class ProductTemplate(models.Model):
             self.state = 'sent'
 
     def action_approve(self):
-        if self.state in ('sent'):
-            self.state = 'approved'
-            self.active = True
-            self.approved_by = self.env.user.id
+        # if self.state in ('sent'):
+        self.state = 'approved'
+        self.active = True
+        self.approved_by = self.env.user.id
+        self.approved_date = fields.Datetime.now()
 
     def action_reject(self):
-        if self.state in ('sent'):
-            self.state = 'rejected'
+        # if self.state in ('sent'):
+        self.state = 'rejected'
 
-    @api.model
-    def create(self, vals):
-        if isinstance(vals, list):
-            for val in vals:
-                val['active'] = False
-        else:
-            vals['active'] = False 
-        return super(ProductTemplate, self).create(vals)
+    # @api.model
+    # def create(self, vals):
+    #     if isinstance(vals, list):
+    #         for val in vals:
+    #             val['active'] = False
+    #     else:
+    #         vals['active'] = False 
+    #     return super(ProductTemplate, self).create(vals)
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mrp_bom_form_inherit_approval" model="ir.ui.view">
+        <field name="name">mrp.bom.form.inherit.approval</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_sent" string="Send" type="object"
+                        icon="fa-paper-plane"
+                        class="oe_highlight"
+                        invisible="state not in ('draft', 'rejected')"/>
+                    <button name="action_approve" string="Approve" type="object"
+                        icon="fa-thumbs-up"
+                        class="btn btn-success"
+                        invisible="state != 'sent'"/>
+                    <button name="action_reject" string="Reject" type="object"
+                        icon="fa-thumbs-down"
+                        class="btn btn-danger"
+                        invisible="state != 'sent'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,approved,rejected"/>
+                </header>
+            </xpath>
+
+            <xpath expr="//field[@name='code']" position="after">
+                <field name="approved_by" readonly="1"/>
+                <field name="approved_date" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_mrp_bom_tree_inherit_approval" model="ir.ui.view">
+        <field name="name">mrp.bom.list.inherit.approval</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='type']" position="after">
+                <field name="state" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'" optional="show"/>
+                <field name="approved_by" optional="hide"/>
+                <field name="approved_date" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_mrp_bom_filter_inherit_approval" model="ir.ui.view">
+        <field name="name">mrp.bom.search.inherit.approval</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.view_mrp_bom_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='phantom']" position="after">
+                <separator/>
+                <filter string="Draft" name="bom_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Sent" name="bom_sent" domain="[('state', '=', 'sent')]"/>
+                <filter string="Approved" name="bom_approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Rejected" name="bom_rejected" domain="[('state', '=', 'rejected')]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
