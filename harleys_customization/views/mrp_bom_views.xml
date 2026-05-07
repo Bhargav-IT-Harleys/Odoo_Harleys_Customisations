@@ -14,10 +14,12 @@
                     <button name="action_approve" string="Approve" type="object"
                         icon="fa-thumbs-up"
                         class="btn btn-success"
+                        groups="mrp.group_mrp_manager"
                         invisible="state != 'sent'"/>
                     <button name="action_reject" string="Reject" type="object"
                         icon="fa-thumbs-down"
                         class="btn btn-danger"
+                        groups="mrp.group_mrp_manager"
                         invisible="state != 'sent'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,sent,approved,rejected"/>
                 </header>

@@ -41,6 +41,7 @@ class MrpProduction(models.Model):
             ('product_id', '=', False),
             ('product_tmpl_id', '=', product.product_tmpl_id.id),
             ('company_id', 'in', [company.id, False]),
+            ('state', 'in', ['approved']),
         ], limit=1))
 
 class StockMove(models.Model):

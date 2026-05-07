@@ -21,11 +21,13 @@
                     <button name="action_approve" string="Approve" type="object"
                       class="btn btn-success"
                       icon="fa-thumbs-up"
-                      invisible="state not in ('sent', 'approved')"/>
+                      groups="stock.group_stock_manager"
+                      invisible="state not in ('sent')"/>
                     <button name="action_reject" string="Reject" type="object"
                       class="btn btn-danger"
                       icon="fa-thumbs-down"
-                      invisible="state not in ('sent', 'approved')"/>
+                      groups="stock.group_stock_manager"
+                      invisible="state not in ('sent')"/>
                 </header>
             </xpath>
 
