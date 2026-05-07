@@ -24,24 +24,29 @@ class ProductTemplate(models.Model):
             self.state = 'sent'
 
     def action_approve(self):
-        # if self.state in ('sent'):
-        self.state = 'approved'
-        self.active = True
-        self.approved_by = self.env.user.id
-        self.approved_date = fields.Datetime.now()
+        if self.state in ('sent'):
+            self.state = 'approved'
+            self.active = True
+            self.approved_by = self.env.user.id
+            self.approved_date = fields.Datetime.now()
 
     def action_reject(self):
-        # if self.state in ('sent'):
-        self.state = 'rejected'
+        if self.state in ('sent'):
+            self.state = 'rejected'
 
-    # @api.model
-    # def create(self, vals):
-    #     if isinstance(vals, list):
-    #         for val in vals:
-    #             val['active'] = False
-    #     else:
-    #         vals['active'] = False 
-    #     return super(ProductTemplate, self).create(vals)
+    @api.model
+    def create(self, vals):
+        if isinstance(vals, list):
+            for val in vals:
+                val['active'] = False
+        else:
+            vals['active'] = False 
+        return super(ProductTemplate, self).create(vals)
+
+    def make_state_as_sent(self):
+        for record in self:
+            record.state = 'sent'
+            record.active = False
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'

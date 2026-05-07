@@ -54,11 +54,17 @@ class ResPartner(models.Model):
             name = f"{self.ref}, {name}"
         return name.strip()
     
-    # @api.model
-    # def create(self, vals):
-    #     if isinstance(vals, list):
-    #         for val in vals:
-    #             val['active'] = False
-    #     else:
-    #         vals['active'] = False 
-    #     return super(ResPartner, self).create(vals)
+    @api.model
+    def create(self, vals):
+        if isinstance(vals, list):
+            for val in vals:
+                val['active'] = False
+        else:
+            vals['active'] = False 
+        return super(ResPartner, self).create(vals)
+
+
+    def make_state_as_sent(self):
+        for record in self:
+            record.state = 'sent'
+            record.active = False

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models
+from odoo import fields, models, api
 
 
 _STATE = [
@@ -63,3 +63,18 @@ class MrpBom(models.Model):
                     'approved_by': False,
                     'approved_date': False,
                 })
+
+    @api.model
+    def create(self, vals):
+        if isinstance(vals, list):
+            for val in vals:
+                val['active'] = False
+        else:
+            vals['active'] = False 
+        return super(MrpBom, self).create(vals)
+
+
+    def make_state_as_sent(self):
+        for record in self:
+            record.state = 'sent'
+            record.active = False
