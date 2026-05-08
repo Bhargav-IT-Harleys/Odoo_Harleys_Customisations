@@ -5,7 +5,8 @@ from datetime import date, timedelta
 _STATES = [
     ("draft", "Draft"),
     ("sent", "Sent"),
-    ("locked", "Approved")
+    ("locked", "Approved"),
+    ("closed", "Closed")
 ]
 
 class IndentRequest(models.Model):
@@ -93,6 +94,7 @@ class IndentRequest(models.Model):
         index=True,
         tracking=True,
         required=True,
+        store=True,
         copy=False,
         default="draft",
     )
@@ -291,6 +293,14 @@ class IndentRequest(models.Model):
         if self.line_ids:
             for line in self.line_ids:
                 line.state = 'sent'
+
+    def action_close(self):
+        self._check_template_password()
+        if self.state == 'locked':
+            self.state = 'closed'
+        if self.line_ids:
+            for line in self.line_ids:
+                line.state = 'closed'
 
     @api.depends("line_ids")
     def _compute_line_count(self):
