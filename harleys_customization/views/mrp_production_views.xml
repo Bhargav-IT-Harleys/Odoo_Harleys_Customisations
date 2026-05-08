@@ -10,6 +10,9 @@
             <xpath expr="//field[@name='components_availability']" position="attributes">
                 <attribute name="invisible">state not in ['draft', 'confirmed', 'progress']</attribute>
             </xpath>
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="section"/>
+            </xpath>
         </field>
     </record>
     <record id="mrp_production_form_inherit" model="ir.ui.view">

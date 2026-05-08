@@ -26,6 +26,9 @@
         'views/helpdesk_ticket_views.xml',
         'views/helpdesk_portal_template.xml',
         'reports/manufacturing_order_lines_views.xml',
+        'wizard/mol_internal_transfer_views.xml',
+        'wizard/mo_internal_transfer_views.xml',
+
     ],
     'installable': True,
     'application': True,

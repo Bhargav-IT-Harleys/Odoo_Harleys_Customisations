@@ -20,3 +20,8 @@ access_indent_wizard_admin,Indent Wizard Admin,model_indent_request_line_wizard,
 access_service_type_admin,Service Type Admin,model_service_type,base.group_user,1,1,1,1
 access_production_section,access.production.section,model_production_section,,1,1,1,1
 
+access_mol_internal_transfer_wizard_user,Mol Internal Transfer Wizard User,model_mol_internal_transfer_wizard,stock.group_stock_user,1,1,1,1
+access_mol_internal_transfer_line_wizard_admin,Mol Internal Transfer Line Wizard Admin,model_mol_internal_transfer_line_wizard,stock.group_stock_user,1,1,1,1
+
+access_mo_internal_transfer_wizard_user,Mo Internal Transfer Wizard User,model_mo_internal_transfer_wizard,stock.group_stock_user,1,1,1,1
+access_mo_internal_transfer_line_wizard_admin,Mo Internal Transfer Line Wizard Admin,model_mo_internal_transfer_line_wizard,stock.group_stock_user,1,1,1,1

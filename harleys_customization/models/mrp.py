@@ -7,6 +7,14 @@ class MrpProduction(models.Model):
     batch_size = fields.Float(related="product_id.batch_size", string="Batch Size")
     batch_qty = fields.Float()
     section = fields.Many2one(related="product_id.product_tmpl_id.section", string="Section", store=True)
+    is_transfer_created = fields.Boolean(
+        string="Transfer Created",
+        default=False,
+        readonly=True,
+        copy=False,
+        store=True,
+        help="Indicates whether the transfer has been created."
+        )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -44,6 +52,25 @@ class MrpProduction(models.Model):
             ('state', 'in', ['approved']),
         ], limit=1))
 
+    def action_create_internal_transfer(self):
+        selected_lines = self.browse(self.env.context.get('active_ids', []))
+
+        mrp = self.env['mrp.production']
+        mrp_records = mrp.search([('id', 'in', selected_lines)])
+        for mrp_record in mrp_records:
+            if mrp_record.is_transfer_created:
+                raise UserError(f"Already Material Request created for this selected product - {mrp_record.product_id.display_name}")
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Switch production to store',
+            'res_model': 'mo.internal.transfer.wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref('harleys_customization.view_mo_internal_transfer').id,
+            'target': 'new',
+            'context': {'active_ids': self.ids},
+        }
+
 class StockMove(models.Model):
     _inherit = "stock.move"
 
@@ -55,6 +82,14 @@ class StockMove(models.Model):
     mo_product_id = fields.Many2one('product.product', string="MO Product", related='raw_material_production_id.product_id', store=True, readonly=True)
     categ_id = fields.Many2one('product.category', string="MO lines Prod.Catg.", related='product_id.categ_id', store=True, readonly=True)
     parent_categ_id = fields.Many2one('product.category', related='product_id.categ_id.parent_id', string="Parent Catg.", store=True)
+    is_transfer_created = fields.Boolean(
+        string="Transfer Created",
+        default=False,
+        readonly=True,
+        copy=False,
+        store=True,
+        help="Indicates whether the transfer has been created."
+        )
 
     def action_print_report(self):
         hy = self._get_grouped_data()
@@ -168,3 +203,22 @@ class StockMove(models.Model):
                 'total_count': date_total,
             })
         return result
+
+    def action_create_internal_transfer(self):
+        selected_lines = self.browse(self.env.context.get('active_ids', []))
+
+        stock_move = self.env['stock.move']
+        stock_move_lines = stock_move.search([('id', 'in', selected_lines)])
+        for stock_move_line in stock_move_lines:
+            if stock_move_line.is_transfer_created:
+                raise UserError(f"Already Material Request created for this selected product - {stock_move_line.product_id.display_name}")
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Create Material Request',
+            'res_model': 'mol.internal.transfer.wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref('harleys_customization.view_mol_internal_transfer').id,
+            'target': 'new',
+            'context': {'active_ids': self.ids},
+        }

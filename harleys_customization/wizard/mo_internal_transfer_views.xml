@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_mo_internal_transfer" model="ir.ui.view">
+        <field name="name">MO Internal Transfer Wizard</field>
+        <field name="model">mo.internal.transfer.wizard</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <form string="Switch production to store">
+                <newline />
+                <group>
+                    <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('incoming', 'outgoing', 'internal'))]"/>
+                    <field name="location_id" options="{'no_create': True}"/>
+                    <field name="location_dest_id" options="{'no_create': True}"/>
+                </group>
+                <newline />
+                <separator string="Operations:" />
+                <newline />
+                <newline />
+                <group>
+                    <field name="internal_transfer_line_wizard_ids" nolabel="1" colspan="2">
+                        <list name="Operations" create="false" editable="bottom">
+                            <field name="mo_number" readonly="1" force_save="1" optional="hide"/>
+                            <field name="product_id" readonly="1" force_save="1"/>
+                            <field name="name" readonly="1" force_save="1" optional="hide"/>
+                            <field name="demanded_qty" readonly="0"/>
+                            <field
+                                name="product_uom_id"
+                                column_invisible="1"
+                                groups="!uom.group_uom"
+                                force_save="1"
+                                
+                            />
+                            <field name="product_uom_id" groups="uom.group_uom" readonly="1" force_save="1"/>
+                        </list>
+                    </field>
+                </group>
+                <newline />
+                <footer>
+                    <button
+                        name="make_internal_transfer_draft"
+                        string="Switch production to store"
+                        type="object"
+                        class="oe_highlight"
+                    />
+                    <button special="cancel" string="Cancel" class="oe_link" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_create_mo_internal_transfer_wizard" model="ir.actions.server">
+        <field name="name">Switch production to store</field>
+        <field name="model_id" ref="harleys_customization.model_mrp_production"/>
+        <field name="binding_model_id" ref="harleys_customization.model_mrp_production"/>
+        <field name="state">code</field>
+        <field name="code">
+            action=records.action_create_internal_transfer()
+        </field>
+    </record>
+</odoo>
