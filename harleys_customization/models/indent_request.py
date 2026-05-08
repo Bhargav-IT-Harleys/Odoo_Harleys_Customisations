@@ -279,6 +279,13 @@ class IndentRequest(models.Model):
     
     def action_sent(self):
         self._check_template_password()
+
+        for line in self.line_ids:
+            if not self._product_has_bom(line.product_id):
+                raise UserError(_(
+                    "For the '%s' BOM missing contact your city head"
+                ) % line.product_id.display_name)
+
         if self.state == 'draft':
             self.state = 'sent'
         if self.line_ids:
@@ -343,6 +350,18 @@ class IndentRequest(models.Model):
                     "comments" : template_line.comments,
                 })]
 
+
+    def _product_has_bom(self, product, company=None):
+        company = company or self.company_id
+        return bool(self.env['mrp.bom'].search([
+            '|',
+            ('product_id', '=', product.id),
+            '&',
+            ('product_id', '=', False),
+            ('product_tmpl_id', '=', product.product_tmpl_id.id),
+            ('company_id', 'in', [company.id, False]),
+            ('state', 'in', ['approved']),
+        ], limit=1))
 
 class IndentRequestLine(models.Model):
     _name = 'indent.request.line'

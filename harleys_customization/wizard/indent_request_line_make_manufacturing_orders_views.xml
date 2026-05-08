@@ -43,7 +43,6 @@
                         string="Approve"
                         type="object"
                         class="oe_highlight"
-                        context="{'check_mo_bom_missing_from_indent': True}"
                     />
                     <button special="cancel" string="Cancel" class="oe_link" />
                 </footer>
