@@ -13,6 +13,9 @@
             <xpath expr="//field[@name='product_id']" position="after">
                 <field name="section"/>
             </xpath>
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="is_transfer_created" optional="hide"/>
+            </xpath>
         </field>
     </record>
     <record id="mrp_production_form_inherit" model="ir.ui.view">
@@ -54,6 +57,8 @@
                 <field name="parent_categ_id"/>
                 <field name="product_uom_qty" string="MO Line Demand"/>
                 <field name="product_uom" string="MO line UOM"/>
+                <field name="is_transfer_created" optional="hide"/>
+
             </list>
         </field>
     </record>
@@ -74,7 +79,6 @@
                 <field name="product_uom" string="MO line UOM"/>
                 <field name="mo_product_uom_id" string="MO Prod.UOM"/>
                 <field name="product_uom_qty" type="measure"/>
-
             </pivot>
         </field>
     </record>

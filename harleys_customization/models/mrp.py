@@ -53,6 +53,18 @@ class MrpProduction(models.Model):
     def action_create_internal_transfer(self):
         selected_lines = self.browse(self.env.context.get('active_ids', []))
 
+
+        if 'draft' in selected_lines.mapped('state') or 'confirmed' in selected_lines.mapped('state') or 'progress' in selected_lines.mapped('state') or 'to_close' in selected_lines.mapped('state') or 'cancel' in selected_lines.mapped('state'):
+            raise UserError('Selected Manufacturing Orders is not in "Done" state')
+            
+        section_values = selected_lines.mapped('section')
+        if len(section_values) > 1:
+            raise UserError(_('Selected lines "section" is not same'))
+
+        picking_type_values = selected_lines.mapped('picking_type_id')
+        if len(picking_type_values) > 1:
+            raise UserError(_('Selected lines "Operation Type" is not same'))
+
         mrp = self.env['mrp.production']
         mrp_records = mrp.search([('id', 'in', selected_lines)])
         for mrp_record in mrp_records:
@@ -204,6 +216,14 @@ class StockMove(models.Model):
 
     def action_create_internal_transfer(self):
         selected_lines = self.browse(self.env.context.get('active_ids', []))
+
+        section_values = selected_lines.mapped('mo_section')
+        if len(section_values) > 1:
+            raise UserError(_('Selected lines "Production Section." is not same'))
+
+        picking_type_values = selected_lines.mapped('picking_type_id')
+        if len(picking_type_values) > 1:
+            raise UserError(_('Selected lines "Operation Type" is not same'))
 
         stock_move = self.env['stock.move']
         stock_move_lines = stock_move.search([('id', 'in', selected_lines)])
