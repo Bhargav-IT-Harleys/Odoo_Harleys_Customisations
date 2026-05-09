@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import pytz
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import get_lang
 
 
@@ -65,7 +65,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 origin = line.indent_number
                 received_date = self.env['indent.request'].sudo().search([('name', 'in', line.indent_number.split(','))], limit=1).received_date
                 date_start = received_date - timedelta(days=1)
-                self.check_product_has_bom(pid)
+                # picking_type = self.env['stock.picking.type'].search([('warehouse_id', '=', self.env.user.property_warehouse_id.id)], limit=1)
                 if pid in merged:
                     merged[pid]['product_qty'] += qty
                     if origin:
@@ -76,8 +76,9 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                         'product_qty': qty,
                         'origin': origin,
                         'product_uom_id': product_uom,
-                        'date_start': date_start[0],
+                        'date_start': date_start,
                         'batch_qty': line.batch_qty,
+                        'picking_type_id': picking_type.id if picking_type else False,
                     }
 
         active_ids = self.env.context.get('active_ids', [])
@@ -116,7 +117,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                                         'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
 
                                                         # 'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
-                                                        'picking_type_id' : indent_source.picking_type_id.id,
+                                                        # 'picking_type_id' : indent_source.picking_type_id.id,
                                                         'via_picking_type_id' : indent_source.via_picking_type_id.id,
 
                                                         'scheduled_date': indent_source.received_date,
@@ -204,25 +205,6 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
             picking_next_transfer.action_confirm()
 
         return True
-
-
-    def check_product_has_bom(self, product_id):
-        """Raise a warning if the product has no BoM in the current company or globally."""
-        product = self.env['product.product'].browse(product_id)
-        company = self.env.company
-
-        has_bom = self.env['mrp.bom'].search([
-            '|',
-            ('product_id', '=', product.id),
-            ('product_tmpl_id', '=', product.product_tmpl_id.id),
-            ('company_id', 'in', [company.id, False])
-        ], limit=1)
-
-        if not has_bom:
-            raise ValidationError(
-                "Product '%s' does not have a Bill of Materials defined for company '%s' or globally." %
-                (product.display_name, company.name)
-            )
 
 class IndentRequestLineWizard(models.TransientModel):
     _name = 'indent.request.line.wizard'
