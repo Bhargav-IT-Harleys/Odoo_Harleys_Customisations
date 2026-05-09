@@ -23,6 +23,13 @@ class MolInternalTransferWizard(models.TransientModel):
         store=True, precompute=True, readonly=False,
         check_company=True, required=True)
 
+    @api.onchange("picking_type_id")
+    def _onchange_picking_type(self):
+        if self.picking_type_id:
+            self.location_id = self.picking_type_id.default_location_src_id.id
+            self.location_dest_id = self.picking_type_id.default_location_dest_id.id
+
+
     @api.model
     def default_get(self, fields_list):
         res = super(MolInternalTransferWizard, self).default_get(fields_list)

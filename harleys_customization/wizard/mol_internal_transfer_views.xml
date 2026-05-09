@@ -18,7 +18,7 @@
                 <newline />
                 <group>
                     <field name="internal_transfer_line_wizard_ids" nolabel="1" colspan="2">
-                        <list name="Operations" create="false" editable="bottom">
+                        <list name="Operations" editable="bottom">
                             <field name="mo_number" readonly="1" force_save="1" optional="hide"/>
                             <field name="product_id" readonly="1" force_save="1"/>
                             <field name="name" readonly="1" force_save="1" optional="hide"/>

@@ -65,7 +65,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 origin = line.indent_number
                 received_date = self.env['indent.request'].sudo().search([('name', 'in', line.indent_number.split(','))], limit=1).received_date
                 date_start = received_date - timedelta(days=1)
-                # picking_type = self.env['stock.picking.type'].search([('warehouse_id', '=', self.env.user.property_warehouse_id.id)], limit=1)
+                picking_type = self.env['stock.picking.type'].search([('warehouse_id', '=', self.env.user.property_warehouse_id.id)], limit=1)
                 if pid in merged:
                     merged[pid]['product_qty'] += qty
                     if origin:
@@ -117,7 +117,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                                                         'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
 
                                                         # 'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
-                                                        # 'picking_type_id' : indent_source.picking_type_id.id,
+                                                        'picking_type_id' : indent_source.picking_type_id.id,
                                                         'via_picking_type_id' : indent_source.via_picking_type_id.id,
 
                                                         'scheduled_date': indent_source.received_date,
