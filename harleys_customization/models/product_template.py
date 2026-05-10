@@ -19,6 +19,22 @@ class ProductTemplate(models.Model):
     batch_size = fields.Float(string="Batch Size")
     section = fields.Many2one('production.section', string="Production Section")
 
+    @api.constrains('default_code')
+    def _check_default_code_unique(self):
+        for rec in self:
+            if not rec.default_code:
+                continue
+
+            existing = self.search([
+                ('default_code', '=', rec.default_code),
+                ('id', '!=', rec.id)
+            ], limit=1)
+
+            if existing:
+                raise ValidationError(
+                    _("The Internal Reference '%s' already exists.") % rec.default_code
+                )
+                
     def action_sent(self):
         if self.state in ('draft', 'rejected'):
             self.state = 'sent'

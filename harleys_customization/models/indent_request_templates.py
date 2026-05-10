@@ -52,8 +52,8 @@ class IndentRequestTemplates(models.Model):
     )
     
     employee_ids = fields.Many2many('hr.employee', string="Employee")
-    password = fields.Char(string="Password")
-    retype_password = fields.Char(string="Re-Enter Password")
+    password = fields.Char(string="Password", copy=False)
+    retype_password = fields.Char(string="Re-Enter Password", copy=False)
 
     line_ids = fields.One2many(
         comodel_name="indent.request.line.templates",

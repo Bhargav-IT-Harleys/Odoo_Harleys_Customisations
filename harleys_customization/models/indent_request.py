@@ -114,7 +114,7 @@ class IndentRequest(models.Model):
         tracking=True,
     )
 
-    employee_id = fields.Many2one('hr.employee', string="Requested Employee")
+    employee_id = fields.Many2one('hr.employee', string="Requested Employee", copy=False)
     password = fields.Char(string="Enter Password")
     is_valid = fields.Boolean("Is Valid",readonly=True, invisible=True)
 
