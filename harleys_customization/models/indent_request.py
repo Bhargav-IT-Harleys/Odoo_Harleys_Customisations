@@ -282,8 +282,19 @@ class IndentRequest(models.Model):
     def action_sent(self):
         self._check_template_password()
 
+        # for line in self.line_ids:
+        #     if not self._product_has_bom(line.product_id):
+        #         raise UserError(_(
+        #             "For the '%s' BOM missing contact your city head"
+        #         ) % line.product_id.display_name)
+        manufacture_route = self.env.ref('mrp.route_warehouse0_manufacture', raise_if_not_found=False)
+
         for line in self.line_ids:
-            if not self._product_has_bom(line.product_id):
+            if (
+                manufacture_route
+                and manufacture_route in line.product_id.route_ids
+                and not self._product_has_bom(line.product_id)
+            ):
                 raise UserError(_(
                     "For the '%s' BOM missing contact your city head"
                 ) % line.product_id.display_name)
