@@ -41,8 +41,8 @@ class IndentRequestTemplates(models.Model):
         related='via_picking_type_id.warehouse_id',
         required=True
     )
-    picking_type_id = fields.Many2one('stock.picking.type', string="Operation Type")
-    via_picking_type_id = fields.Many2one('stock.picking.type', string="Via Operation Type")
+    picking_type_id = fields.Many2one('stock.picking.type', string="Operation From", help="This defines the first stock movement from the Central Store to the Transit location. When the indent is confirmed, the products will first move out from the Central Store and reach the Transit location. Example: TGCS/Stock → Transit")
+    via_picking_type_id = fields.Many2one('stock.picking.type', string="Operation To", help="This defines the second stock movement from the Transit location to the Outlet location. When the indent is confirmed, and first move is completed the products will move out from Transit location to Outlet location. Example: Transit → TG-Ivory Lounge Nanakramguda")
 
     company_id = fields.Many2one(
         comodel_name="res.company",
@@ -73,10 +73,10 @@ class IndentRequestTemplates(models.Model):
         ])
 
         if not existing_templates:
-            new_name = base_name
+            new_name = f"{base_name} - 1"
         else:
             count = len(existing_templates)
-            new_name = f"{base_name} - {count}"
+            new_name = f"{base_name} - {count+1}"
 
         default['name'] = new_name
         return super(IndentRequestTemplates, self).copy(default)
@@ -98,10 +98,10 @@ class IndentRequestTemplates(models.Model):
             ])
 
             if not existing_templates:
-                self.name = base_name
+                self.name = f"{base_name} - 1"
             else:
                 count = len(existing_templates)
-                self.name = f"{base_name} - {count}"
+                self.name = f"{base_name} - {count+1}"
 
 class IndentRequestLineTemplates(models.Model):
     _name = 'indent.request.line.templates'

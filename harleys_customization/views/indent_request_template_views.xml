@@ -17,7 +17,7 @@
                             <field name="picking_type_id" required="1"/>
                             <field name="via_picking_type_id" required="1"/>
                             <field name="delivery_from" required="1"/>
-                            <field name="via_location_id" required="1"/>
+                            <field name="via_location_id" required="1" invisible="1"/>
                             <field name="delivery_to" required="1"/>
                             <field name="company_id" groups="base.group_multi_company" widget="selection"/>
                         </group>
