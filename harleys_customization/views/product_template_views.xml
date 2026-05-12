@@ -46,6 +46,10 @@
             <xpath expr="//field[@name='uom_id']" position="after">
                 <field name="state" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'" optional="show"/>
             </xpath>
+            <field name="name" position="after">
+                <field name="section"/>
+                <field name="batch_size"/>
+            </field>
        </field>
     </record>
 
@@ -57,7 +61,20 @@
 
             <xpath expr="//label[@for='lst_price']" position="before">
               <field name="section"/>
+              <field name="batch_size"/>
             </xpath>
+        </field>
+    </record>
+
+    <record id="bon_product_product_only_tree_view" model="ir.ui.view">
+        <field name="name">view.product.product.tree.inherit</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_product_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="section"/>
+                <field name="batch_size"/>
+            </field>
         </field>
     </record>
 
