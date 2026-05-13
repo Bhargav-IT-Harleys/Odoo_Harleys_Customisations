@@ -135,7 +135,7 @@ class MolInternalTransferLineWizard(models.TransientModel):
         store=True
     )
     demanded_qty = fields.Float(
-        string="Demanded Qty", tracking=True, digits="Product Unit of Measure", store=True)
+        string="Demanded Qty", tracking=True, digits="Product Unit", store=True)
 
     mo_number = fields.Char(
         string="MO Number",

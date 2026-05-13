@@ -240,7 +240,7 @@ class IndentRequestLineWizard(models.TransientModel):
         store=True
     )
     product_qty = fields.Float(
-        string="Production Qty", tracking=True, digits="Product Unit of Measure", store=True, compute="_compute_product_qty")
+        string="Production Qty", tracking=True, digits="Product Unit", store=True, compute="_compute_product_qty")
     demanded_qty = fields.Float(string="Demanded Qty", readonly=True, store=True)
     comments = fields.Char(string="Comments", store=True)
     batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")
