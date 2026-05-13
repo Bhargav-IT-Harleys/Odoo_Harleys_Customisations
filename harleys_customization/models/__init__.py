@@ -8,3 +8,4 @@ from . import mrp_bom
 from . import service_type
 from . import helpdesk_ticket
 from . import stock_move_line
+from . import stock_warehouse
