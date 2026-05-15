@@ -8,7 +8,7 @@
             <form string="Create Material Request">
                 <newline />
                 <group>
-                    <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('incoming', 'outgoing', 'internal'))]"/>
+                    <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('internal'))]"/>
                     <field name="location_id" options="{'no_create': True}"/>
                     <field name="location_dest_id" options="{'no_create': True}"/>
                 </group>
