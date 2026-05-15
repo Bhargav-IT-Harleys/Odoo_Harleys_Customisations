@@ -95,7 +95,7 @@
         </field>
         <field name="context">
             {
-                'group_by': ['mo_date_start:day', 'mo_section', 'parent_categ_id', 'product_id']
+                'group_by': ['mo_date_start:day', 'mo_section']
             }
         </field>
     </record>
