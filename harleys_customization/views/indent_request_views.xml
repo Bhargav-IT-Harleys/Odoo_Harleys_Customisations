@@ -139,7 +139,8 @@
                 <field name="name"/>
                 <field name="delivery_from"/>
                 <field name="delivery_to"/>
-                <field name="employee_id"/>
+                <field name="requested_by"/>
+                <!-- <field name="employee_id"/> -->
                 <field name="received_date"/>
                 <field name="create_date"/>
                 <field name="internal_transfer_status"/>
