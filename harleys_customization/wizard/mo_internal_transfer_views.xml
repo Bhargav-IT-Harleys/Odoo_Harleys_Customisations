@@ -38,7 +38,7 @@
                 <footer>
                     <button
                         name="make_internal_transfer_draft"
-                        string="Switch production to store"
+                        string="Send Produced Products to store"
                         type="object"
                         class="oe_highlight"
                     />
@@ -49,7 +49,7 @@
     </record>
 
     <record id="action_create_mo_internal_transfer_wizard" model="ir.actions.server">
-        <field name="name">Switch production to store</field>
+        <field name="name">Send Produced Products to store</field>
         <field name="model_id" ref="harleys_customization.model_mrp_production"/>
         <field name="binding_model_id" ref="harleys_customization.model_mrp_production"/>
         <field name="state">code</field>
