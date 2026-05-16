@@ -30,6 +30,9 @@
             <xpath expr="//field[@name='user_id']" position="after">
                 <field name="section"/>
             </xpath>
+            <xpath expr="//button[@name='action_assign']" position="attributes">
+                <attribute name="string">Check Availability &amp; Reserve</attribute>
+            </xpath>
         </field>
     </record>
 

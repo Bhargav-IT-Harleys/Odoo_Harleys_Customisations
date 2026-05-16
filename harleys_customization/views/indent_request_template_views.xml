@@ -10,7 +10,7 @@
                         <label for="name" class="oe_inline"/>
                     </div>
                     <h1>
-                        <field name="name" class="oe_inline" readonly="1" force_save="1"/>
+                        <field name="name" class="oe_inline" readonly="0" force_save="1"/>
                     </h1>
                     <group>
                         <group>

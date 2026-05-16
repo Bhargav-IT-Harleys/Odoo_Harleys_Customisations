@@ -73,7 +73,7 @@ class MrpProduction(models.Model):
 
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Switch production to store',
+            'name': 'Internal Transfer to store',
             'res_model': 'mo.internal.transfer.wizard',
             'view_mode': 'form',
             'view_id': self.env.ref('harleys_customization.view_mo_internal_transfer').id,

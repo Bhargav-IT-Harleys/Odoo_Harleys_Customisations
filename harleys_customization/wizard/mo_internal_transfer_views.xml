@@ -5,7 +5,7 @@
         <field name="model">mo.internal.transfer.wizard</field>
         <field name="type">form</field>
         <field name="arch" type="xml">
-            <form string="Switch production to store">
+            <form string="Internal Transfer to store">
                 <newline />
                 <group>
                     <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('internal'))]"/>
@@ -38,7 +38,7 @@
                 <footer>
                     <button
                         name="make_internal_transfer_draft"
-                        string="Send Produced Products to store"
+                        string="Internal Transfer to store"
                         type="object"
                         class="oe_highlight"
                     />
@@ -49,7 +49,7 @@
     </record>
 
     <record id="action_create_mo_internal_transfer_wizard" model="ir.actions.server">
-        <field name="name">Send Produced Products to store</field>
+        <field name="name">Internal Transfer to store</field>
         <field name="model_id" ref="harleys_customization.model_mrp_production"/>
         <field name="binding_model_id" ref="harleys_customization.model_mrp_production"/>
         <field name="state">code</field>

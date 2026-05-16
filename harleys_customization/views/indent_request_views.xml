@@ -194,9 +194,9 @@
                     create="false"
             >
                 <field name="product_id" options="{'no_create': True}" readonly="0"/>
-                <field name="categ_id" force_save="1"/>
-                <field name="default_code" readonly="0"/>
-                <field name="hsn_code" readonly="0"/>
+                <!-- <field name="categ_id" force_save="1"/> -->
+                <!-- <field name="default_code" readonly="0"/> -->
+                <!-- <field name="hsn_code" readonly="0"/> -->
                 <field name="product_qty" readonly="0"/>
                 <field name="product_uom_id" readonly="0"/>
                 <field name="comments" readonly="0"/>
@@ -225,7 +225,7 @@
     </record>
 
     <record id="view_indent_request_line_search" model="ir.ui.view">
-        <field name="name">Indent Requests Line</field>
+        <field name="name">Indent Requests Lines</field>
         <field name="model">indent.request.line</field>
         <field name="arch" type="xml">
             <search string="Indent Request Lines">
@@ -240,14 +240,14 @@
     </record>
 
       <record model="ir.actions.act_window" id="indent_request_line_action">
-        <field name="name">Indent Requests Line</field>
+        <field name="name">Indent Requests Lines</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">indent.request.line</field>
         <field name="view_mode">list</field>
         <field name="context">{'search_default_requested_by':uid, 'group_by': 'received_date:day'}</field>
         <field name="help" type="html">
             <p class="oe_view_nocontent_create">
-                Click to start a new Indent request line process.
+                Click to start a new Indent request lines process.
             </p>
             <p>
                 A Indent request line is an instruction to Manufacturing to procure
@@ -276,7 +276,7 @@
     <menuitem name="Indent Request" id="menu_indent_request" parent="harleys_customization.menu_indent_request_root"/>
     <menuitem name="Indent Requests" id="harleys_customization.menu_sub_indent_request" parent="harleys_customization.menu_indent_request"
               action="harleys_customization.indent_request_form_action"/>
-    <menuitem name="Indent Request Line" id="harleys_customization.menu_sub_indent_request_line" parent="harleys_customization.menu_indent_request"
+    <menuitem name="Indent Request Lines" id="harleys_customization.menu_sub_indent_request_line" parent="harleys_customization.menu_indent_request"
               action="harleys_customization.indent_request_line_action"/>
 
 
