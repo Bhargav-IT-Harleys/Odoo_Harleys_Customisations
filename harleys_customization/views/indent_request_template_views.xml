@@ -90,7 +90,7 @@
     </record>
 
 
-    <menuitem name="Outlet Wise Indent Template" id="harleys_customization.menu_sub_indent_request_template" parent="harleys_customization.menu_indent_request"
+    <menuitem name="Outlet Wise Indent Template" id="harleys_customization.menu_sub_indent_request_template" parent="harleys_customization.menu_indent_request" groups="harleys_customization.group_indent_admin"
               action="harleys_customization.indent_request_templates_form_action"/>
 
   </data>

@@ -276,7 +276,7 @@
     <menuitem name="Indent Request" id="menu_indent_request" parent="harleys_customization.menu_indent_request_root"/>
     <menuitem name="Indent Requests" id="harleys_customization.menu_sub_indent_request" parent="harleys_customization.menu_indent_request"
               action="harleys_customization.indent_request_form_action"/>
-    <menuitem name="Indent Request Lines" id="harleys_customization.menu_sub_indent_request_line" parent="harleys_customization.menu_indent_request"
+    <menuitem name="Indent Request Lines" id="harleys_customization.menu_sub_indent_request_line" parent="harleys_customization.menu_indent_request" groups="stock.group_stock_manager"
               action="harleys_customization.indent_request_line_action"/>
 
 
