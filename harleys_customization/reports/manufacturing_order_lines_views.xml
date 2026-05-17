@@ -79,6 +79,7 @@
                                                 </td>
                                                 <td style="padding: 3px 8px; text-align: right; color: #555;">
                                                     <t t-esc="product['qty']"/> <t t-esc="product['uom']"/>
+                                                    <!-- <br/> <t t-esc="product['on_hand']"/> <t t-esc="product['uom']"/> On Hand -->
                                                 </td>
                                             </tr>
                                         </t>

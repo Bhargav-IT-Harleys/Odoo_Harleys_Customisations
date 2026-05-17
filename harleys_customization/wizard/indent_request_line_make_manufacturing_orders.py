@@ -227,8 +227,8 @@ class IndentRequestLineWizard(models.TransientModel):
     )
     qty_available = fields.Float(
         string="On Hand QTY",
-        related='product_id.qty_available',
         readonly=True,
+        compute="_compute_quantities_custom",
     )
     default_code = fields.Char(string="Internal Reference", related="product_id.default_code", store=True)
     hsn_code = fields.Char(string="HSN/SAC Code", store=True)
@@ -245,6 +245,13 @@ class IndentRequestLineWizard(models.TransientModel):
     comments = fields.Char(string="Comments", store=True)
     batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")
     batch_qty = fields.Float(string="No. of Batch's", compute="_compute_no_of_batches", store=True)
+
+
+    def _compute_quantities_custom(self):
+        for rec in self:
+            indent_request = self.env['indent.request'].search([('name', '=', self.indent_number)], limit=1)
+            rec.qty_available = sum([stock_quant.inventory_quantity_auto_apply for stock_quant in 
+            self.env['stock.quant'].sudo().search([('product_id', '=', rec.product_id.id), ('location_id', '=', indent_request.delivery_from.lot_stock_id.id)])])
 
     @api.depends('batch_qty', 'batch_size')
     def _compute_product_qty(self):

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <odoo>
+    <record id="purchase_order_form_inherit_restrict_confirm" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.restrict.confirm</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Targets the primary action_confirm button -->
+            <xpath expr="//button[@id='bid_confirm']" position="attributes">
+                <attribute name="groups">purchase.group_purchase_manager</attribute>
+            </xpath>
+            
+    
+            <!-- Targets the secondary action_confirm button in the status bar -->
+            <xpath expr="//button[@id='draft_confirm']" position="attributes">
+                <attribute name="groups">purchase.group_purchase_manager</attribute>
+            </xpath>
+        </field>
+    </record>
+  </odoo>

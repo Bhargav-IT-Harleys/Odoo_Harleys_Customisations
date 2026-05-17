@@ -85,7 +85,7 @@ class StockMove(models.Model):
     _inherit = "stock.move"
 
     mo_name = fields.Char(related='raw_material_production_id.name', string="MO Ref.")
-    mo_product_qty = fields.Float(related="raw_material_production_id.product_qty", string="MO Qty")
+    mo_product_qty = fields.Float(related="raw_material_production_id.product_qty", string="MO Qty", digits="Product Unit")
     mo_date_start = fields.Datetime(related='raw_material_production_id.date_start', string="MO Schedule Date")
     mo_section = fields.Many2one('production.section', related='raw_material_production_id.section', string="Prod.Sect.")
     mo_product_uom_id = fields.Many2one('uom.uom', related='raw_material_production_id.product_uom_id', string="MO Prod.UOM")
@@ -101,8 +101,17 @@ class StockMove(models.Model):
         help="Indicates whether the transfer has been created."
         )
 
+    qty_available = fields.Float(
+        'On Hand', compute='_compute_quantities_custom',
+        digits="Product Unit")
+
+    def _compute_quantities_custom(self):
+        for rec in self:
+            rec.qty_available = sum([stock_quant.inventory_quantity_auto_apply for stock_quant in 
+            self.env['stock.quant'].sudo().search([('product_id', '=', rec.product_id.id), ('location_id', '=', rec.location_id.id)])])
+        
+
     def action_print_report(self):
-        hy = self._get_grouped_data()
         return self.env.ref(
             'harleys_customization.action_report_mo_material_requirements'
         ).report_action(self)
@@ -147,6 +156,8 @@ class StockMove(models.Model):
             qty     = line['product_uom_qty'] or 0
             product_uom = self.env['product.product'].search([('id', '=', line['product_id'][0])], limit=1)
             uom     = product_uom.uom_id.name
+            # on_hand = self.env['stock.move'].sudo().search([('id', '=', line['id'][0])], limit=1).qty_available or 0.00000
+
 
             categ_key   = categ[0] if categ else 0
             categ_name  = categ[1] if categ else 'Uncategorized'
@@ -184,6 +195,7 @@ class StockMove(models.Model):
                 'count': count,
                 'uom': uom_name,
                 'qty': product_qty,
+                # 'on_hand' : on_hand,
             })
 
             tree[date][section_key]['categories'][categ_key]['total_count'] += count

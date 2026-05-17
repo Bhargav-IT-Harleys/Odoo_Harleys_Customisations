@@ -412,7 +412,7 @@ class IndentRequestLine(models.Model):
     
     qty_available = fields.Float(
         string="On Hand QTY",
-        related='product_id.qty_available',
+        compute='_compute_quantities_custom',
         readonly=True,
     )
     batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")
@@ -423,8 +423,13 @@ class IndentRequestLine(models.Model):
         string="UoM"
     )
     product_qty = fields.Float(
-        string="Qty", tracking=True, digits="Product Unit of Measure"
+        string="Qty", tracking=True, digits="Product Unit"
     )
+    received_qty = fields.Float(
+        string="Received Qty", digits="Product Unit",
+        compute='_compute_qty'
+    )
+
     comments = fields.Char(string="Comments")
 
     state = fields.Selection(
@@ -482,6 +487,24 @@ class IndentRequestLine(models.Model):
         string="Company",
         store=True,
     )
+
+    def _compute_quantities_custom(self):
+        for rec in self:
+            rec.qty_available = sum([stock_quant.inventory_quantity_auto_apply for stock_quant in 
+            self.env['stock.quant'].sudo().search([('product_id', '=', rec.product_id.id), ('location_id', '=', rec.delivery_from.lot_stock_id.id)])])
+
+
+    def _compute_qty(self):
+        for request in self:
+            transit_transfer = self.env['stock.move'].search([
+                ('picking_id.origin', '=', request.indent_number),
+                ('picking_id.picking_type_code', '=', 'internal'),
+                ('picking_id.picking_type_id', '=', request.request_id.picking_type_id.id),
+                ('picking_id.location_id', '=', request.request_id.delivery_from.lot_stock_id.id),
+                ('product_id', '=', request.product_id.id),
+            ])
+            request.received_qty =  sum([transit_trans.quantity for transit_trans in transit_transfer if transit_trans.state == 'done'])
+
 
     def _compute_is_editable(self):
         for rec in self:

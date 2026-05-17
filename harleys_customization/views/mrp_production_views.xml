@@ -53,6 +53,7 @@
                 <field name="mo_product_id" optional="hide"/>
                 <field name="mo_section"/>
                 <field name="location_id"/>
+                <field name="qty_available" string="On Hand"/>
                 <field name="mo_product_qty" optional="hide"/>
                 <field name="mo_product_uom_id" optional="hide"/>
                 <field name="product_id" string="MO line Prod."/>
@@ -104,4 +105,5 @@
     </record>
     
     <menuitem id="menu_mrp_order_lines" name="MO Material Requirments" parent="mrp.menu_mrp_manufacturing" action="action_mrp_order_line_stock_move" sequence="2"/>
+
 </odoo>
