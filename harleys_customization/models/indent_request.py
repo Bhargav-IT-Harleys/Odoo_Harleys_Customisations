@@ -76,10 +76,11 @@ class IndentRequest(models.Model):
         required=True
     )
 
-    received_date = fields.Date(
-        string='Receiving Date',
-        default=lambda self: fields.Date.context_today(self) + timedelta(days=2),
-    )
+    # received_date = fields.Date(
+    #     string='Receiving Date',
+    #     default=lambda self: fields.Date.context_today(self) + timedelta(days=2),
+    # )
+    received_date = fields.Date(string='Receiving Date',required=True)
 
     company_id = fields.Many2one(
         comodel_name="res.company",
