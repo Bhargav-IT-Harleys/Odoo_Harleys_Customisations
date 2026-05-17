@@ -4,11 +4,11 @@ from odoo import _, api, fields, models
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
-    def button_validate(self):
-        for line in self.move_line_ids:
-            if not line.expiration_date:
-                line._compute_expiration_date()
-        super().button_validate()
+    # def button_validate(self):
+    #     for line in self.move_line_ids:
+    #         if not line.expiration_date:
+    #             line._compute_expiration_date()
+    #     super().button_validate()
         
     @api.depends('move_ids.state', 'move_ids.date', 'move_type')
     def _compute_scheduled_date(self):
