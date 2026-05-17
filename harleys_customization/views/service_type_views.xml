@@ -56,7 +56,7 @@
 
         </field>
     </record>
-    <record id="view_move_form_inherit_hide_ocr_button" model="ir.ui.view">
+    <!-- <record id="view_move_form_inherit_hide_ocr_button" model="ir.ui.view">
         <field name="name">account.move.form.hide.ocr.button</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account_invoice_extract.view_move_form_inherit_ocr"/>
@@ -67,7 +67,7 @@
             </xpath>
 
         </field>
-    </record>
+    </record> -->
     <menuitem
         action="service_type_action"
         id="service_type_menu"
