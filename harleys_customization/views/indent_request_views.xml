@@ -83,17 +83,18 @@
                                     <field name="request_id" column_invisible="True"/>
                                     <field name="product_id" options="{'no_create': True}" force_save="1" domain="[('state', '=', 'approved')]"/>
                                     <field name="categ_id" force_save="1"/>
-                                    <field name="name" readonly="state not in ['draft']" force_save="1"/>
-                                    <field name="qty_available" readonly="1" optional="hide"/>
+                                    <field name="name" readonly="state not in ['draft']" force_save="1" column_invisible="1"/>
+                                    <field name="qty_available" readonly="1" column_invisible="1"/>
                                     <field name="product_uom_id" force_save="1" required="1" readonly="1"/>
                                     <field name="product_qty" string="Demanded Qty" force_save="1"/>
                                     <field name="received_qty" readonly="1" force_save="1"/>
-                                    <field name="comments" force_save="1"/>
+                                    <field name="comments" force_save="1" column_invisible="1"/>
                                     <field
                                             name="company_id"
                                             groups="base.group_multi_company"
                                             widget="selection"
                                             force_save="1"
+                                            optional="hide"
                                     />
                                     <field name="is_editable" column_invisible="1" force_save="1" width="150px"/>
                                 </list>
