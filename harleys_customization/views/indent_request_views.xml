@@ -86,7 +86,7 @@
                                     <field name="name" readonly="state not in ['draft']" force_save="1" column_invisible="1"/>
                                     <field name="qty_available" readonly="1" column_invisible="1"/>
                                     <field name="product_uom_id" force_save="1" required="1" readonly="1"/>
-                                    <field name="product_qty" string="Demanded Qty" force_save="1"/>
+                                    <field name="product_qty" string="Demand" force_save="1"/>
                                     <field name="received_qty" readonly="1" force_save="1"/>
                                     <field name="comments" force_save="1" column_invisible="1"/>
                                     <field
@@ -198,9 +198,9 @@
                 <!-- <field name="categ_id" force_save="1"/> -->
                 <!-- <field name="default_code" readonly="0"/> -->
                 <!-- <field name="hsn_code" readonly="0"/> -->
-                <field name="product_qty" readonly="0"/>
+                <field name="product_qty" string="Demand" readonly="0"/>
                 <field name="product_uom_id" readonly="0"/>
-                <field name="comments" readonly="0"/>
+                <field name="comments" readonly="0" column_invisible="1"/>
                 <field name="delivery_from" readonly="0"/>
                 <field name="delivery_to" readonly="0"/>
                 <field name="requested_by" widget="many2one_avatar_user" readonly="0"/>
@@ -212,7 +212,7 @@
                         widget="selection"
                         optional="hide"
                 />
-                <field name="name" readonly="0"/>
+                <field name="name" readonly="0" column_invisible="1"/>
                 <field
                         name="state"
                         widget="badge"
