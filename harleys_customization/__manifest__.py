@@ -27,6 +27,7 @@
         'views/helpdesk_portal_template.xml',
         'views/purchase_views.xml',
         'views/stock_move_views.xml',
+        'views/stock_quant_views.xml',
         'reports/manufacturing_order_lines_views.xml',
         'wizard/mol_internal_transfer_views.xml',
         'wizard/mo_internal_transfer_views.xml',
