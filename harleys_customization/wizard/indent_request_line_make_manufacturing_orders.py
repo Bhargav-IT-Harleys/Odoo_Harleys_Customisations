@@ -249,7 +249,7 @@ class IndentRequestLineWizard(models.TransientModel):
 
     def _compute_quantities_custom(self):
         for rec in self:
-            indent_request = self.env['indent.request'].search([('name', '=', self.indent_number)], limit=1)
+            indent_request = self.env['indent.request'].search([('name', '=', rec.indent_number)], limit=1)
             rec.qty_available = sum([stock_quant.inventory_quantity_auto_apply for stock_quant in 
             self.env['stock.quant'].sudo().search([('product_id', '=', rec.product_id.id), ('location_id', '=', indent_request.delivery_from.lot_stock_id.id)])])
 
