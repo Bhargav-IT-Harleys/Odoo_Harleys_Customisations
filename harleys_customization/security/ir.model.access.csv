@@ -13,9 +13,12 @@ access_indent_request_line_templates_admin,Indent Line Templates Admin,model_ind
 
 access_indent_make_mo_user,Indent Make MO User,model_indent_request_line_make_manufacturing_order,harleys_customization.group_indent_user,1,0,0,0
 access_indent_make_mo_admin,Indent Make MO Admin,model_indent_request_line_make_manufacturing_order,harleys_customization.group_indent_admin,1,1,1,1
+access_inventory_make_mo_admin,inventory Make MO Admin,model_indent_request_line_make_manufacturing_order,stock.group_stock_manager,1,1,1,1
 
 access_indent_wizard_user,Indent Wizard User,model_indent_request_line_wizard,harleys_customization.group_indent_user,1,0,0,0
 access_indent_wizard_admin,Indent Wizard Admin,model_indent_request_line_wizard,harleys_customization.group_indent_admin,1,1,1,1
+access_inventory_wizard_admin,inventory Wizard Admin,model_indent_request_line_wizard,stock.group_stock_manager,1,1,1,1
+
 
 access_service_type_admin,Service Type Admin,model_service_type,base.group_user,1,1,1,1
 access_production_section,access.production.section,model_production_section,,1,1,1,1

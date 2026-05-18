@@ -1,5 +1,5 @@
 <odoo>
-  <data noupdate="1">
+  <data noupdate="0">
 
     <record id="group_show_contacts" model="res.groups">
       <field name="name">Show Contacts</field>
@@ -53,7 +53,7 @@
         <field name="model_id" ref="model_indent_request" />
         <field name="groups" eval="[(6,0, [ref('group_indent_user')])]" />
         <field name="perm_read" eval="True" />
-        <field name="perm_write" eval="False" />
+        <field name="perm_write" eval="True" />
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
     </record>
@@ -99,7 +99,7 @@
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
-        <field name="domain_force">[('request_id.requested_by','=',user.id)]</field>
+        <!-- <field name="domain_force">[('request_id.requested_by','=',user.id)]</field> -->
     </record>
     <record id="indent_request_line_manager_rule" model="ir.rule">
         <field name="name">Indent Request Line Manager</field>
