@@ -36,7 +36,8 @@
     <record id="stock_warehouse_rule_users" model="ir.rule">
         <field name="name">Warehouse Restrict on Users</field>
         <field name="model_id" ref="stock.model_stock_warehouse"/>
-        <field name="domain_force">['|', ('user_ids', '=', False), ('user_ids', 'in', user.id)]</field>
+        <!-- ('name', 'ilike', 'Central') is added specially only for harleys project -->
+        <field name="domain_force">['|', ('user_ids', '=', False), ('user_ids', 'in', user.id), ('name', 'ilike', 'Central')]</field>
         <field name="groups" eval="[(4, ref('user_warehouse_restriction.user_warehouse_restriction_group_user'))]"/>
         <field name="perm_read" eval="True"/>
         <field name="perm_write" eval="True"/>
