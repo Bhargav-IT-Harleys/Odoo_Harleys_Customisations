@@ -499,8 +499,7 @@ class IndentRequestLine(models.Model):
             transit_transfer = self.env['stock.move'].search([
                 ('picking_id.origin', '=', request.indent_number),
                 ('picking_id.picking_type_code', '=', 'internal'),
-                ('picking_id.picking_type_id', '=', request.request_id.picking_type_id.id),
-                ('picking_id.location_id', '=', request.request_id.delivery_from.lot_stock_id.id),
+                ('picking_id.location_dest_id', '=', request.request_id.delivery_to.lot_stock_id.id),
                 ('product_id', '=', request.product_id.id),
             ])
             request.received_qty =  sum([transit_trans.quantity for transit_trans in transit_transfer if transit_trans.state == 'done'])
