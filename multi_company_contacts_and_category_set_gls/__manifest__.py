@@ -9,7 +9,7 @@
     'author': "Hari",
     'category': 'Customizations',
     'version': '0.1',
-    'depends': ['base', 'contacts'],
+    'depends': ['base', 'contacts', 'account'],
     'data': [],
 
 }

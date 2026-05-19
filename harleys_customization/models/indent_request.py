@@ -289,6 +289,8 @@ class IndentRequest(models.Model):
         #             "For the '%s' BOM missing contact your city head"
         #         ) % line.product_id.display_name)
         manufacture_route = self.env.ref('mrp.route_warehouse0_manufacture', raise_if_not_found=False)
+        if not [line for line in self.line_ids]:
+            raise UserError(_("No Indent Request Line"))
 
         for line in self.line_ids:
             if (
@@ -569,3 +571,11 @@ class IndentRequestLine(models.Model):
             'target': 'new',
             'context': {'active_ids': self.ids},
         }
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('request_id') and not vals.get('state'):
+                parent = self.env['indent.request'].browse(vals['request_id'])
+                vals['state'] = parent.state
+        return super().create(vals_list)
