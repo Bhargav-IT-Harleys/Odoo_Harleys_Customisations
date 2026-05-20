@@ -8,7 +8,7 @@
             <form string="Internal Transfer to store">
                 <newline />
                 <group>
-                    <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('internal'))]"/>
+                    <!-- <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('internal'))]"/> -->
                     <field name="location_id" options="{'no_create': True}"/>
                     <field name="location_dest_id" options="{'no_create': True}"/>
                 </group>
@@ -22,7 +22,7 @@
                             <field name="mo_number" readonly="1" force_save="1" optional="hide"/>
                             <field name="product_id" readonly="1" force_save="1"/>
                             <field name="name" readonly="1" force_save="1" optional="hide"/>
-                            <field name="demanded_qty" readonly="1"/>
+                            <field name="demanded_qty" force_save="1" readonly="1"/>
                             <field
                                 name="product_uom_id"
                                 column_invisible="1"

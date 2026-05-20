@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mrp_production_form_view_custom" model="ir.ui.view">
+        <field name="name">stock.location.form.operations.custom</field>
+        <field name="model">stock.location</field>
+        <field name="inherit_id" ref="stock.view_location_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='additional_info']" position="after">
+              <group name="operation_type" string="Harleys Customization">
+                 <field name="material_request_picking_type_id" options="{'no_create': True}"/>
+                 <field name="production_transfer_picking_type_id" options="{'no_create': True}"/>
+              </group>
+            </xpath>
+        </field>
+    </record>   
+</odoo>

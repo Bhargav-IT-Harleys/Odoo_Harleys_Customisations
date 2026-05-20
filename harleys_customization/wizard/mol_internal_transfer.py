@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 
-from odoo import _, api, fields, models
+from odoo import _, api, fields, models, SUPERUSER_ID
 from odoo.exceptions import UserError
 from odoo.tools import get_lang
 
@@ -10,10 +10,10 @@ class MolInternalTransferWizard(models.TransientModel):
     _name = "mol.internal.transfer.wizard"
     _description = "Mol to Internal Transfer Wizard"
 
-    picking_type_id = fields.Many2one(
-        'stock.picking.type', 'Operation Type',
-        required=True, index=True,
-        tracking=True)
+    # picking_type_id = fields.Many2one(
+    #     'stock.picking.type', 'Operation Type',
+    #     required=True, index=True,
+    #     tracking=True)
     location_id = fields.Many2one(
         'stock.location', "Source Location",
         store=True, precompute=True, readonly=False,
@@ -25,11 +25,11 @@ class MolInternalTransferWizard(models.TransientModel):
 
     button_visible = fields.Boolean(default=False)
 
-    @api.onchange("picking_type_id")
-    def _onchange_picking_type(self):
-        if self.picking_type_id:
-            self.location_id = self.picking_type_id.default_location_src_id.id
-            self.location_dest_id = self.picking_type_id.default_location_dest_id.id
+    # @api.onchange("picking_type_id")
+    # def _onchange_picking_type(self):
+    #     if self.picking_type_id:
+    #         self.location_id = self.picking_type_id.default_location_src_id.id
+    #         self.location_dest_id = self.picking_type_id.default_location_dest_id.id
 
 
     @api.model
@@ -71,7 +71,7 @@ class MolInternalTransferWizard(models.TransientModel):
 
         source_location = self.location_id
         dest_location = self.location_dest_id
-        picking_type = self.picking_type_id
+        picking_type = self.location_id.material_request_picking_type_id
 
         if source_location.id == dest_location.id:
             raise UserError("Source Location and the Destination Location should not be same.")
@@ -84,7 +84,7 @@ class MolInternalTransferWizard(models.TransientModel):
         origin_list = [origin_line.mo_number for origin_line in self.internal_transfer_line_wizard_ids]
         origin = ", ".join(set(origin_list))
                     
-        picking = self.env['stock.picking'].create({
+        picking = self.env['stock.picking'].with_user(SUPERUSER_ID).create({
             'picking_type_id': picking_type.id,
             'location_id': source_location.id,
             'location_dest_id': dest_location.id,
@@ -94,20 +94,20 @@ class MolInternalTransferWizard(models.TransientModel):
         })
 
         for line_data in self.internal_transfer_line_wizard_ids:
-            move1 = self.env['stock.move'].create({
+            move1 = self.env['stock.move'].with_user(SUPERUSER_ID).create({
                 'product_id': line_data.product_id.id,
                 'product_uom_qty': line_data.demanded_qty,
                 'product_uom': line_data.product_uom_id.id,
                 'picking_id': picking.id,
                 'company_id': current_company.id,
             })
-
         picking.action_confirm()
         active_records = self.env['stock.move'].browse(active_ids)
         for active_record in active_records:
             active_record.is_transfer_created = True
         self.button_visible = True
-        return self.env.ref('stock.action_report_picking').report_action(picking)
+
+        return True
 
 class MolInternalTransferLineWizard(models.TransientModel):
     _name = 'mol.internal.transfer.line.wizard'

@@ -1,4 +1,4 @@
-from odoo import _, api, fields, models
+from odoo import _, api, fields, models, SUPERUSER_ID
 
 
 class StockPicking(models.Model):
@@ -20,6 +20,11 @@ class StockPicking(models.Model):
                 picking.scheduled_date = default=picking.scheduled_date
             else:
                 picking.scheduled_date = max(moves_dates, default=picking.scheduled_date or fields.Datetime.now())
+
+
+    def generate_report(self):        
+        report_action = self.env.ref('stock.action_report_delivery')
+        return report_action.with_user(SUPERUSER_ID).report_action(self)
 
 
 class StockMove(models.Model):
