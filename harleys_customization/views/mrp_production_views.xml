@@ -94,7 +94,8 @@
         <field name="view_id" ref="view_mrp_order_line_stock_move_tree"/>
         <field name="domain">
             [('raw_material_production_id','!=',False),
-             ('raw_material_production_id.state','=','confirmed')]
+             ('raw_material_production_id.state','=','confirmed'),
+             ('warehouse_id.user_ids', 'in', [uid])]
         </field>
         <field name="context">
             {

@@ -7,7 +7,7 @@
            Harleys Customization
     """,
     'category': 'Customizations',
-    'depends': ['base','web', 'stock','mrp', 'helpdesk', 'product_expiry'],
+    'depends': ['base','web', 'stock','mrp', 'helpdesk', 'product_expiry', 'user_warehouse_restriction'],
     'data': [
         'security/security_group.xml',
         'security/ir.model.access.csv',
