@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, timedelta
 import pytz
 
@@ -103,12 +104,29 @@ class MoInternalTransferWizard(models.TransientModel):
                 'company_id': current_company.id,
             })
 
-        picking.action_confirm()
+        picking.with_user(SUPERUSER_ID).action_confirm()
         for active_record in active_records:
             active_record.is_transfer_created = True
         self.button_visible = True
-        return True
-        # return self.env.ref('stock.action_report_delivery').report_action(picking)
+
+        report = self.env.ref('stock.action_report_delivery').sudo()
+        pdf_content, _content_type = self.env['ir.actions.report'].sudo()._render_qweb_pdf(report, [picking.id])
+        attachment = self.env['ir.attachment'].sudo().create({
+            'name': '%s.pdf' % (picking.name or 'picking'),
+            'type': 'binary',
+            'datas': base64.b64encode(pdf_content),
+            'res_model': 'stock.picking',
+            'res_id': picking.id,
+            'mimetype': 'application/pdf',
+        })
+        access_token = attachment.generate_access_token()[0]
+
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true&access_token=%s' % (attachment.id, access_token),
+            'target': 'self',
+            'close': True,
+        }
 
 
 class MoInternalTransferLineWizard(models.TransientModel):
