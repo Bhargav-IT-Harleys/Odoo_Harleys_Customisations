@@ -41,6 +41,7 @@
                         string="Create Material Request"
                         type="object"
                         class="oe_highlight"
+                        invisible="button_visible"
                     />
                     <button special="cancel" string="Cancel" class="oe_link" />
                 </footer>

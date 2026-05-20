@@ -22,7 +22,7 @@
                             <field name="mo_number" readonly="1" force_save="1" optional="hide"/>
                             <field name="product_id" readonly="1" force_save="1"/>
                             <field name="name" readonly="1" force_save="1" optional="hide"/>
-                            <field name="demanded_qty" readonly="0"/>
+                            <field name="demanded_qty" readonly="1"/>
                             <field
                                 name="product_uom_id"
                                 column_invisible="1"
@@ -40,6 +40,7 @@
                         name="make_internal_transfer_draft"
                         string="Internal Transfer to store"
                         type="object"
+                        invisible="button_visible"
                         class="oe_highlight"
                     />
                     <button special="cancel" string="Cancel" class="oe_link" />

@@ -62,10 +62,13 @@ class MoInternalTransferWizard(models.TransientModel):
         store=True
     )
             
+    button_visible = fields.Boolean(default=False)
+
     def make_internal_transfer_draft(self):
         """Create internal transfers in draft state strictly within the current active company."""
         self.ensure_one()
-
+        active_ids = self.env.context.get('active_ids', [])
+        active_records = self.env['mrp.production'].browse(active_ids)
         current_company = self.env.company
         source_location = self.location_id
         dest_location = self.location_dest_id
@@ -100,13 +103,11 @@ class MoInternalTransferWizard(models.TransientModel):
                 'company_id': current_company.id,
             })
 
-        # picking.action_confirm()
-        active_ids = self.env.context.get('active_ids', [])
-        active_records = self.env['mrp.production'].browse(active_ids)
+        picking.action_confirm()
         for active_record in active_records:
             active_record.is_transfer_created = True
-
-        return True
+        self.button_visible = True
+        return self.env.ref('stock.action_report_picking').report_action(picking)
 
 
 class MoInternalTransferLineWizard(models.TransientModel):
@@ -136,7 +137,7 @@ class MoInternalTransferLineWizard(models.TransientModel):
         store=True
     )
     demanded_qty = fields.Float(
-        string="Demanded Qty", tracking=True, digits="Product Unit", store=True)
+        string="Demanded Qty", tracking=True, readonly=True, digits="Product Unit", store=True)
 
     mo_number = fields.Char(
         string="MO Number",

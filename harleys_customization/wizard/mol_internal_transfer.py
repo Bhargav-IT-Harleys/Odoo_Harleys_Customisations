@@ -23,6 +23,8 @@ class MolInternalTransferWizard(models.TransientModel):
         store=True, precompute=True, readonly=False,
         check_company=True, required=True)
 
+    button_visible = fields.Boolean(default=False)
+
     @api.onchange("picking_type_id")
     def _onchange_picking_type(self):
         if self.picking_type_id:
@@ -65,7 +67,6 @@ class MolInternalTransferWizard(models.TransientModel):
         """Create internal transfers in draft state strictly within the current active company."""
         self.ensure_one()
         active_ids = self.env.context.get('active_ids', [])
-
         current_company = self.env.company
 
         source_location = self.location_id
@@ -101,12 +102,12 @@ class MolInternalTransferWizard(models.TransientModel):
                 'company_id': current_company.id,
             })
 
-        # picking.action_confirm()
+        picking.action_confirm()
         active_records = self.env['stock.move'].browse(active_ids)
         for active_record in active_records:
             active_record.is_transfer_created = True
-        return True
-
+        self.button_visible = True
+        return self.env.ref('stock.action_report_picking').report_action(picking)
 
 class MolInternalTransferLineWizard(models.TransientModel):
     _name = 'mol.internal.transfer.line.wizard'
