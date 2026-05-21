@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from datetime import datetime
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
@@ -20,6 +21,17 @@ class MrpProduction(models.Model):
         compute='_compute_custom_picking_type_id', store=True, precompute=True,
         domain="[('code', '=', 'mrp_operation')]",
         required=True, check_company=True, index=True)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            # Detect child MO via parent production reference
+            parent_id = vals.get('production_id')
+            if parent_id:
+                parent = self.env['mrp.production'].browse(parent_id)
+                if parent.exists() and parent.date_start:
+                    vals['date_start'] = parent.date_start
+        return super().create(vals_list)
 
     @api.depends('company_id', 'bom_id')
     def _compute_custom_picking_type_id(self):
