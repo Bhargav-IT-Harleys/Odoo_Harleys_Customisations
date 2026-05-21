@@ -33,6 +33,9 @@
             <xpath expr="//button[@name='action_assign']" position="attributes">
                 <attribute name="string">Check Availability &amp; Reserve</attribute>
             </xpath>
+            <xpath expr="//field[@name='move_raw_ids']/list/field[@name='product_id']" position="after">
+                <field name="categ_id" string="Product Category"/>
+            </xpath>
         </field>
     </record>
 
