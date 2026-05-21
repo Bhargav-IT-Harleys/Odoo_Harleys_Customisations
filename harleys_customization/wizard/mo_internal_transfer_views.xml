@@ -11,6 +11,7 @@
                     <!-- <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('internal'))]"/> -->
                     <field name="location_id" options="{'no_create': True}"/>
                     <field name="location_dest_id" options="{'no_create': True}"/>
+                    <field name="button_visible" invisible="1"/>
                 </group>
                 <newline />
                 <separator string="Operations:" />

@@ -67,7 +67,19 @@ class MolInternalTransferWizard(models.TransientModel):
     def make_internal_transfer_draft(self):
         """Create internal transfers in draft state strictly within the current active company."""
         self.ensure_one()
+        # if self.button_visible:
+        #     raise UserError("Internal transfer is already created from this wizard.")
+
         active_ids = self.env.context.get('active_ids', [])
+        active_records = self.env['stock.move'].browse(active_ids)
+        if not active_records:
+            raise UserError("No Material Request line selected.")
+
+        # already_created = active_records.filtered('is_transfer_created')
+        # if already_created:
+        #     product_names = ", ".join(already_created.mapped('product_id.display_name'))
+        #     raise UserError("Internal transfer is already created for: %s" % product_names)
+
         current_company = self.env.company
 
         source_location = self.location_id
@@ -92,6 +104,7 @@ class MolInternalTransferWizard(models.TransientModel):
             # 'scheduled_date': ,
             'origin': origin,
             'company_id': current_company.id,
+            'user_id': self.env.user.id,
         })
 
         for line_data in self.internal_transfer_line_wizard_ids:
@@ -102,12 +115,10 @@ class MolInternalTransferWizard(models.TransientModel):
                 'picking_id': picking.id,
                 'company_id': current_company.id,
             })
-
+            
         picking.with_user(SUPERUSER_ID).action_confirm()
-        active_records = self.env['stock.move'].browse(active_ids)
-        for active_record in active_records:
-            active_record.is_transfer_created = True
-        self.button_visible = True
+        active_records.write({'is_transfer_created': True})
+        self.write({'button_visible': True})
 
         report = self.env.ref('stock.action_report_delivery').sudo()
         pdf_content, _content_type = self.env['ir.actions.report'].sudo()._render_qweb_pdf(report, [picking.id])
@@ -124,7 +135,7 @@ class MolInternalTransferWizard(models.TransientModel):
         return {
             'type': 'ir.actions.act_url',
             'url': '/web/content/%s?download=true&access_token=%s' % (attachment.id, access_token),
-            'target': 'self',
+            'target': 'new',
             'close': True,
         }
 
