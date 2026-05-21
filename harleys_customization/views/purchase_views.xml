@@ -15,6 +15,29 @@
             <xpath expr="//button[@id='draft_confirm']" position="attributes">
                 <attribute name="groups">purchase.group_purchase_manager</attribute>
             </xpath>
+            <field name="partner_ref" position="after">
+                <field name="purchase_type" required="1"/>
+            </field>
+        </field>
+    </record>
+    <record id="purchase_order_tree_inherit" model="ir.ui.view">
+        <field name="name">purchase.order.tree.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <field name="partner_ref" position="after">
+                <field name="purchase_type"/>
+            </field>
+        </field>
+    </record>
+    <record id="purchase_order_tree_inherit_po" model="ir.ui.view">
+        <field name="name">purchase.order.tree.inherit.po</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="partner_ref" position="after">
+                <field name="purchase_type"/>
+            </field>
         </field>
     </record>
   </odoo>
