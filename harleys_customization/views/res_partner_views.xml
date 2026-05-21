@@ -14,15 +14,17 @@
                     <button name="action_sent" string="Send" type="object"
                       icon="fa-paper-plane"
                       class="oe_highlight"
-                      invisible="state not in ('draft', 'rejected') or supplier_rank==0"/>
+                      invisible="state not in ('draft', 'rejected')"/>
                     <button name="action_approve" string="Approve" type="object"
                       class="btn btn-success"
                       icon="fa-thumbs-up"
-                      invisible="state not in ('sent') or supplier_rank==0"/>
+                      invisible="state not in ('sent')"
+                      groups="account.group_account_manager"/>
                     <button name="action_reject" string="Reject" type="object"
                       class="btn btn-danger"
                       icon="fa-thumbs-down"
-                      invisible="state not in ('sent') or supplier_rank==0"/>
+                      invisible="state not in ('sent')"
+                      groups="account.group_account_manager"/>
                 </header>
             </xpath>
             <field name="ref" position="replace">
