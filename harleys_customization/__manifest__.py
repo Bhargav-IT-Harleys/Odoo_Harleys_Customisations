@@ -16,6 +16,7 @@
         'views/indent_request_template_views.xml',
         'views/res_users_views.xml',
         'data/indent_request_sequence.xml',
+        'data/indent_request_cron.xml',
         'wizard/indent_request_line_make_manufacturing_orders_views.xml',
         'views/res_partner_views.xml',
         'views/product_template_views.xml',

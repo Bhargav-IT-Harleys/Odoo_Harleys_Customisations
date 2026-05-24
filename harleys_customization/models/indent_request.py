@@ -333,6 +333,20 @@ class IndentRequest(models.Model):
                 if not [line for line in record.line_ids if line.state != 'locked']:
                     record.state = 'locked'
 
+    @api.model
+    def _cron_close_requests_by_received_qty(self):
+        requests = self.sudo().search([
+            ('state', '!=', 'closed'),
+            ('line_ids', '!=', False),
+        ])
+        requests.filtered(
+            lambda request: all(
+                line.received_qty >= line.product_qty
+                for line in request.line_ids
+            )
+        ).write({'state': 'closed'})
+        return True
+
     @api.depends("state")
     def _compute_is_editable(self):
         for rec in self:
