@@ -29,12 +29,15 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
 
         return new Promise(async (resolve) => {
             const overlay = this._createOverlay();
-            var video;
+            let video;
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = this._setupVideoStream(stream, overlay);
-                this._bindAutoCapture(video, overlay, resolve, employeeId);
-                await this._addEventListeners(video, overlay, resolve);
+                video = this._setupVideoStream(stream, overlay);
+                const employeeDetails = await rpc('/employee/images', {
+                    employee_id: employeeId,
+                });
+                this._bindAutoCapture(video, overlay, resolve, employeeDetails);
+                this._addEventListeners(video, overlay, resolve, employeeDetails);
             } catch (error) {
                 alert("Unable to access the camera");
                 this._handleError(video, overlay, resolve);
@@ -42,12 +45,9 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
         });
     },
 
-    async _bindAutoCapture(video, overlay, resolve, employeeId) {
+    async _bindAutoCapture(video, overlay, resolve, employeeDetails) {
         const self = this;
         let attempts = 0;
-        const employeeDetails = await rpc('/employee/images',{
-            employee_id: employeeId,
-        });
         
         this.autoCaptureIntervalID = setInterval(async () => {
             try {
@@ -56,17 +56,9 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
                     clearInterval(self.autoCaptureIntervalID);
                     self.autoCaptureIntervalID = null;
                     self._handleError(video, overlay, resolve);
-                }
-                const faceDetection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
-
-                if (!faceDetection) {
                     return;
                 }
-
-                const matchingEmployeeId = await self._findMatchingEmployee(faceDetection, employeeDetails);
-
+                const matchingEmployeeId = await self._captureMatchingEmployee(video, employeeDetails);
                 if (matchingEmployeeId) {
                     clearInterval(self.autoCaptureIntervalID);
                     self.autoCaptureIntervalID = null;
@@ -107,13 +99,25 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
 
         const video = document.createElement('video');
         video.id = 'camera-stream';
+        video.autoplay = true;
+        video.playsInline = true;
         camDiv.appendChild(video);
+
+        const controls = document.createElement('div');
+        controls.id = 'camera-controls';
+        camDiv.appendChild(controls);
+
+        const captureButton = document.createElement('button');
+        captureButton.id = 'capture-button';
+        captureButton.type = 'button';
+        captureButton.textContent = 'Capture';
+        controls.appendChild(captureButton);
 
         const closeButton = document.createElement('button');
         closeButton.id = 'close-button';
+        closeButton.type = 'button';
         closeButton.textContent = 'Close Camera';
-        closeButton.style.marginTop = '10px';
-        camDiv.appendChild(closeButton);
+        controls.appendChild(closeButton);
 
         video.srcObject = stream;
         video.play();
@@ -121,12 +125,42 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
         return video;
     },
 
-    _addEventListeners(video, overlay, resolve) {
+    _addEventListeners(video, overlay, resolve, employeeDetails) {
         const self = this;
+        const captureButton = document.getElementById('capture-button');
 
+        captureButton.addEventListener('click', async () => {
+            captureButton.disabled = true;
+            try {
+                const matchingEmployeeId = await self._captureMatchingEmployee(video, employeeDetails);
+                if (matchingEmployeeId) {
+                    await self._handleEmployeeDetected(matchingEmployeeId, video, overlay, resolve);
+                } else {
+                    alert('No matching employee found.');
+                }
+            } catch (error) {
+                alert('Face detection failed.');
+            } finally {
+                if (document.body.contains(captureButton)) {
+                    captureButton.disabled = false;
+                }
+            }
+        });
         document.getElementById('close-button').addEventListener('click', () => {
             self._handleError(video, overlay, resolve);
         });
+    },
+
+    async _captureMatchingEmployee(video, employeeDetails) {
+        const faceDetection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (!faceDetection) {
+            return null;
+        }
+
+        return await this._findMatchingEmployee(faceDetection, employeeDetails);
     },
 
     async _findMatchingEmployee(faceDetection, employeeDetails) {
@@ -154,6 +188,10 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
 
     async _handleEmployeeDetected(employeeId, video, overlay, resolve) {
         this.employee_id = employeeId;
+        if (this.autoCaptureIntervalID) {
+            window.clearInterval(this.autoCaptureIntervalID);
+            this.autoCaptureIntervalID = null;
+        }
         this._stopStream(video);
         overlay.remove();
 
@@ -166,11 +204,8 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
         if (result && result.attendance) {
             this.employeeData = result
             this.switchDisplay('greet')
-        }else{
-            if (enteredPin){
-                this.displayNotification(_t("Wrong Pin"))
-            }
         }
+        resolve(true);
 
     },
 
