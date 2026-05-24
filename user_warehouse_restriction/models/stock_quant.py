@@ -31,12 +31,16 @@ class StockQuant(models.Model):
         return self.env.user.has_group(
             'user_warehouse_restriction.user_warehouse_restriction_group_user')
 
+    def _get_user_allowed_warehouse_ids(self):
+        """Return warehouse ids allowed for the current inventory user."""
+        return self.env.user.allowed_warehouse_ids.ids
+
     def _domain_location_id(self):
         """Limit selectable inventory count locations to allowed warehouses."""
         if not self._apply_user_warehouse_restriction():
             return super()._domain_location_id()
 
-        allowed_warehouse_ids = self.env.user.allowed_warehouse_ids.ids
+        allowed_warehouse_ids = self._get_user_allowed_warehouse_ids()
         if self.env.user.has_group('stock.group_stock_user'):
             return (
                 "[('usage', 'in', ['internal', 'transit']), "
@@ -49,8 +53,13 @@ class StockQuant(models.Model):
         """Show only allowed warehouse quants in Physical Inventory."""
         action = super().action_view_inventory()
         if self._apply_user_warehouse_restriction():
-            allowed_warehouse_ids = self.env.user.allowed_warehouse_ids.ids
+            allowed_warehouse_ids = self._get_user_allowed_warehouse_ids()
+            action['context'] = dict(action.get('context') or {})
+            action['context'].update({
+                'restrict_inventory_locations': True,
+                'user_allowed_warehouse_ids': allowed_warehouse_ids,
+            })
             action['domain'] = action.get('domain', []) + [
-                ('warehouse_id', 'in', allowed_warehouse_ids)
+                ('location_id.warehouse_id', 'in', allowed_warehouse_ids)
             ]
         return action

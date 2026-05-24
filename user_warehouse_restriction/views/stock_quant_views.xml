@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_stock_quant_tree_inventory_editable_restrict_location" model="ir.ui.view">
+        <field name="name">stock.quant.inventory.list.editable.restrict.location</field>
+        <field name="model">stock.quant</field>
+        <field name="inherit_id" ref="stock.view_stock_quant_tree_inventory_editable"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_apply_all']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='location_id']" position="attributes">
+                <attribute name="domain">[('usage', 'in', ['internal', 'transit']), ('warehouse_id', 'in', context.get('user_allowed_warehouse_ids', []))]</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
