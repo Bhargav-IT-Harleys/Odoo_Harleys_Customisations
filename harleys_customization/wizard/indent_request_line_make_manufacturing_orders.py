@@ -115,7 +115,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
 
                                                         'delivery_via' : indent_source.via_location_id.id,
                                                         'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
-
+                                                        'partner_id' : indent_source.delivery_to.partner_id.id,
                                                         # 'delivery_to' : indent_source.delivery_to.lot_stock_id.id,
                                                         'picking_type_id' : indent_source.picking_type_id.id,
                                                         'via_picking_type_id' : indent_source.via_picking_type_id.id,
@@ -168,6 +168,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 # 'location_dest_id': via_location.id,
                 'scheduled_date': internal_transfer_data[data]['scheduled_date'],
                 'origin': data,
+                'partner_id': internal_transfer_data[data]['partner_id'],
                 'company_id': current_company.id,
             })
             picking_next_transfer = self.env['stock.picking'].create({
@@ -176,6 +177,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 # 'location_dest_id': dest_location.id,
                 'scheduled_date': internal_transfer_data[data]['scheduled_date'],
                 'origin': data,
+                'partner_id': internal_transfer_data[data]['partner_id'],
                 'company_id': current_company.id,
             })
 
