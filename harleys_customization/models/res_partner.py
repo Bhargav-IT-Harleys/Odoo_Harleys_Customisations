@@ -58,10 +58,17 @@ class ResPartner(models.Model):
     def create(self, vals):
         if isinstance(vals, list):
             for val in vals:
-                val['active'] = False
+                val['active'] = True if val.get('parent_id') else not (val.get('supplier_rank', 0) or val.get('customer_rank', 0))
         else:
-            vals['active'] = False 
+            vals['active'] = True if vals.get('parent_id') else not (vals.get('supplier_rank', 0) or vals.get('customer_rank', 0))
         return super(ResPartner, self).create(vals)
+
+    def write(self, vals):
+        res = super(ResPartner, self).write(vals)
+        partners_with_parent = self.filtered(lambda partner: partner.parent_id and not partner.active)
+        if partners_with_parent:
+            super(ResPartner, partners_with_parent).write({'active': True})
+        return res
 
 
     def make_state_as_sent(self):

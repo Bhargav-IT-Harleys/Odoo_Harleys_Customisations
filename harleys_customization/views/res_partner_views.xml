@@ -6,24 +6,26 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
             <field name="function" position="before">
+                <field name="supplier_rank" invisible="1"/>
+                <field name="customer_rank" invisible="1"/>
                 <field name="state" decoration-success="state=='approved'" decoration-danger="state=='rejected'"
-                invisible="supplier_rank==0"/>
+                invisible="supplier_rank == 0 and customer_rank == 0"/>
             </field>
             <xpath expr="//sheet" position="before">
                 <header>
                     <button name="action_sent" string="Send" type="object"
                       icon="fa-paper-plane"
                       class="oe_highlight"
-                      invisible="state not in ('draft', 'rejected')"/>
+                      invisible="parent_id or (supplier_rank == 0 and customer_rank == 0) or state not in ('draft', 'rejected')"/>
                     <button name="action_approve" string="Approve" type="object"
                       class="btn btn-success"
                       icon="fa-thumbs-up"
-                      invisible="state not in ('sent')"
+                      invisible="parent_id or (supplier_rank == 0 and customer_rank == 0) or state not in ('sent')"
                       groups="account.group_account_manager"/>
                     <button name="action_reject" string="Reject" type="object"
                       class="btn btn-danger"
                       icon="fa-thumbs-down"
-                      invisible="state not in ('sent')"
+                      invisible="parent_id or (supplier_rank == 0 and customer_rank == 0) or state not in ('sent')"
                       groups="account.group_account_manager"/>
                 </header>
             </xpath>
@@ -33,8 +35,8 @@
                 <field name="ref"/>
             </field>
             <field name="state" position="after">
-                <field name="approved_by" invisible="supplier_rank==0"/>
-                <field name="approved_date" invisible="supplier_rank==0"/>
+                <field name="approved_by" invisible="supplier_rank == 0 and customer_rank == 0"/>
+                <field name="approved_date" invisible="supplier_rank == 0 and customer_rank == 0"/>
             </field>
         </field>
     </record>
@@ -46,7 +48,8 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='country_id']" position="after">
                 <field name="supplier_rank" invisible="1" column_invisible="1"/>
-                <field name="state" decoration-success="state == 'approved'" invisible="supplier_rank==0" optional="show"/>
+                <field name="customer_rank" invisible="1" column_invisible="1"/>
+                <field name="state" decoration-success="state == 'approved'" invisible="supplier_rank == 0 and customer_rank == 0" optional="show"/>
             </xpath>
        </field>
     </record>
