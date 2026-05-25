@@ -125,6 +125,19 @@ class IndentRequest(models.Model):
         compute="_compute_internal_transfer_count"
     )
 
+
+    def _can_be_deleted(self):
+        self.ensure_one()
+        return self.state == "draft"
+
+    def unlink(self):
+        for request in self:
+            if not request._can_be_deleted():
+                raise UserError(
+                    _("You cannot delete a indent request which is not draft.")
+                )
+        return super().unlink()
+
     def _compute_internal_transfer_count(self):
         for rec in self:
             # rec.internal_transfer_count = self.env['stock.picking'].search_count([
