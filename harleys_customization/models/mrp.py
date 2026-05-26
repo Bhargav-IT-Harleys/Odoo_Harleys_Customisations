@@ -1,6 +1,19 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-from datetime import datetime
+from datetime import datetime, timedelta
+
+
+class StockRule(models.Model):
+    _inherit = 'stock.rule'
+
+    def _prepare_mo_vals(self, product_id, product_qty, product_uom, location_dest_id, name, origin, company_id, values, bom):
+        res = super()._prepare_mo_vals(product_id, product_qty, product_uom, location_dest_id, name, origin, company_id, values, bom)
+        if values.get('sale_line_id'):
+            schedule_date = fields.Datetime.to_datetime(values.get('date_start') or values.get('date_deadline'))
+            if schedule_date:
+                res['date_start'] = schedule_date - timedelta(days=1)
+        return res
+
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
