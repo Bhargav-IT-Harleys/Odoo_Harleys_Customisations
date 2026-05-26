@@ -9,9 +9,15 @@ class StockRule(models.Model):
     def _prepare_mo_vals(self, product_id, product_qty, product_uom, location_dest_id, name, origin, company_id, values, bom):
         res = super()._prepare_mo_vals(product_id, product_qty, product_uom, location_dest_id, name, origin, company_id, values, bom)
         if values.get('sale_line_id'):
-            schedule_date = fields.Datetime.to_datetime(values.get('date_start') or values.get('date_deadline'))
+            schedule_date = fields.Datetime.to_datetime(
+                values.get('date_start') or values.get('date_deadline') or values.get('date_planned')
+            )
             if schedule_date:
-                res['date_start'] = schedule_date - timedelta(days=1)
+                lead_time_param = self.env['ir.config_parameter'].sudo().get_param(
+                    'harleys_customization.parent_mo_lead_time'
+                )
+                lead_time = int(lead_time_param or 0)
+                res['date_start'] = schedule_date + timedelta(days=lead_time)
         return res
 
 

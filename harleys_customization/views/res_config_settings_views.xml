@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_inherit_harleys_mrp" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.harleys.mrp</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="mrp.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//setting[@id='mrp_mps']" position="after">
+                <setting id="harleys_parent_mo_lead_time" string="Harley's Parent MO Lead Time" help="Number of days to offset the parent manufacturing order scheduled date from the sale order scheduled date. Use a negative value such as -1.">
+                    <field name="harleys_parent_mo_lead_time"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

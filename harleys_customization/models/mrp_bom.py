@@ -14,6 +14,7 @@ _STATE = [
 class MrpBom(models.Model):
     _inherit = 'mrp.bom'
 
+    produce_delay = fields.Integer(default=0, readonly=True)
     state = fields.Selection(
         _STATE,
         default='draft',
@@ -35,6 +36,7 @@ class MrpBom(models.Model):
         tracking=True,
         copy=False,
     )
+
 
     def action_sent(self):
         for bom in self:
@@ -70,9 +72,8 @@ class MrpBom(models.Model):
             for val in vals:
                 val['active'] = False
         else:
-            vals['active'] = False 
+            vals['active'] = False
         return super(MrpBom, self).create(vals)
-
 
     def make_state_as_sent(self):
         for record in self:

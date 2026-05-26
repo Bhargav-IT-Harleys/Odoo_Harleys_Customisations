@@ -64,7 +64,11 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                 product_uom = line.product_uom_id.id
                 origin = line.indent_number
                 received_date = self.env['indent.request'].sudo().search([('name', 'in', line.indent_number.split(','))], limit=1).received_date
-                date_start = received_date - timedelta(days=1)
+                lead_time_param = self.env['ir.config_parameter'].sudo().get_param(
+                    'harleys_customization.parent_mo_lead_time'
+                )
+                lead_time = int(lead_time_param or 0)
+                date_start = received_date + timedelta(days=lead_time)
                 picking_type = self.env['stock.picking.type'].search([('code', '=', 'mrp_operation'),('warehouse_id', '=', self.env.user.property_warehouse_id.id)], limit=1)
                 if pid in merged:
                     merged[pid]['product_qty'] += qty
