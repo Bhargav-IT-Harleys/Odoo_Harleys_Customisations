@@ -2,7 +2,7 @@
 
 {
     'name': 'Face Recognition for HR Attendance',
-    'version': '19.0.2.0',
+    'version': '19.0.1.0',
     'summary': 'Face Recognition for HR Attendance',
     'category': 'Human Resources',
     'depends': ['hr_attendance', 'hr'],

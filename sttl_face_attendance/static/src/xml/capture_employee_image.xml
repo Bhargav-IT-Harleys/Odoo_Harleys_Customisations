@@ -9,7 +9,6 @@
                 </div>
                 <div class="o_modal_body">
                     <video id="video" autoplay="1"></video>
-                    <div id="capture-status" class="mt-2 text-muted">Preparing face capture...</div>
                     <button type="button" class="btn btn-primary mt-3" id="btn-click">Capture</button>
                     <canvas id="canvas" style="display: none;"></canvas>
                 </div>
