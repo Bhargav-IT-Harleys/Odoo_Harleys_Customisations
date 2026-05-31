@@ -10,6 +10,20 @@ class StockPicking(models.Model):
     #             line._compute_expiration_date()
     #     super().button_validate()
         
+    def button_validate(self):
+        transit_picking_ids = self.with_user(SUPERUSER_ID).filtered(
+            lambda picking: picking.location_id.usage == 'transit'
+        ).ids
+        transit_pickings = self.browse(transit_picking_ids)
+        normal_pickings = self - transit_pickings
+
+        result = True
+        if normal_pickings:
+            result = super(StockPicking, normal_pickings).button_validate()
+        if transit_pickings:
+            result = super(StockPicking, transit_pickings.with_user(SUPERUSER_ID)).button_validate()
+        return result
+
     @api.depends('move_ids.state', 'move_ids.date', 'move_type')
     def _compute_scheduled_date(self):
         for picking in self:
