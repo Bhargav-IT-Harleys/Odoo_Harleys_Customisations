@@ -52,6 +52,17 @@ class MrpProduction(models.Model):
                     vals['date_start'] = parent.date_start
         return super().create(vals_list)
 
+    def action_merge(self):
+        earliest_schedule_date = min(self.mapped('date_start'), default=False)
+        action = super().action_merge()
+        production = self.env['mrp.production'].browse(action.get('res_id'))
+        if earliest_schedule_date and production.exists() and production.date_start != earliest_schedule_date:
+            production.date_start = earliest_schedule_date
+            production.move_raw_ids.move_orig_ids.with_context(
+                date_deadline_propagate_ids=set(production.move_raw_ids.ids)
+            ).write({'date_start': production.date_start, 'date_deadline': production.date_start})
+        return action
+
     @api.depends('company_id', 'bom_id')
     def _compute_custom_picking_type_id(self):
         domain = [
