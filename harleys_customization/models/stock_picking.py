@@ -51,3 +51,12 @@ class StockMove(models.Model):
         if self.picking_code == 'incoming':
             vals['quantity'] = 0
         return vals
+<<<<<<< Updated upstream
+=======
+
+class StockLot(models.Model):
+    _inherit = 'stock.lot'
+
+    def _check_unique_lot(self):
+        return
+>>>>>>> Stashed changes
