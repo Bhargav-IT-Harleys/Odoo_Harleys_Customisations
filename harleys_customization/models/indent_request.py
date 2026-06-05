@@ -459,6 +459,10 @@ class IndentRequestLine(models.Model):
         compute='_compute_qty'
     )
 
+    supplied_qty = fields.Float(
+        string="Supplied Qty", digits="Product Unit",
+        compute='_compute_supplied_qty'
+    )
     comments = fields.Char(string="Comments")
 
     state = fields.Selection(
@@ -531,8 +535,17 @@ class IndentRequestLine(models.Model):
                 ('picking_id.location_dest_id', '=', request.request_id.delivery_to.lot_stock_id.id),
                 ('product_id', '=', request.product_id.id),
             ])
-            request.received_qty =  sum([transit_trans.quantity for transit_trans in transit_transfer if transit_trans.state == 'done'])
+            request.received_qty = sum([transit_trans.quantity for transit_trans in transit_transfer if transit_trans.state == 'done'])
 
+    def _compute_supplied_qty(self):
+        for request in self:
+            transit_transfer = self.env['stock.move'].search([
+                ('picking_id.origin', '=', request.indent_number),
+                ('picking_id.picking_type_code', '=', 'internal'),
+                ('picking_id.location_id', '=', request.request_id.delivery_from.lot_stock_id.id),
+                ('product_id', '=', request.product_id.id),
+            ])
+            request.supplied_qty = sum([transit_trans.quantity for transit_trans in transit_transfer if transit_trans.state == 'done'])
 
     def _compute_is_editable(self):
         for rec in self:
