@@ -106,7 +106,26 @@
             }
         </field>
     </record>
+
+    <record id="action_mrp_order_line_stock_move_consumption" model="ir.actions.act_window">
+        <field name="name">MO Consumption</field>
+        <field name="res_model">stock.move</field>
+        <field name="view_mode">list,pivot</field>
+        <field name="view_id" ref="view_mrp_order_line_stock_move_tree"/>
+        <field name="domain">
+            [('raw_material_production_id','!=',False),
+             ('raw_material_production_id.state','!=','cancel'),
+             ('warehouse_id.user_ids', 'in', [uid])]
+        </field>
+        <field name="context">
+            {
+                'group_by': ['mo_date_start:day', 'mo_section']
+            }
+        </field>
+    </record>
     
     <menuitem id="menu_mrp_order_lines" name="MO Material Requirments" parent="mrp.menu_mrp_manufacturing" action="action_mrp_order_line_stock_move" sequence="2"/>
+
+    <menuitem id="menu_mrp_order_consumption" name="MO Consumption" parent="mrp.menu_mrp_manufacturing" action="action_mrp_order_line_stock_move_consumption" sequence="3"/>
 
 </odoo>
