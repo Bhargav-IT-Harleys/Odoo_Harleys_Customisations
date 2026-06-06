@@ -57,3 +57,14 @@ class StockLot(models.Model):
 
     def _check_unique_lot(self):
         return
+
+class StockScrap(models.Model):
+    _inherit = "stock.scrap"
+
+    scrap_location_id = fields.Many2one(
+        string="Inv Adj Location",
+    )
+
+    scrap_reason_tag_ids = fields.Many2many(
+        string="Inv Adj Reason",
+    )
