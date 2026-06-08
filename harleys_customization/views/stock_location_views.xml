@@ -16,6 +16,9 @@
     <record id="stock.menu_stock_scrap" model="ir.ui.menu">
         <field name="name">Inv Adjustments</field>
     </record>
+    <record id="mrp.menu_mrp_scrap" model="ir.ui.menu">
+        <field name="name">Inv Adjustments</field>
+    </record>
     <record id="stock.action_stock_scrap" model="ir.actions.act_window">
         <field name="name">Inv Adjustments</field>
     </record>
