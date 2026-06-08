@@ -66,5 +66,5 @@ class StockScrap(models.Model):
     )
 
     scrap_reason_tag_ids = fields.Many2many(
-        string="Inv Adj Reason",
+        string="Inv Adj Reason", required=True
     )
