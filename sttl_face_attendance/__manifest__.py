@@ -5,13 +5,15 @@
     'version': '19.0.1.0',
     'summary': 'Face Recognition for HR Attendance',
     'category': 'Human Resources',
-    'depends': ['hr_attendance', 'hr'],
+    'depends': ['base', 'hr_attendance', 'hr'],
     'description':
     '''
         Face Recognition for HR Attendance
     '''
 ,    'data': [
         'views/employee.xml',
+        'views/res_config_settings_views.xml',
+
     ],
     "author": "Silver Touch Technologies Limited",
     "website": "https://www.silvertouch.com/",

@@ -14,6 +14,8 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
         super.setup();
         this.faceAttendanceActive = false;
         this.faceAttendanceProcessing = false;
+        this.faceAttendanceMatchedEmployeeId = null;
+        this.faceAttendanceShiftTimer = null;
     },
 
     async initiateFaceAttendance() {
@@ -30,6 +32,8 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
         }
         this.faceAttendanceActive = true;
         this.faceAttendanceProcessing = false;
+        this.faceAttendanceMatchedEmployeeId = null;
+        this._clearFaceAttendanceShiftTimer();
 
         try {
             return await new Promise((resolve) => {
@@ -43,6 +47,7 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
     async _initializeFaceCamera(employeeId, resolve) {
         const overlay = this._createOverlay();
         let video;
+        let setupStage = "models";
         try {
             this._setCameraStatus(_t("Loading face recognition..."));
             await Promise.all([
@@ -51,6 +56,12 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
                 faceapi.nets.faceRecognitionNet.load(MODEL_URL),
             ]);
 
+            setupStage = "camera";
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                const error = new Error("Camera API is unavailable.");
+                error.name = "CameraApiUnavailable";
+                throw error;
+            }
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 1280 },
@@ -61,6 +72,7 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
             video = this._setupVideoStream(stream, overlay);
             this._setCameraStatus(_t("Preparing enrolled faces..."));
 
+            setupStage = "attendance";
             const employeeDetails = await rpc("/employee/images", {
                 token: this.props.token,
                 employee_id: employeeId,
@@ -69,18 +81,49 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
                 this._setCameraStatus(
                     _t("No employee face is enrolled. Capture the employee face first.")
                 );
+                this._showFaceScanButton();
+                this._setFaceScanButtonDisabled(true);
                 this._setActionButtonsDisabled(true);
             } else {
-                this._setCameraStatus(
-                    _t("Position one face, then choose Check In or Check Out.")
-                );
+                const selectedEmployee = this._getSelectedEmployee(employeeId, employeeDetails);
+                if (selectedEmployee) {
+                    this.faceAttendanceMatchedEmployeeId = selectedEmployee.employee_id;
+                    this._showAttendanceActions(selectedEmployee);
+                    this._setCameraStatus(this._getActionPrompt(selectedEmployee));
+                    this._scheduleShiftActionUpdate(selectedEmployee);
+                } else {
+                    this._showFaceScanButton();
+                    this._setCameraStatus(_t("Position one face, then click Identify Face."));
+                }
             }
             this._addEventListeners(video, overlay, resolve, employeeDetails);
         } catch (error) {
             console.error(error);
-            this.displayNotification(_t("Unable to access the camera."));
+            this.displayNotification(this._getFaceSetupErrorMessage(error, setupStage));
             this._handleError(video, overlay, resolve);
         }
+    },
+
+    _getFaceSetupErrorMessage(error, setupStage) {
+        if (setupStage === "models") {
+            return _t("Unable to load the face recognition models.");
+        }
+        if (setupStage === "attendance") {
+            return _t("Unable to load employee attendance data.");
+        }
+        if (error && error.name === "CameraApiUnavailable") {
+            return _t("Camera access requires HTTPS or localhost.");
+        }
+        if (error && error.name === "NotAllowedError") {
+            return _t("Camera permission was denied.");
+        }
+        if (error && error.name === "NotFoundError") {
+            return _t("No camera was found on this device.");
+        }
+        if (error && error.name === "NotReadableError") {
+            return _t("The camera is already in use or unavailable.");
+        }
+        return _t("Unable to access the camera.");
     },
 
     _createOverlay() {
@@ -130,6 +173,14 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
 
         controls.appendChild(
             this._createActionButton(
+                "scan-face-button",
+                "btn btn-primary",
+                _t("Identify Face"),
+                "fa-camera"
+            )
+        );
+        controls.appendChild(
+            this._createActionButton(
                 "check-in-button",
                 "btn btn-success",
                 _t("Check In"),
@@ -171,6 +222,9 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
     },
 
     _addEventListeners(video, overlay, resolve, employeeDetails) {
+        document.getElementById("scan-face-button").addEventListener("click", () => {
+            this._identifyEmployeeForAction(video, employeeDetails);
+        });
         document.getElementById("check-in-button").addEventListener("click", () => {
             this._verifyAndRecord(
                 "check_in",
@@ -194,22 +248,14 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
         });
     },
 
-    async _verifyAndRecord(attendanceAction, video, overlay, resolve, employeeDetails) {
-        if (
-            this.faceAttendanceProcessing ||
-            !ATTENDANCE_ACTIONS.includes(attendanceAction)
-        ) {
+    async _identifyEmployeeForAction(video, employeeDetails) {
+        if (this.faceAttendanceProcessing) {
             return;
         }
 
         this.faceAttendanceProcessing = true;
-        this._setActionButtonsDisabled(true);
-        this._setCloseButtonDisabled(true);
-        this._setCameraStatus(
-            attendanceAction === "check_in"
-                ? _t("Verifying face for Check In...")
-                : _t("Verifying face for Check Out...")
-        );
+        this._setFaceScanButtonDisabled(true);
+        this._setCameraStatus(_t("Identifying employee face..."));
 
         try {
             const matchingEmployeeId = await this._captureMatchingEmployee(
@@ -221,6 +267,83 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
                     _t("Face does not match any enrolled employee. Please try again.")
                 );
                 this.displayNotification(_t("No matching employee found."));
+                this._showFaceScanButton();
+                this._resetActionButtons();
+                return;
+            }
+
+            const matchingEmployee = this._getEmployeeDetails(
+                matchingEmployeeId,
+                employeeDetails
+            );
+            if (!matchingEmployee) {
+                this._setCameraStatus(_t("Face verification failed. Please try again."));
+                this._showFaceScanButton();
+                this._resetActionButtons();
+                return;
+            }
+            this.faceAttendanceMatchedEmployeeId = matchingEmployeeId;
+            this._showAttendanceActions(matchingEmployee);
+            this._setCameraStatus(this._getActionPrompt(matchingEmployee));
+            this._scheduleShiftActionUpdate(matchingEmployee);
+            this._resetActionButtons();
+        } catch (error) {
+            console.error(error);
+            this._setCameraStatus(_t("Face verification failed. Please try again."));
+            this.displayNotification(_t("Face verification failed."));
+            this._showFaceScanButton();
+            this._resetActionButtons();
+        }
+    },
+
+    async _verifyAndRecord(attendanceAction, video, overlay, resolve, employeeDetails) {
+        if (
+            this.faceAttendanceProcessing ||
+            !ATTENDANCE_ACTIONS.includes(attendanceAction)
+        ) {
+            return;
+        }
+
+        this.faceAttendanceProcessing = true;
+        this._setActionButtonsDisabled(true);
+        this._setCameraStatus(
+            attendanceAction === "check_in"
+                ? _t("Verifying face for Check In...")
+                : _t("Verifying face for Check Out...")
+        );
+
+        try {
+            const employeeDetailsForMatch = this.faceAttendanceMatchedEmployeeId
+                ? employeeDetails.filter(
+                    ({ employee_id }) =>
+                        String(employee_id) === String(this.faceAttendanceMatchedEmployeeId)
+                )
+                : employeeDetails;
+            const matchingEmployeeId = await this._captureMatchingEmployee(
+                video,
+                employeeDetailsForMatch
+            );
+            if (!matchingEmployeeId) {
+                this._setCameraStatus(
+                    _t("Face does not match any enrolled employee. Please try again.")
+                );
+                this.displayNotification(_t("No matching employee found."));
+                this._resetActionButtons();
+                return;
+            }
+
+            const matchingEmployee = this._getEmployeeDetails(matchingEmployeeId, employeeDetails);
+            if (!matchingEmployee) {
+                this._setCameraStatus(_t("Face verification failed. Please try again."));
+                this._resetActionButtons();
+                return;
+            }
+            const availableActions = this._getAvailableAttendanceActions(matchingEmployee);
+            this.faceAttendanceMatchedEmployeeId = matchingEmployeeId;
+            this._showAttendanceActions(matchingEmployee);
+            if (!availableActions.includes(attendanceAction)) {
+                this._setCameraStatus(this._getActionPrompt(matchingEmployee));
+                this.displayNotification(this._getActionPrompt(matchingEmployee));
                 this._resetActionButtons();
                 return;
             }
@@ -309,6 +432,7 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
                 attendance_action: attendanceAction,
             });
             if (result && result.attendance) {
+                this._clearFaceAttendanceShiftTimer();
                 this._stopStream(video);
                 if (document.body.contains(overlay)) {
                     overlay.remove();
@@ -319,6 +443,9 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
                 return;
             }
 
+            if (result && result.attendance_state) {
+                this._showAttendanceActions(result);
+            }
             this._setCameraStatus(this._getAttendanceErrorMessage(result));
             this.displayNotification(this._getAttendanceErrorMessage(result));
             this._resetActionButtons();
@@ -331,9 +458,6 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
     },
 
     _getAttendanceErrorMessage(result) {
-        if (result && result.error === "already_checked_in") {
-            return _t("This employee is already checked in.");
-        }
         if (result && result.error === "already_checked_out") {
             return _t("This employee is already checked out.");
         }
@@ -346,7 +470,7 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
     _resetActionButtons() {
         this.faceAttendanceProcessing = false;
         this._setActionButtonsDisabled(false);
-        this._setCloseButtonDisabled(false);
+        this._setFaceScanButtonDisabled(false);
     },
 
     _setActionButtonsDisabled(disabled) {
@@ -358,10 +482,93 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
         }
     },
 
-    _setCloseButtonDisabled(disabled) {
-        const closeButton = document.getElementById("close-button");
-        if (closeButton) {
-            closeButton.disabled = disabled;
+    _setFaceScanButtonDisabled(disabled) {
+        const button = document.getElementById("scan-face-button");
+        if (button) {
+            button.disabled = disabled;
+        }
+    },
+
+    _showFaceScanButton() {
+        this._setButtonHidden("scan-face-button", false);
+        this._setButtonHidden("check-in-button", true);
+        this._setButtonHidden("check-out-button", true);
+    },
+
+    _showAttendanceActions(employeeDetails) {
+        const availableActions = this._getAvailableAttendanceActions(employeeDetails);
+        this._setButtonHidden("scan-face-button", true);
+        this._setButtonHidden("check-in-button", !availableActions.includes("check_in"));
+        this._setButtonHidden("check-out-button", !availableActions.includes("check_out"));
+    },
+
+    _setButtonHidden(id, hidden) {
+        const button = document.getElementById(id);
+        if (button) {
+            button.classList.toggle("d-none", hidden);
+        }
+    },
+
+    _getSelectedEmployee(employeeId, employeeDetails) {
+        if (employeeId) {
+            return this._getEmployeeDetails(employeeId, employeeDetails);
+        }
+        return employeeDetails.length === 1 ? employeeDetails[0] : null;
+    },
+
+    _getEmployeeDetails(employeeId, employeeDetails) {
+        return employeeDetails.find(
+            ({ employee_id }) => String(employee_id) === String(employeeId)
+        );
+    },
+
+    _getAvailableAttendanceActions(employeeDetails) {
+        if (employeeDetails.attendance_state !== "checked_in") {
+            return ["check_in"];
+        }
+        return employeeDetails.shift_expired
+            ? ["check_in"]
+            : ["check_out"];
+    },
+
+    _getActionPrompt(employeeDetails) {
+        if (employeeDetails.attendance_state !== "checked_in") {
+            return _t("Face matched. Please use Check In.");
+        }
+        return employeeDetails.shift_expired
+            ? _t("Shift duration exceeded. Please use Check In.")
+            : _t("Face matched. Please use Check Out.");
+    },
+
+    _scheduleShiftActionUpdate(employeeDetails) {
+        this._clearFaceAttendanceShiftTimer();
+        if (
+            employeeDetails.attendance_state !== "checked_in"
+            || employeeDetails.shift_expired
+            || !employeeDetails.shift_seconds_remaining
+        ) {
+            return;
+        }
+
+        const delay = Math.max(0, employeeDetails.shift_seconds_remaining * 1000);
+        this.faceAttendanceShiftTimer = setTimeout(() => {
+            if (
+                String(this.faceAttendanceMatchedEmployeeId)
+                !== String(employeeDetails.employee_id)
+            ) {
+                return;
+            }
+            employeeDetails.shift_expired = true;
+            employeeDetails.shift_seconds_remaining = 0;
+            this._showAttendanceActions(employeeDetails);
+            this._setCameraStatus(this._getActionPrompt(employeeDetails));
+        }, delay);
+    },
+
+    _clearFaceAttendanceShiftTimer() {
+        if (this.faceAttendanceShiftTimer) {
+            clearTimeout(this.faceAttendanceShiftTimer);
+            this.faceAttendanceShiftTimer = null;
         }
     },
 
@@ -373,6 +580,7 @@ patch(attendanceApp.kioskAttendanceApp.prototype, {
     },
 
     _handleError(video, overlay, resolve) {
+        this._clearFaceAttendanceShiftTimer();
         if (video) {
             this._stopStream(video);
         }

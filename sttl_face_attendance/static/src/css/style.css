@@ -99,17 +99,17 @@
 #camera-controls {
     display: flex;
     gap: 12px;
-    justify-content: flex-end;
+    justify-content: center;
     flex-wrap: wrap;
 }
 
-#check-in-button, #check-out-button, #close-button {
+#scan-face-button, #check-in-button, #check-out-button, #close-button {
     min-width: 130px;
     border-radius: 4px;
     font-weight: 500;
 }
 
-#check-in-button:disabled, #check-out-button:disabled {
+#scan-face-button:disabled, #check-in-button:disabled, #check-out-button:disabled {
     cursor: not-allowed;
     opacity: 0.65;
 }
@@ -127,7 +127,7 @@
         flex-direction: column;
     }
 
-    #check-in-button, #check-out-button, #close-button {
+    #scan-face-button, #check-in-button, #check-out-button, #close-button {
         width: 100%;
     }
 }
