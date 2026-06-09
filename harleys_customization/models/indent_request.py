@@ -349,7 +349,7 @@ class IndentRequest(models.Model):
     @api.model
     def _cron_close_requests_by_received_qty(self):
         requests = self.sudo().search([
-            ('state', '!=', 'closed'),
+            ('state', '==', 'locked'),
             ('line_ids', '!=', False),
         ])
         requests.filtered(
