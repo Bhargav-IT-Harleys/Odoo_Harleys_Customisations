@@ -68,3 +68,50 @@ class StockScrap(models.Model):
     scrap_reason_tag_ids = fields.Many2many(
         string="Inv Adj Reason", required=True
     )
+    allowed_location_ids = fields.Many2many(
+        'stock.location',
+        string='Allowed Locations',
+        compute='_compute_allowed_location_ids',
+    )
+
+    location_id = fields.Many2one(
+        'stock.location',
+        string='Source Location',
+        required=True,
+        states={'done': [('readonly', True)]},
+    )
+
+    def _get_allowed_location_ids(self):
+        """
+        Return stock.location recordset the current user is allowed to use,
+        derived from their allowed_warehouse_ids on res.users.
+        Falls back to all active internal locations for the company.
+        """
+        user = self.env.user
+        allowed_warehouses = getattr(user, 'allowed_warehouse_ids', self.env['stock.warehouse'])
+
+        if allowed_warehouses:
+            warehouse_view_loc_ids = allowed_warehouses.mapped('view_location_id').ids
+            return self.env['stock.location'].search([
+                ('location_id', 'child_of', warehouse_view_loc_ids),
+                ('usage', '=', 'internal'),
+                ('active', '=', True),
+            ])
+        else:
+            company_id = self.env.company.id
+            return self.env['stock.location'].search([
+                ('usage', '=', 'internal'),
+                ('active', '=', True),
+                '|',
+                ('company_id', '=', False),
+                ('company_id', '=', company_id),
+            ])
+    location_id = fields.Many2one(
+        'stock.location',
+        string='Source Location',
+        domain=lambda self: [('id', 'in', self._get_allowed_location_ids().ids)],
+        required=True,
+        states={'done': [('readonly', True)]},
+        check_company=True,
+        default=False
+    )
