@@ -1,4 +1,5 @@
 from odoo import _, api, fields, models, SUPERUSER_ID
+from odoo.exceptions import AccessError
 
 
 class StockPicking(models.Model):
@@ -21,7 +22,10 @@ class StockPicking(models.Model):
         if normal_pickings:
             result = super(StockPicking, normal_pickings).button_validate()
         if transit_pickings:
-            result = super(StockPicking, transit_pickings.with_user(SUPERUSER_ID)).button_validate()
+            try:
+                result = super(StockPicking, transit_pickings).button_validate()
+            except AccessError:
+                result = super(StockPicking, transit_pickings.with_user(SUPERUSER_ID)).button_validate()
         return result
 
     @api.depends('move_ids.state', 'move_ids.date', 'move_type')
