@@ -30,6 +30,7 @@
         'views/purchase_views.xml',
         # 'views/stock_move_views.xml',
         # 'views/stock_quant_views.xml',
+        'views/stock_scrap_views.xml',
         'views/account_move_views.xml',
         'views/stock_location_views.xml',
         'reports/manufacturing_order_lines_views.xml',
