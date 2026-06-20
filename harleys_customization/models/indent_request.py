@@ -414,6 +414,14 @@ class IndentRequest(models.Model):
             ('state', 'in', ['approved']),
         ], limit=1))
 
+    def unlink(self):
+        for rec in self:
+            if rec.state != 'draft':
+                raise UserError(
+                    _("You cannot delete this record in its current state. Only records in Draft state can be deleted.")
+                )
+        return super().unlink()
+
 class IndentRequestLine(models.Model):
     _name = 'indent.request.line'
     _description = 'Indent Request Line'
@@ -619,3 +627,11 @@ class IndentRequestLine(models.Model):
                 parent = self.env['indent.request'].browse(vals['request_id'])
                 vals['state'] = parent.state
         return super().create(vals_list)
+
+    def unlink(self):
+        for rec in self:
+            if rec.request_id.state != 'draft':
+                raise UserError(
+                    _("You cannot delete this line because the parent Indent Request is not in Draft state.")
+                )
+        return super().unlink()
