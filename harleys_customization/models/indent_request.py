@@ -635,3 +635,18 @@ class IndentRequestLine(models.Model):
                     _("You cannot delete this line because the parent Indent Request is not in Draft state.")
                 )
         return super().unlink()
+
+    @api.constrains('product_id', 'request_id')
+    def _check_duplicate_product(self):
+        for line in self:
+            if not line.product_id or not line.request_id:
+                continue
+
+            duplicate = line.request_id.line_ids.filtered(
+                lambda l: l.id != line.id and l.product_id == line.product_id
+            )
+
+            if duplicate:
+                raise UserError(_(
+                    "Product '%s' has already been added to this Indent Request. Duplicate products are not allowed."
+                ) % line.product_id.display_name)
