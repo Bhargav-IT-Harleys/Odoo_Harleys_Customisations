@@ -68,6 +68,18 @@ class ProductProduct(models.Model):
     _inherit = 'product.product'
     _order = 'name, id'
 
+
+    @api.model
+    def _name_search(self, name='', domain=None, operator='ilike', limit=100, order=None):
+        return super()._name_search(
+            name=name,
+            domain=domain,
+            operator=operator,
+            limit=limit,
+            order='name, id'
+        )
+
+
     # batch_size = fields.Float(string="Batch Size")
     # section = fields.Many2one('production.section', string="Production Section")
 
