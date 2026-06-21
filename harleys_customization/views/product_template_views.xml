@@ -71,6 +71,9 @@
         <field name="model">product.product</field>
         <field name="inherit_id" ref="product.product_product_tree_view"/>
         <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="default_order">name asc, id asc</attribute>
+            </xpath>
             <field name="name" position="after">
                 <field name="section"/>
                 <field name="batch_size"/>

@@ -66,17 +66,28 @@ class ProductTemplate(models.Model):
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
-    _order = 'name, id'
-
+    _order = 'name asc, id asc'
 
     @api.model
-    def _name_search(self, name='', domain=None, operator='ilike', limit=100, order=None):
-        return super()._name_search(
+    def name_search(self, name='', domain=None, operator='ilike', limit=100):
+        results = super().name_search(
             name=name,
             domain=domain,
             operator=operator,
             limit=limit,
-            order='name, id'
+        )
+        products = {
+            product.id: product
+            for product in self.browse([
+                product_id for product_id, _display_name in results
+            ])
+        }
+        return sorted(
+            results,
+            key=lambda result: (
+                (products[result[0]].name or '').casefold(),
+                result[0],
+            ),
         )
 
 
