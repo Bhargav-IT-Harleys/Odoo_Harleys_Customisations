@@ -66,6 +66,7 @@ class ProductTemplate(models.Model):
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
+    _order = 'name, id'
 
     # batch_size = fields.Float(string="Batch Size")
     # section = fields.Many2one('production.section', string="Production Section")
