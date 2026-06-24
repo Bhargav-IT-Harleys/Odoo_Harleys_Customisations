@@ -444,6 +444,11 @@ class IndentRequestLine(models.Model):
         string="Product",
         tracking=True,
     )
+    product_name = fields.Char(
+        string="Product Name",
+        related="product_id.name",
+        store=True,
+    )
 
     categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)
     

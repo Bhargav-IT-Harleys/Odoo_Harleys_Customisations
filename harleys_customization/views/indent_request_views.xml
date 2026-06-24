@@ -79,8 +79,9 @@
                     <notebook>
                         <page string="Products" name="line_ids" invisible="is_valid == False">
                             <field name="line_ids" readonly="state in ['locked', 'closed']">
-                                <list string="Indent Request Lines" editable="bottom" limit="200">
+                                <list string="Indent Request Lines" editable="bottom" limit="200" default_order="product_name">
                                     <field name="request_id" column_invisible="True"/>
+                                    <field name="product_name" optional="hide"/>
                                     <field name="product_id" options="{'no_create': True}" force_save="1" domain="[('state', '=', 'approved')]"/>
                                     <field name="categ_id" force_save="1"/>
                                     <field name="name" readonly="state not in ['draft']" force_save="1" column_invisible="1"/>
