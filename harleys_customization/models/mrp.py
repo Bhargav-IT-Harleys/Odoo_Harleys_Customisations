@@ -184,7 +184,6 @@ class StockMove(models.Model):
 
     def _get_grouped_4level(self):
         raw = self._get_grouped_data()
-        import re
         from collections import OrderedDict
 
         tree = OrderedDict()
@@ -208,10 +207,7 @@ class StockMove(models.Model):
             uom_name    = uom if uom else ''
             product_qty = qty if qty else 0
 
-            prod_full = prod[1]
-            match = re.match(r'^\[(.+?)\]\s*(.*)', prod_full)
-            prod_code = match.group(1) if match else ''
-            prod_name = match.group(2) if match else prod_full
+            prod_name = prod[1]
 
             if date not in tree:
                 tree[date] = OrderedDict()
@@ -231,9 +227,7 @@ class StockMove(models.Model):
                 }
 
             tree[date][section_key]['categories'][categ_key]['products'].append({
-                'code': prod_code,
                 'name': prod_name,
-                'full_name': prod_full,
                 'count': count,
                 'uom': uom_name,
                 'qty': product_qty,
@@ -250,7 +244,7 @@ class StockMove(models.Model):
             for _, sec_data in sorted(sections.items(), key=lambda x: x[1]['name']):
                 category_list = []
                 for _, cat_data in sorted(sec_data['categories'].items(), key=lambda x: x[1]['name']):
-                    cat_data['products'].sort(key=lambda p: p['code'])
+                    cat_data['products'].sort(key=lambda p: (p['name'] or '').casefold())
                     category_list.append({
                         'name': cat_data['name'],
                         'products': cat_data['products'],

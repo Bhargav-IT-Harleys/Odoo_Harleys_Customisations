@@ -19,6 +19,12 @@ class ProductTemplate(models.Model):
     batch_size = fields.Float(string="Batch Size")
     section = fields.Many2one('production.section', string="Production Section")
 
+    @api.depends('name')
+    @api.depends_context('lang')
+    def _compute_display_name(self):
+        for template in self:
+            template.display_name = template.name or False
+
     @api.constrains('default_code')
     def _check_default_code_unique(self):
         for rec in self:
@@ -67,6 +73,17 @@ class ProductTemplate(models.Model):
 class ProductProduct(models.Model):
     _inherit = 'product.product'
     _order = 'name asc, id asc'
+
+    @api.depends('name', 'product_template_attribute_value_ids')
+    @api.depends_context('lang')
+    def _compute_display_name(self):
+        for product in self:
+            variant = product.product_template_attribute_value_ids._get_combination_name()
+            product.display_name = (
+                "%s (%s)" % (product.name, variant)
+                if variant
+                else product.name or False
+            )
 
     @api.model
     def name_search(self, name='', domain=None, operator='ilike', limit=100):

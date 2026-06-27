@@ -444,11 +444,6 @@ class IndentRequestLine(models.Model):
         string="Product",
         tracking=True,
     )
-    product_name = fields.Char(
-        string="Product Name",
-        related="product_id.name",
-        store=True,
-    )
 
     categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)
     
@@ -571,8 +566,6 @@ class IndentRequestLine(models.Model):
     def onchange_product_id(self):
         if self.product_id:
             name = self.product_id.name
-            if self.product_id.code:
-                name = f"[{self.product_id.code}] {name}"
             if self.product_id.description_purchase:
                 name += "\n" + self.product_id.description_purchase
             self.product_uom_id = self.product_id.uom_id.id

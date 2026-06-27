@@ -70,8 +70,6 @@
                                                 t-attf-style="background-color: {{ '#ffffff' if product_index % 2 == 0 else '#fafafa' }};">
                                                 <td style="padding: 3px 8px 3px 72px; color: #333;">
                                                     <span style="margin-right: 6px; color: #bbb; font-size: 10px;">▶</span>
-                                                    <span style="color: #666;">[<t t-esc="product['code']"/>]</span>
-                                                    &#160;
                                                     <t t-esc="product['name']"/>
                                                     <span style="color: #aaa; margin-left: 4px;">
                                                         (<t t-esc="product['count']"/>)
