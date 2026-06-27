@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <function model="ir.ui.view" name="write">
+        <value model="ir.ui.view" eval="obj().with_context(active_test=False).search([
+            ('model', '=', 'mrp.bom'),
+            ('name', 'in', [
+                'mrp.bom.form.readonly.without.create.edit.access',
+                'mrp.bom.form.create.edit.access',
+                'mrp.bom.list.readonly.without.create.edit.access',
+                'mrp.bom.list.create.edit.access',
+                'mrp.bom.kanban.readonly.without.create.edit.access',
+                'mrp.bom.kanban.create.edit.access',
+            ]),
+        ]).ids"/>
+        <value eval="{'active': False, 'group_ids': [(5, 0, 0)]}"/>
+    </function>
+
     <record id="view_mrp_bom_form_inherit_approval" model="ir.ui.view">
         <field name="name">mrp.bom.form.inherit.approval</field>
         <field name="model">mrp.bom</field>
@@ -10,28 +25,41 @@
                     <button name="action_sent" string="Send" type="object"
                         icon="fa-paper-plane"
                         class="oe_highlight"
-                        invisible="state not in ('draft', 'rejected')"/>
+                        invisible="not can_create_edit_bom or state not in ('draft', 'rejected')"/>
                     <button name="action_approve" string="Approve" type="object"
                         icon="fa-thumbs-up"
                         class="btn btn-success"
                         groups="mrp.group_mrp_manager"
-                        invisible="state != 'sent'"/>
+                        invisible="not can_create_edit_bom or state != 'sent'"/>
                     <button name="action_reject" string="Reject" type="object"
                         icon="fa-thumbs-down"
                         class="btn btn-danger"
                         groups="mrp.group_mrp_manager"
-                        invisible="state != 'sent'"/>
+                        invisible="not can_create_edit_bom or state != 'sent'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,sent,approved,rejected"/>
                 </header>
             </xpath>
 
             <xpath expr="//field[@name='code']" position="after">
+                <field name="can_create_edit_bom" invisible="1"/>
                 <field name="approved_by" readonly="1"/>
                 <field name="approved_date" readonly="1"/>
             </xpath>
 
             <xpath expr="//field[@name='produce_delay']" position="attributes">
                 <attribute name="readonly">1</attribute>
+            </xpath>
+
+            <xpath expr="//label[@for='product_qty']/following-sibling::div[1]" position="attributes">
+                <attribute name="class">o_row gap-2 flex-nowrap align-items-center</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='product_qty']" position="attributes">
+                <attribute name="class">flex-grow-0 flex-shrink-0 w-auto</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='product_uom_id'][ancestor::group]" position="attributes">
+                <attribute name="class">flex-grow-1 min-w-0 ms-2</attribute>
             </xpath>
         </field>
     </record>

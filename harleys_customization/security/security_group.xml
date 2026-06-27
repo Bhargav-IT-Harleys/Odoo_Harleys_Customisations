@@ -5,6 +5,11 @@
       <field name="name">Show Contacts</field>
     </record>
 
+    <record id="group_bom_create_edit_access" model="res.groups">
+      <field name="name">BOM Create/ Edit Access</field>
+      <field name="implied_ids" eval="[(4, ref('mrp.group_mrp_user'))]"/>
+    </record>
+
 
     <!-- Group Privilege Category for Indent Request -->
     <record model="res.groups.privilege" id="res_groups_privilege_indent_request">

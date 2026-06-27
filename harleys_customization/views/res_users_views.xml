@@ -8,6 +8,11 @@
             <xpath expr="//field[@name='role']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
+            <xpath expr="//page[@name='access_rights']/field[@name='group_ids'][last()]" position="after">
+                <group name="bom_extra_rights">
+                    <field name="bom_create_edit_access"/>
+                </group>
+            </xpath>
         </field>
     </record>
 
