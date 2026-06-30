@@ -14,15 +14,6 @@ _STATE = [
 ]
 
 
-def _check_bom_create_edit_access(env):
-    if env.su or env.uid == SUPERUSER_ID:
-        return
-    if not env.user.has_group('harleys_customization.group_bom_create_edit_access'):
-        raise AccessError(_(
-            "You are not allowed to modify Bills of Materials. "
-            "Please enable BOM Create/ Edit Access on the user master."
-        ))
-
 
 class MrpBom(models.Model):
     _inherit = 'mrp.bom'
@@ -114,7 +105,6 @@ class MrpBom(models.Model):
 
     @api.model
     def create(self, vals):
-        _check_bom_create_edit_access(self.env)
         if isinstance(vals, list):
             for val in vals:
                 val['active'] = False
@@ -122,49 +112,9 @@ class MrpBom(models.Model):
             vals['active'] = False
         return super(MrpBom, self).create(vals)
 
-    def write(self, vals):
-        _check_bom_create_edit_access(self.env)
-        return super().write(vals)
-
-    def unlink(self):
-        _check_bom_create_edit_access(self.env)
-        return super().unlink()
-
     def make_state_as_sent(self):
         for record in self:
             record.state = 'sent'
             record.active = False
 
 
-class MrpBomLine(models.Model):
-    _inherit = 'mrp.bom.line'
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        _check_bom_create_edit_access(self.env)
-        return super().create(vals_list)
-
-    def write(self, vals):
-        _check_bom_create_edit_access(self.env)
-        return super().write(vals)
-
-    def unlink(self):
-        _check_bom_create_edit_access(self.env)
-        return super().unlink()
-
-
-class MrpBomByproduct(models.Model):
-    _inherit = 'mrp.bom.byproduct'
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        _check_bom_create_edit_access(self.env)
-        return super().create(vals_list)
-
-    def write(self, vals):
-        _check_bom_create_edit_access(self.env)
-        return super().write(vals)
-
-    def unlink(self):
-        _check_bom_create_edit_access(self.env)
-        return super().unlink()
