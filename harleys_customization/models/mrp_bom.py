@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lxml import etree
+from markupsafe import Markup
 
 from odoo import SUPERUSER_ID, _, api, fields, models
 from odoo.exceptions import AccessError
@@ -18,6 +19,18 @@ _STATE = [
 class MrpBom(models.Model):
     _inherit = 'mrp.bom'
 
+    code = fields.Char(tracking=True)
+    active = fields.Boolean(tracking=True)
+    type = fields.Selection(tracking=True)
+    product_tmpl_id = fields.Many2one(tracking=True)
+    product_id = fields.Many2one(tracking=True)
+    bom_line_ids = fields.One2many(tracking=True)
+    product_qty = fields.Float(tracking=True)
+    product_uom_id = fields.Many2one(tracking=True)
+    picking_type_id = fields.Many2one(tracking=True)
+    company_id = fields.Many2one(tracking=True)
+    consumption = fields.Selection(tracking=True)
+    ready_to_produce = fields.Selection(tracking=True)
     produce_delay = fields.Integer(default=0, readonly=True)
     state = fields.Selection(
         _STATE,
@@ -118,3 +131,73 @@ class MrpBom(models.Model):
             record.active = False
 
 
+class MrpBomLine(models.Model):
+    _name = 'mrp.bom.line'
+    _inherit = ['mrp.bom.line', 'mail.thread']
+
+    product_id = fields.Many2one(tracking=True)
+    product_qty = fields.Float(tracking=True)
+    product_uom_id = fields.Many2one(tracking=True)
+    sequence = fields.Integer(tracking=True)
+    operation_id = fields.Many2one(tracking=True)
+    bom_product_template_attribute_value_ids = fields.Many2many(tracking=True)
+
+    def _post_line_tracking_on_bom(self, old_values_by_line):
+        if self.env.context.get('tracking_disable') or self.env.context.get('mail_notrack'):
+            return
+
+        for line in self:
+            old_values = old_values_by_line.get(line.id)
+            if not old_values or not line.bom_id:
+                continue
+
+            qty_changed = 'product_qty' in old_values and old_values['product_qty'] != line.product_qty
+            uom_changed = 'product_uom_id' in old_values and old_values['product_uom_id'] != line.product_uom_id.id
+            if not qty_changed and not uom_changed:
+                continue
+
+            component_name = line.product_id.display_name or _("Unknown Component")
+            old_uom_name = old_values.get('product_uom_name') or ''
+            new_uom_name = line.product_uom_id.display_name or ''
+
+            if qty_changed and uom_changed:
+                body = Markup("<p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul>") % (
+                    _("BoM line quantity and UoM changed."),
+                    _("Component: %s", component_name),
+                    _("Previous: %(qty)s %(uom)s", qty=old_values['product_qty'], uom=old_uom_name),
+                    _("New: %(qty)s %(uom)s", qty=line.product_qty, uom=new_uom_name),
+                )
+            elif qty_changed:
+                body = Markup("<p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul>") % (
+                    _("BoM line quantity changed."),
+                    _("Component: %s", component_name),
+                    _("Previous Quantity: %(qty)s %(uom)s", qty=old_values['product_qty'], uom=new_uom_name),
+                    _("New Quantity: %(qty)s %(uom)s", qty=line.product_qty, uom=new_uom_name),
+                )
+            else:
+                body = Markup("<p>%s</p><ul><li>%s</li><li>%s</li><li>%s</li></ul>") % (
+                    _("BoM line UoM changed."),
+                    _("Component: %s", component_name),
+                    _("Previous UoM: %s", old_uom_name),
+                    _("New UoM: %s", new_uom_name),
+                )
+
+            line.bom_id.message_post(body=body, subtype_xmlid='mail.mt_note')
+
+    def write(self, vals):
+        old_values_by_line = {}
+        tracked_fields = {'product_qty', 'product_uom_id'} & vals.keys()
+        if tracked_fields:
+            old_values_by_line = {
+                line.id: {
+                    field_name: line[field_name].id if field_name == 'product_uom_id' else line[field_name]
+                    for field_name in tracked_fields
+                } | {'product_uom_name': line.product_uom_id.display_name}
+                for line in self
+                if line.bom_id
+            }
+
+        result = super().write(vals)
+        if old_values_by_line:
+            self._post_line_tracking_on_bom(old_values_by_line)
+        return result
