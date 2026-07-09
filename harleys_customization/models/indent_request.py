@@ -245,6 +245,12 @@ class IndentRequest(models.Model):
                 else:
                     rec.is_valid = True
 
+    def action_verify_template(self):
+        """Verify template and password, then set is_valid flag to show products section"""
+        self.ensure_one()
+        self._check_template_password()
+        return True
+
     def action_get_internal_transfers(self):
         self.ensure_one()
         transfers = self.env['stock.picking'].search([
