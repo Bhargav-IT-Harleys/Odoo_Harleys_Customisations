@@ -169,6 +169,13 @@
                         decoration-success="state in ('sent')"
                         decoration-info="state in ('locked')"
                 />
+                <button
+                        name="action_get_internal_transfers"
+                        type="object"
+                        icon="fa-arrow-right"
+                        title="View GRN / Internal Transfers"
+                        invisible="state not in ('locked', 'closed')"
+                />
             </list>
         </field>
     </record>
