@@ -172,9 +172,10 @@
                 <button
                         name="action_get_internal_transfers"
                         type="object"
-                        icon="fa-arrow-right"
-                        title="View GRN / Internal Transfers"
-                        invisible="state not in ('locked', 'closed')"
+                        string="Receipt"
+                        icon="fa-cubes"
+                        title="View Receipt / Internal Transfers"
+                        invisible="state not in ('locked')"
                 />
             </list>
         </field>
