@@ -21,6 +21,13 @@
                             class="btn btn-danger"
                             invisible="state not in ('locked')"
                     />
+                    <button
+                            type="object"
+                            string="Receipt"
+                            name="action_get_internal_transfers"
+                            class="btn-info"
+                            invisible="state not in ('locked')"
+                    />
                     <field
                             name="state"
                             widget="statusbar"
@@ -176,7 +183,7 @@
                         icon="fa-cubes"
                         title="View Receipt / Internal Transfers"
                         invisible="state not in ('locked')"
-                />
+                /> 
             </list>
         </field>
     </record>
