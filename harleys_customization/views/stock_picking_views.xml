@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='move_ids']//field[@name='quantity']" position="attributes">
-                <attribute name="string">Physical Qty</attribute>
+                <attribute name="string">Qty Received</attribute>
             </xpath>
         </field>
     </record>
