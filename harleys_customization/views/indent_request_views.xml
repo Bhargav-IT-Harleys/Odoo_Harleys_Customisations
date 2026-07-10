@@ -149,11 +149,11 @@
                 <field name="name"/>
                 <field name="delivery_from"/>
                 <field name="delivery_to"/>
-                <field name="requested_by"/>
+                <field name="requested_by" optional="hide"/>
                 <!-- <field name="employee_id"/> -->
                 <field name="received_date"/>
-                <field name="create_date"/>
-                <field name="internal_transfer_status"/>
+                <field name="create_date" optional="hide"/>
+                <field name="internal_transfer_status" optional="hide"/>
                 <field name="manufacturing_order_status"/>
                 <field
                         name="company_id"
