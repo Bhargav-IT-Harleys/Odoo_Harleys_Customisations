@@ -2,22 +2,22 @@
 <templates xml:space="preserve">
     <t t-name="harleys_customization.SearchableX2ManyField">
         <div t-att-class="className">
-            <div class="o_searchable_x2many_toolbar o_x2m_control_panel d-flex gap-2 mb-3">
-                <div class="o_searchable_x2many_input input-group input-group-sm flex-fill">
-                    <span class="input-group-text">Search</span>
+            <div class="o_searchable_x2many_toolbar o_x2m_control_panel d-flex align-items-center flex-wrap gap-2 mb-3 bg-light rounded-3 p-2 shadow-sm">
+                <div class="o_searchable_x2many_input input-group input-group-sm flex-grow-1 min-w-0">
+                    <span class="input-group-text"><i class="fa fa-search"></i></span>
                     <input
                         type="text"
                         class="form-control"
                         t-att-value="filter.search"
                         t-on-input="onSearchInput"
-                        placeholder="Search current rows"
+                        placeholder="Search products..."
                     />
                 </div>
                 <t t-if="categoryFieldName">
-                    <div class="o_searchable_x2many_select input-group input-group-sm flex-fill">
-                        <span class="input-group-text">Category</span>
+                    <div class="o_searchable_x2many_select input-group input-group-sm flex-grow-1 min-w-0">
+                        <!-- <span class="input-group-text">Filter Category</span> -->
                         <select class="form-select" t-att-value="filter.category" t-on-change="onCategoryChange">
-                            <option value="">All</option>
+                            <option value="">All Categories</option>
                             <t t-foreach="categoryOptions" t-as="category" t-key="category.id">
                                 <option t-att-value="category.id">
                                     <t t-esc="category.name"/>
@@ -26,7 +26,7 @@
                         </select>
                     </div>
                 </t>
-                <button t-if="hasActiveFilter" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="clearFilters">
+                <button t-if="hasActiveFilter" type="button" class="btn btn-danger btn-sm flex-shrink-0 o_searchable_x2many_clear" t-on-click="clearFilters">
                     Clear
                 </button>
             </div>
