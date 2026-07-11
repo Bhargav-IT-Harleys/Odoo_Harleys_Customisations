@@ -301,31 +301,33 @@ class IndentRequest(models.Model):
     
     def action_sent(self):
         self._check_template_password()
+        warning = self._validate_zero_demand_lines()
 
-        # for line in self.line_ids:
-        #     if not self._product_has_bom(line.product_id):
-        #         raise UserError(_(
-        #             "For the '%s' BOM missing contact your city head"
-        #         ) % line.product_id.display_name)
+        if warning:
+            return warning
+        return self._action_sent_internal()
+
+    def _action_sent_internal(self):
         manufacture_route = self.env.ref('mrp.route_warehouse0_manufacture', raise_if_not_found=False)
-        if not [line for line in self.line_ids]:
-            raise UserError(_("No Indent Request Line"))
 
-        for line in self.line_ids:
-            if (
-                manufacture_route
-                and manufacture_route in line.product_id.route_ids
-                and not self._product_has_bom(line.product_id)
-            ):
-                raise UserError(_(
-                    "For the '%s' BOM missing contact your city head"
-                ) % line.product_id.display_name)
+        for request in self:
+            if not request.line_ids:
+                raise UserError(_("No Indent Request Line"))
 
-        if self.state == 'draft':
-            self.state = 'sent'
-        if self.line_ids:
-            for line in self.line_ids:
-                line.state = 'sent'
+            for line in request.line_ids:
+                if (
+                    manufacture_route
+                    and manufacture_route in line.product_id.route_ids
+                    and not request._product_has_bom(line.product_id)
+                ):
+                    raise UserError(_(
+                        "For the '%s' BOM missing contact your city head"
+                    ) % line.product_id.display_name)
+
+            if request.state == 'draft':
+                request.state = 'sent'
+            if request.line_ids:
+                request.line_ids.write({'state': 'sent'})
 
     def action_close(self):
         self._check_template_password()
@@ -427,6 +429,31 @@ class IndentRequest(models.Model):
                     _("You cannot delete this record in its current state. Only records in Draft state can be deleted.")
                 )
         return super().unlink()
+    
+    def _validate_zero_demand_lines(self):
+        self.ensure_one()
+
+        zero_lines = self.line_ids.filtered(
+            lambda l: (l.product_qty or 0.0) <= 0
+        )
+
+        if not zero_lines:
+            return False
+
+        wizard = self.env["indent.zero.qty.warning"].create({
+            "request_id": self.id,
+            "zero_line_ids": [(6, 0, zero_lines.ids)],
+        })
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Zero Demand Quantity"),
+            "res_model": "indent.zero.qty.warning",
+            "res_id": wizard.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+
 
 class IndentRequestLine(models.Model):
     _name = 'indent.request.line'

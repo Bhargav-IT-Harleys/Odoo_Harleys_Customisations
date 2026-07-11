@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_indent_zero_qty_warning_form" model="ir.ui.view">
+        <field name="name">indent.zero.qty.warning.form</field>
+        <field name="model">indent.zero.qty.warning</field>
+        <field name="arch" type="xml">
+
+            <form string="Zero Demand Quantity Found">
+
+                <sheet>
+
+                    <div class="alert alert-warning o_margin_bottom">
+                        <strong>
+                            The following products have a Demand Quantity of 0.
+                        </strong>
+                        <p>
+                            These products cannot be included in an Indent Request.
+                            Please review the list below.
+                        </p>
+                    </div>
+
+                    <field name="zero_line_ids" nolabel="1">
+                        <list create="false" edit="false" delete="false">
+                            <field name="product_id" string="Product"/>
+                            <field name="product_qty" string="Demand Qty"/>
+                            <field name="categ_id" string="Category"/>
+                        </list>
+                    </field>
+
+                </sheet>
+
+                <footer>
+
+                    <button
+                        name="action_delete_and_continue"
+                        type="object"
+                        string="Delete and Continue"
+                        class="btn-primary"
+                    />
+
+                    <button
+                        string="Cancel"
+                        special="cancel"
+                        class="btn-secondary"
+                    />
+
+                </footer>
+
+            </form>
+
+        </field>
+    </record>
+
+</odoo>
