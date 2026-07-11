@@ -40,6 +40,13 @@
         'wizard/mo_internal_transfer_views.xml',
 
     ],
+    'assets': {
+        'web.assets_backend': [
+            'harleys_customization/static/src/js/searchable_x2many.js',
+            'harleys_customization/static/src/xml/searchable_x2many.xml',
+            'harleys_customization/static/src/scss/searchable_x2many.scss',
+        ],
+    },
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

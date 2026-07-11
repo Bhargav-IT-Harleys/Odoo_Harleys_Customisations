@@ -1,0 +1,21 @@
+.o_searchable_x2many_toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.o_searchable_x2many_toolbar
+.o_searchable_x2many_input {
+    flex: 1;
+}
+
+.o_searchable_x2many_toolbar
+.o_searchable_x2many_select {
+    flex: 0 0 220px;
+}
+
+.o_searchable_x2many_toolbar
+.btn {
+    flex-shrink: 0;
+}

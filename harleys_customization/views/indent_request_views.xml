@@ -94,7 +94,7 @@
                     </group>
                     <notebook>
                         <page string="Products" name="line_ids" invisible="is_valid == False">
-                            <field name="line_ids" readonly="state in ['locked', 'closed']">
+                            <field name="line_ids" widget="searchable_x2many" readonly="state in ['locked', 'closed']">
                                 <list string="Indent Request Lines" editable="bottom" limit="200">
                                     <field name="request_id" column_invisible="True"/>
                                     <field name="product_id" options="{'no_create': True}" force_save="1" domain="[('state', '=', 'approved')]"/>

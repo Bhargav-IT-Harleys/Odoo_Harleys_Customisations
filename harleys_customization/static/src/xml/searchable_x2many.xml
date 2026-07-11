@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="harleys_customization.SearchableX2ManyField">
+        <div t-att-class="className">
+            <div class="o_searchable_x2many_toolbar o_x2m_control_panel d-flex gap-2 mb-3">
+                <div class="o_searchable_x2many_input input-group input-group-sm flex-fill">
+                    <span class="input-group-text">Search</span>
+                    <input
+                        type="text"
+                        class="form-control"
+                        t-att-value="filter.search"
+                        t-on-input="onSearchInput"
+                        placeholder="Search current rows"
+                    />
+                </div>
+                <t t-if="categoryFieldName">
+                    <div class="o_searchable_x2many_select input-group input-group-sm flex-fill">
+                        <span class="input-group-text">Category</span>
+                        <select class="form-select" t-att-value="filter.category" t-on-change="onCategoryChange">
+                            <option value="">All</option>
+                            <t t-foreach="categoryOptions" t-as="category" t-key="category.id">
+                                <option t-att-value="category.id">
+                                    <t t-esc="category.name"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+                </t>
+                <button t-if="hasActiveFilter" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="clearFilters">
+                    Clear
+                </button>
+            </div>
+            <div class="o_x2m_control_panel d-empty-none mt-1 mb-4">
+                <t t-if="displayControlPanelButtons">
+                    <div class="o_cp_buttons gap-1" role="toolbar" aria-label="Control panel buttons" t-ref="buttons">
+                        <t t-foreach="controls" t-as="control" t-key="control_index">
+                            <button
+                                t-if="control.type === 'create' and !evalInvisible(control.invisible)"
+                                type="button"
+                                class="btn btn-secondary"
+                                t-att-class="control.class"
+                                t-on-click.stop.prevent="() => this.onAdd({ context: control.context })"
+                            >
+                                <t t-esc="control.string"/>
+                            </button>
+                            <ViewButton
+                                t-if="control.type === 'button' and !evalInvisible(control.invisible)"
+                                className="`${control.className}`"
+                                clickParams="control.clickParams"
+                                icon="control.icon"
+                                record="props.record.data[props.name]"
+                                string="control.string"
+                                title="control.title"
+                            />
+                        </t>
+                    </div>
+                </t>
+                <div t-if="showPager" class="o_cp_pager" role="search">
+                    <Pager t-props="pagerProps"/>
+                </div>
+            </div>
+            <ListRenderer t-if="props.viewMode === 'list'" t-props="this.rendererProps" />
+            <KanbanRenderer t-elif="props.viewMode" t-props="this.rendererProps" />
+        </div>
+    </t>
+
+    <t t-name="harleys_customization.FilterableListRenderer.Rows">
+        <t t-if="!list.isGrouped">
+            <t t-foreach="filteredRecords" t-as="record" t-key="record.id">
+                <t t-call="web.ListRenderer.RecordRow"/>
+            </t>
+            <tr t-if="displayRowCreates" class="d-print-none">
+                <td t-if="withHandleColumn"/>
+                <td t-att-colspan="withHandleColumn ? nbCols - 1 : nbCols"
+                    class="o_field_x2many_list_row_add"
+                    t-on-keydown="(ev) => this.onCellKeydown(ev, null)"
+                >
+                    <t t-foreach="controls" t-as="control" t-key="control_index">
+                        <a
+                            t-if="control.type === 'create' and !evalColumnInvisible(control.invisible)"
+                            href="#"
+                            role="button"
+                            t-att-class="control_index !== 0 ? 'ml16' : ''"
+                            t-att-tabindex="props.list.editedRecord ? '-1' : '0'"
+                            t-on-click.stop.prevent="() => this.add({ context: control.context })"
+                        >
+                            <t t-esc="control.string"/>
+                        </a>
+                        <ViewButton
+                            t-if="control.type === 'button' and !evalColumnInvisible(control.invisible)"
+                            className="`${control.className} ${control_index !== 0 ? 'ml16' : ''}`"
+                            clickParams="control.clickParams"
+                            icon="control.icon"
+                            record="props.list"
+                            string="control.string"
+                            title="control.title"
+                            tabindex="props.list.editedRecord ? '-1' : '0'"
+                        />
+                    </t>
+                </td>
+            </tr>
+            <t t-if="!props.list.isGrouped and !props.noContentHelp">
+                <tr t-foreach="getEmptyRowIds" t-as="emptyRowId" t-key="emptyRowId">
+                    <td t-att-colspan="nbCols">&#8203;</td>
+                </tr>
+            </t>
+        </t>
+        <t t-else="">
+            <t t-foreach="list.groups" t-as="group" t-key="group.id">
+                <t t-call="web.ListRenderer.GroupRow"/>
+                <t t-if="!group.isFolded">
+                    <t t-call="harleys_customization.FilterableListRenderer.Rows">
+                        <t t-set="list" t-value="group.list"/>
+                        <t t-set="groupId" t-value="group.id"/>
+                    </t>
+                    <tr t-if="!group.list.isGrouped and props.editable and canCreate">
+                        <td t-if="hasSelectors"/>
+                        <td
+                            t-att-colspan="hasSelectors ?  nbCols - 1 : nbCols"
+                            class="o_group_field_row_add"
+                        >
+                            <a href="#"
+                                role="button"
+                                t-on-click.stop.prevent="() => this.addInGroup(group)"
+                                t-on-keydown="(ev) => this.onCellKeydown(ev)"
+                            >
+                                Add a line
+                            </a>
+                        </td>
+                    </tr>
+                </t>
+            </t>
+        </t>
+    </t>
+</templates>
