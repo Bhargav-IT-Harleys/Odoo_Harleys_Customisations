@@ -179,9 +179,8 @@
                 <button
                         name="action_get_internal_transfers"
                         type="object"
-                        string="Receipt"
                         icon="fa-cubes"
-                        title="View Receipt / Internal Transfers"
+                        title="Receipt / Internal Transfers"
                         invisible="state not in ('locked')"
                 /> 
             </list>
