@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_indent_close_confirm_form" model="ir.ui.view">
+        <field name="name">indent.close.confirm.form</field>
+        <field name="model">indent.close.confirm</field>
+        <field name="arch" type="xml">
+
+        <form string="Confirm Close">
+
+            <sheet class="p-4">
+
+                <div class="alert alert-warning border-0 rounded-4 text-center py-4">
+
+                    <i class="fa fa-lock fa-3x text-warning mb-3"/>
+
+                    <h2 class="fw-bold mb-3">
+                        Confirm Indent Closure
+                    </h2>
+
+                    <p class="fs-5 mb-3">
+                        You are about to close this Indent Request.
+                    </p>
+
+                    <div class="bg-white rounded-3 p-3 text-start mx-auto" style="max-width:550px;">
+                        <ul class="mb-0 ps-3">
+                            <li>The status will be changed to <strong>Closed</strong>.</li>
+                            <li>All associated indent lines will also be marked as <strong>Closed</strong>.</li>
+                            <li>No further modifications will be allowed.</li>
+                        </ul>
+                    </div>
+
+                    <p class="mt-4 text-muted">
+                        Please ensure all manufacturing, transfers and approvals have been completed before continuing.
+                    </p>
+
+                </div>
+
+            </sheet>
+
+            <footer>
+
+                <button
+                    name="action_confirm"
+                    type="object"
+                    string="Yes, Close Request"
+                    class="btn btn-primary"
+                />
+
+                <button
+                    string="Cancel"
+                    special="cancel"
+                    class="btn btn-secondary"
+                />
+
+            </footer>
+
+        </form>
+        </field>
+    </record>
+
+</odoo>

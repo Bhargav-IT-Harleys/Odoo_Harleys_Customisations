@@ -330,12 +330,32 @@ class IndentRequest(models.Model):
                 request.line_ids.write({'state': 'sent'})
 
     def action_close(self):
+        self.ensure_one()
+
+        wizard = self.env["indent.close.confirm"].create({
+            "request_id": self.id,
+        })
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Confirm Close"),
+            "res_model": "indent.close.confirm",
+            "res_id": wizard.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+    
+    def _action_close_internal(self):
+        self.ensure_one()
+
         self._check_template_password()
-        if self.state == 'locked':
-            self.state = 'closed'
-        if self.line_ids:
-            for line in self.line_ids:
-                line.state = 'closed'
+
+        if self.state == "locked":
+            self.state = "closed"
+
+        self.line_ids.write({
+            "state": "closed",
+        })
 
     @api.depends("line_ids")
     def _compute_line_count(self):

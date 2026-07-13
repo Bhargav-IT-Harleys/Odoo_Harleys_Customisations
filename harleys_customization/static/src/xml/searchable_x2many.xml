@@ -132,4 +132,10 @@
             </t>
         </t>
     </t>
+
+    <t t-name="harleys_customization.SearchableStockMoveListRenderer.Rows" t-inherit="stock.AddPackageListRendererRows" t-inherit-mode="primary">
+        <xpath expr="//t[@t-foreach='list.records']" position="attributes">
+            <attribute name="t-foreach">filteredRecords</attribute>
+        </xpath>
+    </t>
 </templates>

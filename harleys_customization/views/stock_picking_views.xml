@@ -5,8 +5,19 @@
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='move_ids']" position="attributes">
+                <attribute name="widget">searchable_stock_move_one2many</attribute>
+            </xpath>
             <xpath expr="//field[@name='move_ids']//field[@name='quantity']" position="attributes">
                 <attribute name="string">Qty Received</attribute>
+            </xpath>
+            <xpath expr="//header//button[@name='action_cancel']" position="replace">
+                <button name="action_cancel"
+                    invisible="state not in ('assigned', 'confirmed', 'draft', 'waiting')"
+                    string="Cancel"
+                    groups="base.group_user"
+                    type="object"
+                    data-hotkey="x"/>
             </xpath>
         </field>
     </record>

@@ -39,6 +39,8 @@
         'wizard/mol_internal_transfer_views.xml',
         'wizard/mo_internal_transfer_views.xml',
         'wizard/indent_zero_qty_warning_views.xml',
+        'wizard/indent_close_confirm_views.xml',
+        'wizard/stock_picking_close_confirm_views.xml',
 
     ],
     'assets': {

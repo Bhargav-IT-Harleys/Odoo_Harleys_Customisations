@@ -12,6 +12,8 @@ class StockPicking(models.Model):
     #     super().button_validate()
         
     def button_validate(self):
+        self = self.filtered(lambda p: p.state != 'done')
+
         transit_picking_ids = self.with_user(SUPERUSER_ID).filtered(
             lambda picking: picking.location_id.usage == 'transit'
         ).ids
@@ -27,6 +29,24 @@ class StockPicking(models.Model):
             except AccessError:
                 result = super(StockPicking, transit_pickings.with_user(SUPERUSER_ID)).button_validate()
         return result
+
+    def action_cancel(self):
+        self = self.filtered(lambda p: p.state not in ('done', 'cancel'))
+        if not self.env.context.get('skip_internal_transfer_cancel_confirm', False) and len(self) == 1:
+            picking = self
+            if picking.picking_type_code == 'internal':
+                wizard = self.env['stock.picking.close.confirm'].create({
+                    'picking_id': picking.id,
+                })
+                return {
+                    'type': 'ir.actions.act_window',
+                    'name': _('Confirm Transfer Cancellation'),
+                    'res_model': 'stock.picking.close.confirm',
+                    'res_id': wizard.id,
+                    'view_mode': 'form',
+                    'target': 'new',
+                }
+        return super(StockPicking, self).action_cancel()
 
     @api.depends('move_ids.state', 'move_ids.date', 'move_type')
     def _compute_scheduled_date(self):
