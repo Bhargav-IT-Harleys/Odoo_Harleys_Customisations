@@ -1,0 +1,55 @@
+.o_dialog .modal-dialog:has(.o_transfer_cancel_dialog) {
+    max-width: 680px !important;
+}
+
+.o_transfer_cancel_dialog {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+}
+
+.o_transfer_cancel_dialog .o_transfer_content {
+    width: 100%;
+}
+
+.o_transfer_cancel_dialog .alert {
+    margin: 0 auto;
+}
+
+.o_transfer_cancel_dialog .btn-secondary {
+    min-width: 180px;
+    font-size: 1.1rem;    /* ~17.6px */
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.o_transfer_cancel_dialog .btn-primary {
+    min-width: 130px;
+}
+
+.o_transfer_cancel_dialog .fa-lock {
+    font-size: 56px;
+}
+
+@media (max-width: 768px) {
+
+    .o_dialog .modal-dialog:has(.o_transfer_cancel_dialog) {
+        max-width: 95% !important;
+    }
+
+    .o_transfer_cancel_dialog {
+        max-width: 100%;
+    }
+
+    .o_transfer_cancel_dialog .btn-secondary,
+    .o_transfer_cancel_dialog .btn-primary {
+        min-width: auto;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .o_transfer_cancel_dialog footer {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+}

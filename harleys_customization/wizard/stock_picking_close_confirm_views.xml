@@ -1,45 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+
     <record id="view_stock_picking_close_confirm_form" model="ir.ui.view">
         <field name="name">stock.picking.close.confirm.form</field>
         <field name="model">stock.picking.close.confirm</field>
         <field name="arch" type="xml">
-            <form string="Confirm Transfer Cancellation">
-                <sheet class="p-4">
-                    <div class="alert alert-warning border-0 rounded-4 text-center py-4">
-                        <i class="fa fa-lock fa-3x text-warning mb-3"/>
-                        <h2 class="fw-bold mb-3">
-                            Confirm Internal Transfer Cancellation
-                        </h2>
-                        <p class="fs-5 mb-3">
-                            You are about to cancel this internal transfer.
-                        </p>
-                        <div class="bg-white rounded-3 p-3 text-start mx-auto" style="max-width:550px;">
-                            <ul class="mb-0 ps-3">
-                                <li>The transfer will be cancelled and marked accordingly.</li>
-                                <li>Reserved stock will be released back to inventory.</li>
-                                <li>No further modifications will be allowed after cancellation.</li>
-                            </ul>
+
+        <form string="Confirm Transfer Cancellation" class="o_transfer_cancel_dialog">
+            <div class="p-4 o_transfer_content">
+                    <div class="mx-auto" style="max-width:560px;">
+
+                        <div class="text-center mb-4">
+
+                            <i class="fa fa-lock text-danger"/>
+
+                            <h2 class="fw-bold mt-3 mb-2">
+                                Confirm Internal Transfer Cancellation
+                            </h2>
+
+                            <p class="text-muted fs-5 mb-0">
+                                You are about to cancel this
+                                <strong>Internal Transfer</strong>.
+                            </p>
+
                         </div>
-                        <p class="mt-4 text-muted">
+
+                        <div class="alert alert-warning rounded-3 p-4 mb-4">
+
+                            <h5 class="mb-3">
+                                <i class="fa fa-exclamation-triangle me-2"/>
+                                What will happen?
+                            </h5>
+
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fa fa-check-circle text-success me-2 mt-1"/>
+                                <span>
+                                    The transfer will be cancelled and marked accordingly.
+                                </span>
+                            </div>
+
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fa fa-check-circle text-success me-2 mt-1"/>
+                                <span>
+                                    Reserved stock will be released back to inventory.
+                                </span>
+                            </div>
+
+                            <div class="d-flex align-items-start">
+                                <i class="fa fa-check-circle text-success me-2 mt-1"/>
+                                <span>
+                                    No further modifications will be allowed after cancellation.
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div class="text-center text-muted">
+                            <i class="fa fa-info-circle me-1"/>
                             Please verify the transfer details before continuing.
-                        </p>
+                        </div>
+
                     </div>
-                </sheet>
+
+                </div>
+
                 <footer>
+
                     <button
                         name="action_confirm"
                         type="object"
                         string="Yes, Cancel Transfer"
-                        class="btn btn-primary"
+                        class="btn btn-primary px-3"
                     />
+
                     <button
                         string="Go Back"
                         special="cancel"
-                        class="btn btn-secondary"
+                        class="btn btn-secondary btn-lg px-5 py-2"
                     />
+
                 </footer>
+
             </form>
+
         </field>
     </record>
+
 </odoo>

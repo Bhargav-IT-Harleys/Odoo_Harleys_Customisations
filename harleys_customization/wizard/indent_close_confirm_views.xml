@@ -6,56 +6,79 @@
         <field name="model">indent.close.confirm</field>
         <field name="arch" type="xml">
 
-        <form string="Confirm Close">
+            <form string="Confirm Close" class="o_transfer_cancel_dialog">
 
-            <sheet class="p-4">
+                <div class="p-4 o_transfer_content">
 
-                <div class="alert alert-warning border-0 rounded-4 text-center py-4">
+                    <div class="text-center mb-4">
 
-                    <i class="fa fa-lock fa-3x text-warning mb-3"/>
+                        <i class="fa fa-lock text-danger"
+                           style="font-size:56px;"/>
 
-                    <h2 class="fw-bold mb-3">
-                        Confirm Indent Closure
-                    </h2>
+                        <h2 class="fw-bold mt-3 mb-2">
+                            Confirm Indent Closure
+                        </h2>
 
-                    <p class="fs-5 mb-3">
-                        You are about to close this Indent Request.
-                    </p>
+                        <p class="text-muted fs-5">
+                            You are about to permanently close this
+                            <strong>Indent Request</strong>.
+                        </p>
 
-                    <div class="bg-white rounded-3 p-3 text-start mx-auto" style="max-width:550px;">
-                        <ul class="mb-0 ps-3">
-                            <li>The status will be changed to <strong>Closed</strong>.</li>
-                            <li>All associated indent lines will also be marked as <strong>Closed</strong>.</li>
-                            <li>No further modifications will be allowed.</li>
-                        </ul>
                     </div>
 
-                    <p class="mt-4 text-muted">
-                        Please ensure all manufacturing, transfers and approvals have been completed before continuing.
-                    </p>
+                    <div class="alert alert-warning rounded-3 p-4 mb-4">
+
+                        <h5 class="mb-3">
+                            <i class="fa fa-exclamation-triangle me-2"/>
+                            What will happen?
+                        </h5>
+
+                        <div class="d-flex align-items-start mb-2">
+                            <i class="fa fa-check-circle text-success me-2 mt-1"/>
+                            <span>Status will be changed to <strong>Closed</strong>.</span>
+                        </div>
+
+                        <div class="d-flex align-items-start mb-2">
+                            <i class="fa fa-check-circle text-success me-2 mt-1"/>
+                            <span>All associated indent lines will be marked as <strong>Closed</strong>.</span>
+                        </div>
+
+                        <div class="d-flex align-items-start">
+                            <i class="fa fa-check-circle text-success me-2 mt-1"/>
+                            <span>No further modifications will be allowed.</span>
+                        </div>
+
+                    </div>
+
+                    <div class="text-center text-muted">
+                        <i class="fa fa-info-circle me-1"/>
+                        Please ensure all manufacturing, transfers and approvals
+                        have been completed before continuing.
+                    </div>
 
                 </div>
 
-            </sheet>
+                <footer>
 
-            <footer>
+                    <!-- Smaller Destructive Button -->
+                    <button
+                        name="action_confirm"
+                        type="object"
+                        string="Yes, Close Request"
+                        class="btn btn-danger px-3"
+                    />
 
-                <button
-                    name="action_confirm"
-                    type="object"
-                    string="Yes, Close Request"
-                    class="btn btn-primary"
-                />
+                    <!-- Large Cancel Button -->
+                    <button
+                        string="Cancel"
+                        special="cancel"
+                        class="btn btn-secondary btn-lg px-5 py-2"
+                    />
 
-                <button
-                    string="Cancel"
-                    special="cancel"
-                    class="btn btn-secondary"
-                />
+                </footer>
 
-            </footer>
+            </form>
 
-        </form>
         </field>
     </record>
 

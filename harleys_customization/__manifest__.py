@@ -48,6 +48,7 @@
             'harleys_customization/static/src/js/searchable_x2many.js',
             'harleys_customization/static/src/xml/searchable_x2many.xml',
             'harleys_customization/static/src/scss/searchable_x2many.scss',
+            'harleys_customization/static/src/scss/stock_picking_close_confirm.scss',
         ],
     },
     'installable': True,
