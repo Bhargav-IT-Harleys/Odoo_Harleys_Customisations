@@ -107,14 +107,6 @@ export class StockMoveLineBatchField extends Component {
     return getMoveLineRows(this.props.record);
   }
 
-  // props.readonly on a field inside an editable list also reflects
-  // "this row hasn't been clicked into edit mode yet" - not just genuine
-  // field-level lock - so gating the Add button on it means hovering an
-  // unclicked row shows nothing. move.is_locked is itself just a mirror
-  // of picking_id.is_locked (see stock/models/stock_move.py
-  // _compute_is_locked), so this checks the real lock condition directly,
-  // independent of row-click state; the delete link and autocomplete
-  // still use props.readonly, unchanged.
   get isLocked() {
     return (
       this.props.record.data.state === "done" &&
@@ -140,23 +132,7 @@ export class StockMoveLineBatchField extends Component {
     this.ui.adding = false;
   }
 
-  // Native "click outside to cancel": focusout is the standard DOM event
-  // for this, and it bubbles - relatedTarget is whatever element is about
-  // to receive focus. Only hide when focus actually left the wrapper
-  // (e.g. moved to another field, another row, or nothing focusable at
-  // all); a click on the dropdown's own suggestion list keeps focus
-  // inside the wrapper (or triggers update()/quickCreate(), which already
-  // call hideAddInput() themselves), so this never fights a real selection.
-  //
-  // "Search more..." is the one case that needs an explicit exception:
-  // it renders as a real <a href> (autocomplete.xml), so clicking it
-  // genuinely blurs our input via the browser's own focus handling - and
-  // Many2XAutocomplete opens that follow-up list via useOwnedDialogs(),
-  // which auto-closes any dialog it opened the moment its owner unmounts
-  // (web/core/utils/hooks.js). Hiding here would unmount Many2XAutocomplete
-  // mid-open and silently kill the dialog it just opened. So: also treat
-  // focus landing inside any open Odoo dialog (.o_dialog) as "still
-  // relevant", not "cancelled".
+
   onAutocompleteFocusOut(ev) {
     const wrapper = this.autocompleteWrapperRef.el;
     const target = ev.relatedTarget;

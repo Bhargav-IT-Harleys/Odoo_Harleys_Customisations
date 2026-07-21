@@ -7,9 +7,6 @@
     align-items: flex-start;
   }
 
-  // Match the Batch Qty pill styling exactly (outlined, white fill)
-  // instead of Odoo's default solid-color badge - purely visual, the
-  // underlying many2many_tags widget/behaviour is untouched.
   .o_field_tags .o_tag {
     height: 1.5rem;
     padding: 0 0.5rem;
@@ -20,14 +17,9 @@
 }
 
 .o_harleys_batch_qty_editor {
-  // Keeps the cell clickable/visible even with zero rows and not yet in
-  // edit mode (readonly render produces no children at all otherwise -
-  // an empty div has no height to click into to start editing).
+
   min-height: 1.5rem;
 
-  // Sized/shaped to read as the same "chip" as the Batch tags next to it,
-  // instead of a plain browser number box - rounded pill, no spinner
-  // arrows, same tint as the tags' own badge background.
   .o_harleys_batch_qty_input {
     width: 4.5rem;
     height: 1.5rem;
@@ -53,9 +45,6 @@
     background-color: rgba(var(--bs-primary-rgb, 113, 75, 103), 0.12);
   }
 
-  // Row for a batch that has no stock.move.line yet (just added, not
-  // saved) - kept the same height as a populated row so Batch and
-  // Batch Qty stay visually row-aligned even before that line exists.
   .o_harleys_batch_qty_placeholder {
     display: block;
     height: 1.5rem;
@@ -63,10 +52,7 @@
 }
 
 .o_harleys_batch_field {
-  // Whole cell reads as clickable: blank space still bubbles to Odoo's
-  // own cell-click handler to enter row edit mode, same as any other
-  // grid cell; the Add button itself has its own explicit click handler
-  // (see stock_move_line_batch_field.js showAddInput()).
+
   cursor: pointer;
 
   .o_harleys_batch_lot_value {
@@ -77,10 +63,6 @@
     width: fit-content;
   }
 
-  // Hidden until its own chip is hovered - not gated on the whole cell
-  // like the Add button, since delete is per-batch: with several batches
-  // on one row, showing every "x" at once (on any hover in the cell)
-  // would be as busy as never hiding them. Each chip reveals only its own.
   .o_harleys_batch_lot_delete {
     display: none;
     color: inherit;
@@ -95,16 +77,6 @@
     display: inline-flex;
   }
 
-  // "Add Batch" affordance. Deliberately a different color (success
-  // green) from the Batch/Batch Qty pills' purple, so it reads as an
-  // action rather than another data chip - easier to spot at a glance,
-  // especially on hover-only rows where it needs to catch the eye
-  // quickly. Visible by default (empty row: nothing else to look at,
-  // so it should always be obvious you can add one). Rows that already
-  // have batches hide it until the cell is hovered, so a fully-loaded
-  // grid doesn't look busy - :has() is already used elsewhere in this
-  // module (see stock_picking_close_confirm.scss), same supported-
-  // browser baseline.
   .o_harleys_batch_add_btn {
     display: inline-flex;
     align-items: center;
