@@ -77,13 +77,22 @@
     width: fit-content;
   }
 
+  // Hidden until its own chip is hovered - not gated on the whole cell
+  // like the Add button, since delete is per-batch: with several batches
+  // on one row, showing every "x" at once (on any hover in the cell)
+  // would be as busy as never hiding them. Each chip reveals only its own.
   .o_harleys_batch_lot_delete {
+    display: none;
     color: inherit;
     opacity: 0.7;
 
     &:hover {
       opacity: 1;
     }
+  }
+
+  .o_harleys_batch_lot_value:hover .o_harleys_batch_lot_delete {
+    display: inline-flex;
   }
 
   // "Add Batch" affordance. Deliberately a different color (success

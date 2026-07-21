@@ -5,7 +5,7 @@
             <t t-foreach="rows" t-as="row" t-key="row.key">
                 <span class="o_harleys_batch_qty_value o_harleys_batch_lot_value">
                     <t t-esc="row.lot.data.display_name"/>
-                    <a t-if="!props.readonly" href="#" class="o_harleys_batch_lot_delete"
+                    <a t-if="!isLocked" href="#" class="o_harleys_batch_lot_delete"
                         t-on-click.prevent="() => this.deleteLot(row.lot)">
                         <i class="oi oi-close"/>
                     </a>
