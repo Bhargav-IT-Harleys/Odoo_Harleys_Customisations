@@ -147,9 +147,20 @@ export class StockMoveLineBatchField extends Component {
   // all); a click on the dropdown's own suggestion list keeps focus
   // inside the wrapper (or triggers update()/quickCreate(), which already
   // call hideAddInput() themselves), so this never fights a real selection.
+  //
+  // "Search more..." is the one case that needs an explicit exception:
+  // it renders as a real <a href> (autocomplete.xml), so clicking it
+  // genuinely blurs our input via the browser's own focus handling - and
+  // Many2XAutocomplete opens that follow-up list via useOwnedDialogs(),
+  // which auto-closes any dialog it opened the moment its owner unmounts
+  // (web/core/utils/hooks.js). Hiding here would unmount Many2XAutocomplete
+  // mid-open and silently kill the dialog it just opened. So: also treat
+  // focus landing inside any open Odoo dialog (.o_dialog) as "still
+  // relevant", not "cancelled".
   onAutocompleteFocusOut(ev) {
     const wrapper = this.autocompleteWrapperRef.el;
-    if (wrapper && ev.relatedTarget && wrapper.contains(ev.relatedTarget)) {
+    const target = ev.relatedTarget;
+    if (wrapper && target && (wrapper.contains(target) || target.closest(".o_dialog"))) {
       return;
     }
     this.hideAddInput();
