@@ -14,16 +14,33 @@
         (res.users._mfa_type/_mfa_url and the pre_uid/finalize session flow), the same
         one auth_totp uses, rather than adding a separate authentication layer.
 
-    Once bound, the acting employee is logged alongside the functional account on
-        every create/update of the business records this module is applied to,
-        via chatter messages on the record: Purchase Orders, Indent Requests,
-        Sales Orders, Invoices/Bills, Payments, Manufacturing Orders, Stock
-        Transfers, Stock Scraps and Helpdesk Tickets.
+Once bound, the acting employee is attached to every chatter message posted
+        during that session: a single hook on mail.thread's own
+        _message_post_after_hook() stamps an employee_id onto mail.message and
+        appends a short "Logged by <employee> via <account>" note, wherever a
+        message was already going to be posted. Because every chatter-enabled
+        model composes mail.thread (directly or via a variant), this applies
+        automatically, present and future, with no per-model wiring - see
+        models/message_attribution.py for the implementation and reasoning.
+
+        An earlier, per-model create/write implementation (models/
+        attribution_targets.py) is kept in the codebase but disabled, as a
+        fallback/reference only. point_of_sale is intentionally left
+        untouched by either mechanism, since pos_hr already attributes orders
+        to the badged-in cashier natively.
     """,
     'category': 'Human Resources',
     'depends': [
         'base', 'web', 'hr', 'mail',
-        'purchase', 'sale', 'account', 'stock', 'mrp', 'helpdesk',
+        'purchase', 'purchase_requisition',
+        'sale', 'sales_team',
+        'account', 'account_asset', 'account_batch_payment', 'account_loans',
+        'account_reports', 'account_accountant', 'analytic',
+        'stock', 'stock_landed_costs', 'stock_picking_batch',
+        'mrp', 'quality',
+        'hr_expense', 'hr_holidays', 'hr_payroll', 'hr_attendance',
+        'helpdesk', 'project', 'product', 'fleet', 'calendar',
+        'l10n_in', 'l10n_in_ewaybill',
         'harleys_customization',
     ],
     'data': [
