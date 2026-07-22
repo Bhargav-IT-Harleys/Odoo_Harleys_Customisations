@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_hp_order_log_tree" model="ir.ui.view">
+        <field name="name">hp.order.log.tree</field>
+        <field name="model">hp.order.log</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="purchase_order_id"/>
+                <field name="vendor_id"/>
+                <field name="state"/>
+                <field name="http_status"/>
+                <field name="hp_order_id"/>
+                <field name="sent_on"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hp_order_log_form" model="ir.ui.view">
+        <field name="name">hp.order.log.form</field>
+        <field name="model">hp.order.log</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+
+                    <group>
+                        <field name="purchase_order_id"/>
+                        <field name="configuration_id"/>
+                        <field name="vendor_id" readonly="1"/>
+                    </group>
+
+                    <group>
+                        <field name="state"/>
+                        <field name="http_status"/>
+                        <field name="hp_order_id"/>
+                        <field name="sent_on"/>
+                    </group>
+
+                    <notebook>
+
+                        <page string="Request">
+                            <field name="request_payload" nolabel="1"/>
+                        </page>
+
+                        <page string="Response">
+                            <field name="response_payload" nolabel="1"/>
+                        </page>
+
+                        <page string="Error">
+                            <field name="error_message" nolabel="1"/>
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_hp_order_log" model="ir.actions.act_window">
+        <field name="name">Hyperpure Logs</field>
+        <field name="res_model">hp.order.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="menu_hp_logs"
+        parent="menu_hp_root"
+        name="Logs"
+        action="action_hp_order_log"/>
+
+</odoo>
