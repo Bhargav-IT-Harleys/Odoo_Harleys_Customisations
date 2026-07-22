@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_shared_login" model="ir.ui.view">
+        <field name="name">res.users.form.shared.login</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="after">
+                <page name="shared_login" string="Shared Login" groups="base.group_system">
+                    <group>
+                        <field name="is_shared_login"/>
+                        <field name="authorized_employee_ids"
+                               widget="many2many_tags"
+                               invisible="not is_shared_login"
+                               placeholder="Any employee with a valid employee login"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

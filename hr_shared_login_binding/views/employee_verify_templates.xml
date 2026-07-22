@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="employee_verify_form" name="Confirm Employee Identity">
+        <t t-call="web.login_layout">
+            <t t-set="disable_footer">1</t>
+            <div class="oe_login_form">
+                <h5 class="card-title">Confirm your identity</h5>
+                <div class="mb-3 mt-2 text-muted">
+                    <strong t-esc="functional_user.name"/> is a shared account.
+                    Enter your own employee login to confirm who is working
+                    this session.
+                </div>
+                <form method="POST" action="/web/login/employee_verify">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="redirect" t-att-value="redirect"/>
+                    <div class="mb-3">
+                        <label class="fw-bold" for="employee_login">Employee Login</label>
+                        <input id="employee_login" name="employee_login" type="text"
+                               class="form-control mb-2" autocomplete="username"
+                               autofocus="autofocus" required="required"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold" for="employee_password">Employee Password</label>
+                        <input id="employee_password" name="employee_password" type="password"
+                               class="form-control mb-2" autocomplete="current-password"
+                               required="required"/>
+                    </div>
+                    <p class="alert alert-danger" t-if="error" role="alert">
+                        <t t-esc="error"/>
+                    </p>
+                    <div class="clearfix oe_login_buttons text-center d-grid mb-1">
+                        <button type="submit" class="btn btn-primary">Confirm identity</button>
+                    </div>
+                </form>
+                <form method="POST" action="/web/session/logout">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="w-100 text-center">
+                        <button type="submit" class="btn btn-link btn-sm mb-2">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </t>
+    </template>
+</odoo>
