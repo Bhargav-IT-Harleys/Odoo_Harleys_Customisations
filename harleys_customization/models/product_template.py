@@ -25,6 +25,15 @@ class ProductTemplate(models.Model):
         for template in self:
             template.display_name = template.name or False
 
+    @api.constrains('taxes_id', 'supplier_taxes_id', 'active')
+    def _check_gst_taxes(self):
+        # active_test=False ensures archived/inactive products are strictly validated
+        for record in self.with_context(active_test=False):
+            if not record.taxes_id:
+                raise ValidationError(_("Sale GST tax must be specified for all products."))
+            if not record.supplier_taxes_id:
+                raise ValidationError(_("Purchase GST tax must be specified for all products."))
+
     @api.constrains('default_code')
     def _check_default_code_unique(self):
         for rec in self:
