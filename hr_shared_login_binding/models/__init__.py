@@ -4,4 +4,5 @@ from . import employee_attribution_mixin
 # message_attribution.py's module docstring. Kept importable (uncomment) as
 # a fallback/reference if the wrapper approach ever needs to be reverted.
 # from . import attribution_targets
+from . import attribution_config
 from . import message_attribution

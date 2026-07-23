@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_model_form_employee_attribution" model="ir.ui.view">
+        <field name="name">ir.model.form.employee.attribution</field>
+        <field name="model">ir.model</field>
+        <field name="inherit_id" ref="base.view_model_form"/>
+        <field name="arch" type="xml">
+            <page name="notes" position="after">
+                <page name="employee_attribution" string="Employee Attribution" groups="base.group_system">
+                    <group>
+                        <field name="employee_attribution_log_changes"/>
+                        <field name="employee_attribution_log_deletions"/>
+                        <field name="employee_attribution_parent_field_id"
+                               placeholder="Leave blank for top-level documents"/>
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>

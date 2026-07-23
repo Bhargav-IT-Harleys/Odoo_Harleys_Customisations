@@ -14,16 +14,24 @@
         (res.users._mfa_type/_mfa_url and the pre_uid/finalize session flow), the same
         one auth_totp uses, rather than adding a separate authentication layer.
 
-Once bound, the acting employee is attached to every chatter message posted
-        during that session: a single hook on mail.thread's own
-        _message_post_after_hook() stamps an employee_id onto mail.message and
-        appends a short "Logged by <employee> via <account>" note, wherever a
-        message was already going to be posted. Because every chatter-enabled
-        model composes mail.thread (directly or via a variant), this applies
-        automatically, present and future, with no per-model wiring - see
-        models/message_attribution.py for the implementation and reasoning.
+Once bound, the acting employee is attached to chatter messages via two
+        layers on mail.thread (models/message_attribution.py), both applying
+        automatically to every chatter-enabled model - present and future -
+        with no per-model wiring:
 
-        An earlier, per-model create/write implementation (models/
+        1. Always on: mail.thread's low-level _message_create() is enriched
+           with an employee_id and a short "Logged by <employee>" note,
+           wherever a message was already going to be posted (manual notes,
+           Discuss, field-tracking messages).
+        2. Opt-in per model: an explicit "Created/Updated/Deleted" note for
+           models/fields the above can't reach (untracked fields, line items
+           with no chatter panel of their own). Toggled per model from
+           Settings > Technical > Models (see models/attribution_config.py) -
+           off by default, so installing a new module never enables this on
+           its own; an admin deliberately turns it on per model, no code
+           change required.
+
+        An earlier, static per-model create/write implementation (models/
         attribution_targets.py) is kept in the codebase but disabled, as a
         fallback/reference only. point_of_sale is intentionally left
         untouched by either mechanism, since pos_hr already attributes orders
@@ -46,6 +54,7 @@ Once bound, the acting employee is attached to every chatter message posted
     'data': [
         'views/res_users_views.xml',
         'views/employee_verify_templates.xml',
+        'views/ir_model_views.xml',
     ],
     'installable': True,
     'application': False,
