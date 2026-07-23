@@ -15,3 +15,4 @@ from . import stock_location
 from . import purchase
 from . import res_config_settings
 from . import ir_actions
+from . import account_move

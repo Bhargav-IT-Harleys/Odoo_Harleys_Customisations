@@ -7,7 +7,7 @@
            Harleys Customization
     """,
     'category': 'Customizations',
-    'depends': ['base','web', 'stock','mrp', 'sale_mrp', 'helpdesk', 'product_expiry'],
+    'depends': ['base','web', 'stock','mrp', 'sale_mrp', 'helpdesk', 'product_expiry', 'account', 'purchase'],
     'data': [
         'security/security_group.xml',
         'security/ir.model.access.csv',
@@ -42,7 +42,8 @@
         'wizard/indent_zero_qty_warning_views.xml',
         'wizard/indent_close_confirm_views.xml',
         'wizard/stock_picking_close_confirm_views.xml',
-
+        'views/account_move_views.xml'
+        
     ],
     'assets': {
         'web.assets_backend': [
