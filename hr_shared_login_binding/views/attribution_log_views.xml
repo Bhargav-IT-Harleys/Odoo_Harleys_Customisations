@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_attribution_log_list" model="ir.ui.view">
+        <field name="name">hr.attribution.log.list</field>
+        <field name="model">hr.attribution.log</field>
+        <field name="arch" type="xml">
+            <list string="Employee Attribution Log" create="false" edit="false" delete="false">
+                <field name="logged_at"/>
+                <field name="employee_id"/>
+                <field name="user_id"/>
+                <field name="action"/>
+                <field name="res_model"/>
+                <field name="record_name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_attribution_log_search" model="ir.ui.view">
+        <field name="name">hr.attribution.log.search</field>
+        <field name="model">hr.attribution.log</field>
+        <field name="arch" type="xml">
+            <search string="Employee Attribution Log">
+                <field name="employee_id"/>
+                <field name="user_id"/>
+                <field name="res_model"/>
+                <filter name="group_by_employee" string="Employee" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_by_model" string="Model" context="{'group_by': 'res_model'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_attribution_log" model="ir.actions.act_window">
+        <field name="name">Employee Attribution Log</field>
+        <field name="res_model">hr.attribution.log</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_hr_attribution_log"
+              name="Employee Attribution Log"
+              action="action_hr_attribution_log"
+              parent="base.menu_administration"
+              groups="base.group_system"
+              sequence="100"/>
+</odoo>

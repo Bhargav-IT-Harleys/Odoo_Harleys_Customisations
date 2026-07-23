@@ -44,11 +44,9 @@ class Home(web_home.Home):
         })
 
     def _verify_employee_credential(self, functional_user, login, password):
-        """Validate the employee's own login/password without switching the
-        session's active user. Raises AccessDenied if the credential is
-        invalid, unrelated to an employee, or not authorized for this
-        shared account.
-        """
+        # Validates the employee's own login/password without switching
+        # the session's active user - raises AccessDenied if invalid,
+        # unrelated to an employee, or not authorized for this account.
         credential = {'login': login, 'password': password, 'type': 'password'}
         wsgienv = {
             'interactive': True,
