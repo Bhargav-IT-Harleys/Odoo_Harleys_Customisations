@@ -4,3 +4,4 @@ from . import mo_internal_transfer
 from . import indent_zero_qty_warning
 from . import indent_close_confirm
 from . import stock_picking_close_confirm
+from . import merge_mrp_production

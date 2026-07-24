@@ -27,6 +27,7 @@ class MrpProduction(models.Model):
     batch_size = fields.Float(related="product_id.batch_size", string="Batch Size")
     batch_qty = fields.Float()
     section = fields.Many2one(related="product_id.product_tmpl_id.section", string="Section", store=True)
+    is_merged = fields.Boolean(string="Is Merged", default=False, readonly=True, copy=False, index=True)
     is_transfer_created = fields.Boolean(
         string="Transfer Created",
         default=False,
@@ -53,14 +54,20 @@ class MrpProduction(models.Model):
         return super().create(vals_list)
 
     def action_merge(self):
-        earliest_schedule_date = min(self.mapped('date_start'), default=False)
-        action = super().action_merge()
+        productions = self.filtered(lambda production: not production.is_merged)
+        if len(productions) < 2:
+            raise UserError(_("At least two unmerged Manufacturing Orders are required to merge."))
+
+        earliest_schedule_date = min(productions.mapped('date_start'), default=False)
+        action = super(MrpProduction, productions).action_merge()
         production = self.env['mrp.production'].browse(action.get('res_id'))
-        if earliest_schedule_date and production.exists() and production.date_start != earliest_schedule_date:
-            production.date_start = earliest_schedule_date
-            production.move_raw_ids.move_orig_ids.with_context(
-                date_deadline_propagate_ids=set(production.move_raw_ids.ids)
-            ).write({'date_start': production.date_start, 'date_deadline': production.date_start})
+        if production.exists():
+            production.is_merged = True
+            if earliest_schedule_date and production.date_start != earliest_schedule_date:
+                production.date_start = earliest_schedule_date
+                production.move_raw_ids.move_orig_ids.with_context(
+                    date_deadline_propagate_ids=set(production.move_raw_ids.ids)
+                ).write({'date_start': production.date_start, 'date_deadline': production.date_start})
         return action
 
     @api.depends('company_id', 'bom_id')

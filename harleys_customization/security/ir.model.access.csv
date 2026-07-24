@@ -34,6 +34,8 @@ access_mol_internal_transfer_line_wizard_admin,Mol Internal Transfer Line Wizard
 
 access_mo_internal_transfer_wizard_user,Mo Internal Transfer Wizard User,model_mo_internal_transfer_wizard,stock.group_stock_user,1,1,1,1
 access_mo_internal_transfer_line_wizard_admin,Mo Internal Transfer Line Wizard Admin,model_mo_internal_transfer_line_wizard,stock.group_stock_user,1,1,1,1
+access_merge_mrp_production_wizard_user,Merge Manufacturing Order Wizard User,model_merge_mrp_production_wizard,mrp.group_mrp_user,1,1,1,1
+access_merge_mrp_production_wizard_manager,Merge Manufacturing Order Wizard Manager,model_merge_mrp_production_wizard,mrp.group_mrp_manager,1,1,1,1
 
 access_mrp_bom_create_edit_user,mrp.bom create edit user,mrp.model_mrp_bom,harleys_customization.group_bom_create_edit_access,1,1,1,0
 access_mrp_bom_line_create_edit_user,mrp.bom.line create edit user,mrp.model_mrp_bom_line,harleys_customization.group_bom_create_edit_access,1,1,1,0

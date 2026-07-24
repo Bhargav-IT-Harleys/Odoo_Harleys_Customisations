@@ -19,6 +19,7 @@
         'data/indent_request_sequence.xml',
         'data/indent_request_cron.xml',
         'wizard/indent_request_line_make_manufacturing_orders_views.xml',
+        'wizard/merge_mrp_production_views.xml',
         'views/res_partner_views.xml',
         'views/product_template_views.xml',
         'views/contact_views.xml',
