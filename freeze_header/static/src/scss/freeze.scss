@@ -1,0 +1,20 @@
+/* Start: for freezing header */
+@media screen and (min-width: 900px) {
+    .o_list_renderer.o_renderer.table-responsive {
+        overflow-x: unset !important;
+    }
+    .o_list_renderer {
+        .o_list_table {
+            th {
+                position: sticky !important;
+                top: 0px !important;
+                background-color: #fff;
+            }
+            i.o_optional_columns_dropdown_toggle.fa.fa-ellipsis-v {
+                position: absolute !important;
+                top: 0 !important;
+                right: 0 !important;
+            }
+        }
+    }
+}

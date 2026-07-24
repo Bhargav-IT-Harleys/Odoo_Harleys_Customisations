@@ -26,6 +26,9 @@
             <xpath expr="//button[@name='action_post'][2]" position="attributes">
                 <attribute name="groups">account.group_account_manager</attribute>
             </xpath>
+            <xpath expr="//field[@name='ref']" position="attributes">
+                <attribute name="required">1</attribute>
+            </xpath>
         </field>
     </record>
 

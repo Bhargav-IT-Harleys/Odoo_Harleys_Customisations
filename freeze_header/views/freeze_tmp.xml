@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="freeze_assets" inherit_id="web.layout" name="Freeze Assets">
+        <xpath expr="." position="inside">
+            <link type="text/css" rel="stylesheet" href="/freeze_header/static/src/scss/freeze.scss" />
+        </xpath>
+    </template>
+</odoo>
