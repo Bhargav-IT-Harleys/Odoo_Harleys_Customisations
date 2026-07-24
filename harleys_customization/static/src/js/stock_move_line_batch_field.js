@@ -124,6 +124,18 @@ export class StockMoveLineBatchField extends Component {
     await this.props.record.data[this.props.name].forget(lot);
   }
 
+  // For rows surfaced only via stock_move_line_rows.js's fallback (a lot
+  // that core's own _compute_lot_ids excluded because its line's quantity
+  // is 0 - see that file's comment). There's no lot_ids relation entry to
+  // forget() here since the lot never made it into lot_ids to begin with;
+  // removing the batch means removing the move line itself instead.
+  // move_line_ids is a One2many, so this is .delete() (destroys the
+  // record), not .forget() (which is Many2many-specific unlink-only
+  // semantics, and would be wrong here regardless).
+  async deleteLine(line) {
+    await this.props.record.data.move_line_ids.delete(line);
+  }
+
   showAddInput() {
     this.ui.adding = true;
   }
