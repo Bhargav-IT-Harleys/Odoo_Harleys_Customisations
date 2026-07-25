@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="harleys_customization.StockMoveLineQtyEditor">
+    <t t-name="harleys_customization.StockMoveLineRowField">
         <div class="o_harleys_batch_qty_editor d-flex flex-column gap-1">
             <t t-foreach="rows" t-as="row" t-key="row.key">
                 <span t-if="!row.line" class="o_harleys_batch_qty_placeholder"/>
-                <t t-elif="props.readonly">
-                    <span class="o_harleys_batch_qty_value" t-esc="row.line.data.quantity"/>
+                <t t-elif="!props.editable or props.readonly">
+                    <span class="o_harleys_batch_qty_value" t-esc="getDisplayValue(row)"/>
                 </t>
                 <input t-else="" type="number" step="any"
-                    class="form-control form-control-sm o_harleys_batch_qty_input"
-                    t-att-value="row.line.data.quantity"
-                    t-on-change="(ev) => this.onQuantityChange(row.line, ev)"/>
+                    class="o_harleys_batch_qty_input"
+                    t-att-value="row.line.data[props.rowField]"
+                    t-on-change="(ev) => this.onValueChange(row.line, ev)"/>
             </t>
         </div>
     </t>

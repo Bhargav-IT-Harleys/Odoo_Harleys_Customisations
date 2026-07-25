@@ -22,6 +22,11 @@
             <xpath expr="//field[@name='move_ids']//field[@name='lot_ids']" position="attributes">
                 <attribute name="column_invisible">parent.state == 'draft' or parent.picking_type_code in ('internal', 'incoming', 'outgoing')</attribute>
             </xpath>
+            <!-- Not displayed; fetched so the Batch widget can decide
+                 whether to show an expiry-date field on Receipts. -->
+            <xpath expr="//field[@name='move_ids']//field[@name='lot_ids']" position="after">
+                <field name="use_expiration_date" column_invisible="True"/>
+            </xpath>
             <xpath expr="//field[@name='move_ids']//field[@name='lot_ids']" position="after">
                 <field name="lot_ids" string="Batch" widget="stock_move_line_batch"
                     class="o_harleys_batch_cell"
@@ -32,13 +37,24 @@
                     options="{'create': [('parent.use_create_lots', '=', True)]}"
                     context="{'default_company_id': company_id, 'default_product_id': product_id, 'active_picking_id': parent.id}"
                     domain="[('product_id','=',product_id)]"/>
-                <field name="move_line_ids" widget="stock_move_line_qty_editor" string="Batch Qty"
+                <field name="move_line_ids" widget="stock_move_line_row_field" string="Batch Qty"
                     class="o_harleys_batch_cell"
                     optional="show"
-                    column_invisible="parent.picking_type_code not in ('internal', 'incoming', 'outgoing')">
+                    column_invisible="parent.picking_type_code not in ('internal', 'incoming', 'outgoing')"
+                    options="{'row_field': 'quantity', 'editable': True}">
                     <list>
                         <field name="lot_id"/>
                         <field name="quantity"/>
+                    </list>
+                </field>
+                <field name="move_line_ids" widget="stock_move_line_row_field" string="Expiry Date"
+                    class="o_harleys_batch_cell"
+                    optional="show"
+                    column_invisible="parent.picking_type_code not in ('internal', 'incoming', 'outgoing')"
+                    options="{'row_field': 'expiration_date', 'date_format': 'dd/MM/yy'}">
+                    <list>
+                        <field name="lot_id"/>
+                        <field name="expiration_date"/>
                     </list>
                 </field>
             </xpath>

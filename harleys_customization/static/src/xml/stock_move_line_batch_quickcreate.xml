@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="harleys_customization.StockMoveLineBatchQuickCreate">
+        <div class="o_harleys_batch_popover">
+            <input type="text" t-ref="name" placeholder="Batch number"
+                class="form-control form-control-sm"
+                t-on-input="onNameInput"
+                t-on-keydown="onNameKeydown"/>
+
+            <div t-if="state.matches.length" class="o_harleys_batch_popover_matches">
+                <a t-foreach="state.matches" t-as="lot" t-key="lot.id" href="#"
+                    class="o_harleys_batch_popover_match"
+                    t-on-click.prevent="() => this.selectExisting(lot)">
+                    <t t-esc="lot.name"/>
+                </a>
+            </div>
+
+            <div t-if="showExpiry"
+                data-tooltip="Required - pick the expiry date shown on the vendor's batch">
+                <DateTimeInput
+                    type="'date'"
+                    value="state.expiryValue"
+                    onChange="(v) => this.onExpiryChange(v)"
+                    format="'dd/MM/yy'"
+                    minDate="'today'"
+                    placeholder="'DD/MM/YY'"
+                    class="'form-control form-control-sm'"/>
+            </div>
+
+            <div t-if="state.error" class="o_harleys_batch_popover_error">
+                <t t-esc="state.error"/>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-success" t-on-click="confirmCreate">
+                <i class="fa fa-plus"/> Create
+            </button>
+        </div>
+    </t>
+</templates>

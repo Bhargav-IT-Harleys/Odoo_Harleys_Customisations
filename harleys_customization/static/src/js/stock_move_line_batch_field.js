@@ -9,8 +9,10 @@ import {
 } from "@web/views/fields/relational_utils";
 import { getFieldDomain } from "@web/model/relational_model/utils";
 import { useService } from "@web/core/utils/hooks";
+import { usePopover } from "@web/core/popover/popover_hook";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { getMoveLineRows } from "./stock_move_line_rows";
+import { StockMoveLineBatchQuickCreate } from "./stock_move_line_batch_quickcreate";
 
 export class StockMoveLineBatchField extends Component {
   static template = "harleys_customization.StockMoveLineBatchField";
@@ -37,9 +39,22 @@ export class StockMoveLineBatchField extends Component {
   };
 
   setup() {
+    this.orm = useService("orm");
     this.ui = useState({
       adding: false,
     });
+
+    // Receipts only: opens StockMoveLineBatchQuickCreate (live batch
+    // search + optional expiry date entry).
+    this.batchPopover = usePopover(StockMoveLineBatchQuickCreate, {
+      position: "bottom-start",
+      popoverClass: "o_harleys_batch_popover_wrapper",
+    });
+    // Anchored to the cell, not the "Add" button: the button is only
+    // visible via :hover and collapses to a zero-size rect as soon as the
+    // mouse moves toward the popover, which throws position tracking off.
+    this.cellRootRef = useRef("cellRoot");
+
     const { saveRecord, removeRecord } = useX2ManyCrud(
       () => this.props.record.data[this.props.name],
       true,
@@ -69,7 +84,7 @@ export class StockMoveLineBatchField extends Component {
       }
       await this.crudSaveRecord(recordlist.map((rec) => rec.id));
       await this.props.record.model.root.save();
-      this.hideAddInput();
+      this.closeAddUI();
     };
 
     if (this.props.canQuickCreate) {
@@ -84,7 +99,7 @@ export class StockMoveLineBatchField extends Component {
         );
         await this.crudSaveRecord([created[0]]);
         await this.props.record.model.root.save();
-        this.hideAddInput();
+        this.closeAddUI();
       };
     }
 
@@ -114,6 +129,16 @@ export class StockMoveLineBatchField extends Component {
     );
   }
 
+  // stock.move's own field is picking_code; picking_type_code (used in
+  // the view's column_invisible conditions) lives on stock.picking.
+  get isReceipt() {
+    return this.props.record.data.picking_code === "incoming";
+  }
+
+  get showExpiryField() {
+    return this.isReceipt && this.props.record.data.use_expiration_date;
+  }
+
   getDomain() {
     return Domain.and([
       getFieldDomain(this.props.record, this.props.name, this.props.domain),
@@ -124,26 +149,61 @@ export class StockMoveLineBatchField extends Component {
     await this.props.record.data[this.props.name].forget(lot);
   }
 
-  // For rows surfaced only via stock_move_line_rows.js's fallback (a lot
-  // that core's own _compute_lot_ids excluded because its line's quantity
-  // is 0 - see that file's comment). There's no lot_ids relation entry to
-  // forget() here since the lot never made it into lot_ids to begin with;
-  // removing the batch means removing the move line itself instead.
-  // move_line_ids is a One2many, so this is .delete() (destroys the
-  // record), not .forget() (which is Many2many-specific unlink-only
-  // semantics, and would be wrong here regardless).
+  // Fallback rows (see stock_move_line_rows.js) have no lot_ids entry to
+  // forget(); move_line_ids is a One2many, so removing the batch means
+  // deleting the line itself.
   async deleteLine(line) {
     await this.props.record.data.move_line_ids.delete(line);
   }
 
   showAddInput() {
-    this.ui.adding = true;
+    if (this.isReceipt) {
+      this.openBatchPopover(this.cellRootRef.el);
+    } else {
+      this.ui.adding = true;
+    }
   }
 
   hideAddInput() {
     this.ui.adding = false;
   }
 
+  closeAddUI() {
+    if (this.batchPopover.isOpen) {
+      this.batchPopover.close();
+    }
+    this.hideAddInput();
+  }
+
+  openBatchPopover(anchor) {
+    this.batchPopover.open(anchor, {
+      showExpiryField: this.showExpiryField,
+      productId: this.props.record.data.product_id?.id ?? false,
+      onCreate: this.createNewBatch.bind(this),
+      onSelectExisting: this.selectExistingBatch.bind(this),
+    });
+  }
+
+  async selectExistingBatch(lotId) {
+    await this.update([{ id: lotId }]);
+  }
+
+  async createNewBatch(name, expiryDate) {
+    const vals = {
+      name,
+      product_id: this.props.record.data.product_id?.id,
+      company_id: this.props.record.data.company_id?.id,
+    };
+    if (expiryDate) {
+      vals.expiration_date = expiryDate;
+    }
+    const [newId] = await this.orm.create("stock.lot", [vals], {
+      context: this.props.context,
+    });
+    await this.crudSaveRecord([newId]);
+    await this.props.record.model.root.save();
+    this.closeAddUI();
+  }
 
   onAutocompleteFocusOut(ev) {
     const wrapper = this.autocompleteWrapperRef.el;

@@ -6,7 +6,7 @@ import {
     MovesListRenderer,
     stockMoveX2ManyField,
 } from "@stock/views/picking_form/stock_move_one2many";
-import { useState } from "@odoo/owl";
+import { useEffect, useState } from "@odoo/owl";
 
 function stringifyValue(value) {
     if (value === null || value ===undefined) {
@@ -125,6 +125,30 @@ export class FilterableListRenderer extends ListRenderer {
 export class SearchableMovesListRenderer extends MovesListRenderer {
     static rowsTemplate = "harleys_customization.SearchableStockMoveListRenderer.Rows";
     static props = [...MovesListRenderer.props, "searchValue?", "category?"];
+
+    setup() {
+        super.setup();
+        // Batch/Batch Qty/Expiry Date need a real saved stock.move to work
+        // (they read server-computed data a new, unsaved row doesn't have
+        // yet), so save the picking as soon as a newly-added row gets a
+        // product selected, instead of waiting for the user to save.
+        this.autoSavedRecord = null;
+        useEffect(
+            () => {
+                const record = this.editedRecord;
+                if (
+                    record &&
+                    record.isNew &&
+                    record.data.product_id &&
+                    this.autoSavedRecord !== record
+                ) {
+                    this.autoSavedRecord = record;
+                    this.env.model.root.save();
+                }
+            },
+            () => [this.editedRecord, this.editedRecord && this.editedRecord.data.product_id]
+        );
+    }
 
     get categoryFieldName() {
         const records = this.props.list.records;
