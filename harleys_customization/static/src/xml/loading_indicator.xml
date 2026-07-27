@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="harleys_customization.LoadingIndicator" t-inherit="web.LoadingIndicator" t-inherit-mode="extension">
+        <xpath expr="//span[hasclass('o_loading_indicator')]" position="replace">
+            <div class="o_loading_overlay" t-att-class="transition.className">
+                <div class="o_loading_box">
+                    <div class="spinner-border text-light" role="status"></div>
+                    <div class="mt-3">
+                        Loading...
+                        <t t-if="env.debug" t-esc="' (' + state.count + ')'"/>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+
+</templates>
