@@ -33,11 +33,11 @@
     </record>
 
     <menuitem
-        id="menu_merge_mrp_production_wizard"
+        id="menu_merge_mrp_production_mo_wizard"
         name="Merge Manufacturing Order"
         parent="mrp.menu_mrp_manufacturing"
         action="action_merge_mrp_production_wizard"
         sequence="2"
-        groups="mrp.group_mrp_user,mrp.group_mrp_manager"
+        groups="mrp.group_mrp_manager"
     />
 </odoo>
