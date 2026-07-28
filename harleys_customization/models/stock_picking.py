@@ -139,3 +139,40 @@ class StockScrap(models.Model):
         check_company=True,
         default=False
     )
+
+    def action_validate_multi(self):
+        """Validate several draft Inv Adjustment lines in one action.
+
+        Does not change action_validate() itself - just calls the existing,
+        single-record method once per record. If a record can't be
+        validated (e.g. insufficient quantity), action_validate() returns
+        a warning wizard instead of completing; that's surfaced immediately
+        and the loop stops there, so nothing after it is silently skipped -
+        records already validated earlier in the loop stay validated, and
+        re-running this after resolving the warning picks up where it left off.
+
+        Already-done records are skipped rather than re-validated: core's
+        action_validate()/do_scrap() has no guard against being called
+        twice on the same record, and confirmed by testing, doing so
+        creates a second, duplicate stock.move rather than erroring. The
+        per-row "Validate" button is already safe (the view hides it once
+        state == 'done'), but this header action has no such row-level
+        filter if a user selects a mix of draft and already-validated rows.
+
+        The button is display="always" (see the view), so it isn't gated
+        on the user having checkbox-selected anything - same reasoning as
+        stock.quant's own action_apply_all. That means `self` here may not
+        reflect "everything currently on screen", so - matching that same
+        core method - re-query the list's own active_domain when one is
+        present, falling back to `self` only if it isn't (e.g. called some
+        other way than from this exact list).
+        """
+        records = self
+        active_domain = self.env.context.get('active_domain')
+        if active_domain is not None:
+            records = self.search(active_domain)
+        for scrap in records.filtered(lambda s: s.state != 'done'):
+            result = scrap.action_validate()
+            if isinstance(result, dict):
+                return result
+        return {'type': 'ir.actions.act_window_close'}

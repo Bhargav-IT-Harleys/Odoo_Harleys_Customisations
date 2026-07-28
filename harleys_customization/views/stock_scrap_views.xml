@@ -21,4 +21,59 @@
             </field>
         </field>
     </record>
+
+    <!-- Inv Adjustments, Option 1 (save = draft, separate bulk-validate step).
+         This inherits core's own stock_scrap_tree_view rather than
+         replacing it - every existing field (Reference, Date, Product,
+         Quantity, Unit, Source Location, Inv Adj Location, Company,
+         Status) stays exactly as core defined it. Only additions:
+         editable="bottom" (core's version was multi_edit-only - selecting
+         several rows to bulk-edit one shared field - not inline row
+         creation), a header "Validate All" and per-row "Validate" button,
+         and two fields core's read-only list never needed but inline
+         creation does: Inv Adj Reason (required to validate) and Batch
+         (required for lot/serial-tracked products - see action_validate's
+         check, this was missed once already and had to be added back). -->
+    <record id="stock_scrap_tree_view_editable" model="ir.ui.view">
+        <field name="name">stock.scrap.list.editable</field>
+        <field name="model">stock.scrap</field>
+        <field name="inherit_id" ref="stock.stock_scrap_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="editable">bottom</attribute>
+                <attribute name="js_class">stock_scrap_list</attribute>
+            </xpath>
+            <xpath expr="//list" position="inside">
+                <header>
+                    <!-- display="always": without it, a header button only
+                         appears once rows are checkbox-selected (standard
+                         Odoo list behaviour), which would mean selecting
+                         every row you just typed before this even shows up.
+                         Same reasoning core uses for stock.quant's own
+                         "Apply All" (action_apply_all, display="always"). -->
+                    <button name="action_validate_multi" string="Validate All" type="object"
+                        class="btn-primary" display="always"/>
+                </header>
+            </xpath>
+            <field name="product_id" position="attributes">
+                <attribute name="readonly">state == 'done' or id</attribute>
+            </field>
+            <field name="product_id" position="after">
+                <field name="tracking" column_invisible="True"/>
+                <field name="lot_id" string="Batch"
+                    context="{'default_product_id': product_id}"
+                    domain="[('product_id', '=', product_id)]"
+                    invisible="not product_id or tracking == 'none'"
+                    required="tracking != 'none'"
+                    readonly="state == 'done'"
+                    groups="stock.group_production_lot"/>
+            </field>
+            <field name="state" position="before">
+                <field name="scrap_reason_tag_ids" widget="many2many_tags" required="1" readonly="state == 'done'"/>
+            </field>
+            <field name="state" position="after">
+                <button name="action_validate" type="object" string="Validate" class="btn-link" invisible="state == 'done'"/>
+            </field>
+        </field>
+    </record>
 </odoo>

@@ -52,6 +52,7 @@
             'harleys_customization/static/src/js/stock_move_line_row_field.js',
             'harleys_customization/static/src/js/stock_move_line_batch_field.js',
             'harleys_customization/static/src/js/stock_move_line_batch_quickcreate.js',
+            'harleys_customization/static/src/js/stock_scrap_list.js',
             'harleys_customization/static/src/xml/searchable_x2many.xml',
             'harleys_customization/static/src/xml/stock_move_line_row_field.xml',
             'harleys_customization/static/src/xml/stock_move_line_batch_field.xml',
