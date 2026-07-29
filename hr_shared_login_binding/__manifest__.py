@@ -8,7 +8,10 @@
         employee identity check at login before the session is granted, and every
         chatter message posted afterwards is tagged with that employee - see
         employee-attribution-current-state.md and docs/developer-guide.html for
-        the full design.
+        the full design. Settings > Administration > Bulk Import Employee
+        Attribution provides an Excel/CSV upload for authorizing many employees
+        against their functional accounts at once (requires openpyxl and
+        xlsxwriter, both Python libraries rather than Odoo modules).
     """,
     'category': 'Human Resources',
     'depends': ['base', 'web', 'hr', 'mail'],
@@ -18,6 +21,7 @@
         'views/employee_verify_templates.xml',
         'views/ir_model_views.xml',
         'views/attribution_log_views.xml',
+        'wizard/attribution_bulk_import_views.xml',
     ],
     'installable': True,
     'application': False,

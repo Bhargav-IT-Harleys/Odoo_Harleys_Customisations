@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_hr_attribution_log_system,HR Attribution Log System,model_hr_attribution_log,base.group_system,1,0,0,0
 access_hr_attribution_log_hr_manager,HR Attribution Log HR Manager,model_hr_attribution_log,hr.group_hr_manager,1,0,0,0
+access_hr_attribution_bulk_import,HR Attribution Bulk Import,model_hr_attribution_bulk_import,base.group_system,1,1,1,1
+access_hr_attribution_bulk_import_line,HR Attribution Bulk Import Line,model_hr_attribution_bulk_import_line,base.group_system,1,1,1,1
