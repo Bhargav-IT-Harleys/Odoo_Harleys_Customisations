@@ -37,6 +37,7 @@
         'views/stock_location_views.xml',
         'reports/manufacturing_order_lines_views.xml',
         'reports/report_deliveryslip_template.xml',
+        'reports/picking_report_template.xml',
         'wizard/mol_internal_transfer_views.xml',
         'wizard/mo_internal_transfer_views.xml',
         'wizard/indent_zero_qty_warning_views.xml',
