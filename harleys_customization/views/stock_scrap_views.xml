@@ -45,14 +45,12 @@
             </xpath>
             <xpath expr="//list" position="inside">
                 <header>
-                    <!-- display="always": without it, a header button only
-                         appears once rows are checkbox-selected (standard
-                         Odoo list behaviour), which would mean selecting
-                         every row you just typed before this even shows up.
-                         Same reasoning core uses for stock.quant's own
-                         "Apply All" (action_apply_all, display="always"). -->
-                    <button name="action_validate_multi" string="Validate All" type="object"
-                        class="btn-primary" display="always"/>
+                    <!-- Default Odoo header-button behaviour on purpose: only
+                         appears once rows are checkbox-selected, not always
+                         visible. Selecting a mix that includes already-done
+                         rows is still safe - action_validate_multi() skips
+                         them rather than re-validating (see that method). -->
+                    <button name="action_validate_multi" string="Validate All" type="object" class="btn-primary"/>
                 </header>
             </xpath>
             <field name="product_id" position="attributes">

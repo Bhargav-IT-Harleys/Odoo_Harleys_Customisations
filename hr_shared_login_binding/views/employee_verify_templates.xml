@@ -21,9 +21,14 @@
                     </div>
                     <div class="mb-3">
                         <label class="fw-bold" for="employee_password">Employee Password</label>
-                        <input id="employee_password" name="employee_password" type="password"
-                               class="form-control mb-2" autocomplete="current-password"
-                               required="required"/>
+                        <div class="input-group mb-2">
+                            <input id="employee_password" name="employee_password" type="password"
+                                   class="form-control" autocomplete="current-password"
+                                   required="required"/>
+                            <button type="button" class="btn btn-sm border border-start-0 o_show_password">
+                                <i class="fa fa-eye"/>
+                            </button>
+                        </div>
                     </div>
                     <p class="alert alert-danger" t-if="error" role="alert">
                         <t t-esc="error"/>

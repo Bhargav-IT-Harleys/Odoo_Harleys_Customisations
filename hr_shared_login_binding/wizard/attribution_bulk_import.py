@@ -30,12 +30,39 @@ class AttributionBulkImportLine(models.TransientModel):
     _description = "Employee Attribution Bulk Import - Row"
 
     wizard_id = fields.Many2one('hr.attribution.bulk.import', required=True, ondelete='cascade')
-    functional_email = fields.Char(required=True)
-    employee_email = fields.Char(required=True)
-    functional_user_id = fields.Many2one('res.users', readonly=True)
-    employee_id = fields.Many2one('hr.employee', readonly=True)
-    status = fields.Selection([('resolved', "Resolved"), ('unresolved', "Unresolved")], readonly=True)
+    functional_email = fields.Char(string="Functional Email")
+    employee_email = fields.Char(string="Employee Email")
+    # Editable, not just parse output: fixing an unresolved row (or adding
+    # a new one by hand) is done by picking these directly, rather than
+    # forcing a re-upload for one bad row.
+    functional_user_id = fields.Many2one('res.users', string="Functional Account")
+    employee_id = fields.Many2one('hr.employee', string="Employee")
+    status = fields.Selection(
+        [('resolved', "Resolved"), ('unresolved', "Unresolved")],
+        compute='_compute_status', store=True,
+    )
     reason = fields.Char(readonly=True)
+
+    @api.depends('functional_user_id', 'employee_id')
+    def _compute_status(self):
+        for line in self:
+            line.status = 'resolved' if (line.functional_user_id and line.employee_id) else 'unresolved'
+            if line.status == 'resolved':
+                line.reason = False
+
+    @api.onchange('functional_user_id')
+    def _onchange_functional_user_id(self):
+        if self.functional_user_id:
+            self.functional_email = self.functional_user_id.login
+
+    @api.onchange('employee_id')
+    def _onchange_employee_id(self):
+        if self.employee_id:
+            self.employee_email = (
+                self.employee_id.work_email
+                or self.employee_id.private_email
+                or self.employee_id.user_id.login
+            )
 
 
 class AttributionBulkImport(models.TransientModel):
@@ -51,6 +78,8 @@ class AttributionBulkImport(models.TransientModel):
     import_filename = fields.Char()
     template_file = fields.Binary(readonly=True)
     template_filename = fields.Char(default="employee_attribution_template.xlsx")
+    result_file = fields.Binary(readonly=True)
+    result_filename = fields.Char(default="employee_attribution_result.xlsx")
     line_ids = fields.One2many('hr.attribution.bulk.import.line', 'wizard_id')
     resolved_count = fields.Integer(compute='_compute_counts')
     unresolved_count = fields.Integer(compute='_compute_counts')
@@ -130,14 +159,16 @@ class AttributionBulkImport(models.TransientModel):
                     '|', ('work_email', '=ilike', employee_email),
                     ('private_email', '=ilike', employee_email),
                 ])
+            # status isn't set here - it's computed from functional_user_id/
+            # employee_id, so it stays consistent whether a row comes from
+            # this parse or is added/fixed by hand afterwards.
             vals = {'functional_email': functional_email, 'employee_email': employee_email}
             if len(func_users) != 1:
-                vals.update(status='unresolved',
-                            reason=_("Functional account: %s match(es)") % len(func_users))
+                vals['reason'] = _("Functional account: %s match(es)") % len(func_users)
             elif len(emp) != 1:
-                vals.update(status='unresolved', reason=_("Employee: %s match(es)") % len(emp))
+                vals['reason'] = _("Employee: %s match(es)") % len(emp)
             else:
-                vals.update(status='resolved', functional_user_id=func_users.id, employee_id=emp.id)
+                vals.update(functional_user_id=func_users.id, employee_id=emp.id)
             lines.append((0, 0, vals))
         self.write({'line_ids': lines, 'state': 'validated'})
         return {
@@ -151,6 +182,36 @@ class AttributionBulkImport(models.TransientModel):
     def action_discard_unresolved(self):
         self.ensure_one()
         self.line_ids.filtered(lambda l: l.status == 'unresolved').unlink()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def action_download_result(self):
+        self.ensure_one()
+        import xlsxwriter  # noqa: PLC0415 - optional dependency, only needed here
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        sheet = workbook.add_worksheet('Result')
+        bold = workbook.add_format({'bold': True})
+        headers = ("Functional Account Email", "Employee Email", "Functional Account",
+                   "Employee", "Status", "Reason")
+        for col, header in enumerate(headers):
+            sheet.write(0, col, header, bold)
+        for row, line in enumerate(self.line_ids, start=1):
+            sheet.write(row, 0, line.functional_email or '')
+            sheet.write(row, 1, line.employee_email or '')
+            sheet.write(row, 2, line.functional_user_id.login or '')
+            sheet.write(row, 3, line.employee_id.name or '')
+            sheet.write(row, 4, line.status or '')
+            sheet.write(row, 5, line.reason or '')
+        sheet.set_column(0, 5, 30)
+        workbook.close()
+        output.seek(0)
+        self.result_file = base64.b64encode(output.read())
         return {
             'type': 'ir.actions.act_window',
             'res_model': self._name,

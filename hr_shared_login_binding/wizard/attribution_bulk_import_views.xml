@@ -4,7 +4,7 @@
         <field name="name">hr.attribution.bulk.import.form</field>
         <field name="model">hr.attribution.bulk.import</field>
         <field name="arch" type="xml">
-            <form string="Bulk Import Employee Attribution">
+            <form string="Portal User Mapping">
                 <header>
                     <button name="action_generate_template" string="Download Template"
                             type="object" class="btn-secondary"/>
@@ -16,6 +16,8 @@
                             confirm="Remove all unresolved rows from this list? This only affects this wizard's preview, not any employee or user record."/>
                     <button name="action_apply" string="Apply" type="object"
                             class="btn-primary" invisible="state != 'validated'"/>
+                    <button name="action_download_result" string="Download Result" type="object"
+                            class="btn-secondary" invisible="state == 'draft'"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
@@ -29,14 +31,23 @@
                         <field name="import_file" filename="import_filename"
                                string="Import File (.xlsx or .csv, two columns: Functional Account Email, Employee Email)"/>
                     </group>
+                    <group invisible="not result_file">
+                        <field name="result_filename" invisible="1"/>
+                        <field name="result_file" filename="result_filename" readonly="1"
+                               string="Result (click to download)"/>
+                    </group>
                     <group string="Result" invisible="state == 'draft'">
                         <field name="resolved_count"/>
                         <field name="unresolved_count"/>
                     </group>
+                    <div class="text-muted mb-2" invisible="state == 'draft'">
+                        Fix an unresolved row by picking the correct Functional Account / Employee
+                        directly below, or add a new row at the bottom of the list.
+                    </div>
                     <field name="line_ids" invisible="state == 'draft'">
-                        <list decoration-danger="status == 'unresolved'">
-                            <field name="functional_email"/>
-                            <field name="employee_email"/>
+                        <list editable="bottom" decoration-danger="status == 'unresolved'">
+                            <field name="functional_email" readonly="1" string="From file (functional)"/>
+                            <field name="employee_email" readonly="1" string="From file (employee)"/>
                             <field name="functional_user_id"/>
                             <field name="employee_id"/>
                             <field name="status"/>
@@ -49,16 +60,16 @@
     </record>
 
     <record id="action_hr_attribution_bulk_import" model="ir.actions.act_window">
-        <field name="name">Bulk Import Employee Attribution</field>
+        <field name="name">Portal User Mapping</field>
         <field name="res_model">hr.attribution.bulk.import</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
 
     <menuitem id="menu_hr_attribution_bulk_import"
-              name="Bulk Import Employee Attribution"
+              name="Portal User Mapping"
               action="action_hr_attribution_bulk_import"
-              parent="base.menu_administration"
+              parent="hr_shared_login_binding.menu_harleys_root"
               groups="base.group_system"
-              sequence="101"/>
+              sequence="10"/>
 </odoo>

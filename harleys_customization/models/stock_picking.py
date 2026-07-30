@@ -154,24 +154,12 @@ class StockScrap(models.Model):
         Already-done records are skipped rather than re-validated: core's
         action_validate()/do_scrap() has no guard against being called
         twice on the same record, and confirmed by testing, doing so
-        creates a second, duplicate stock.move rather than erroring. The
-        per-row "Validate" button is already safe (the view hides it once
-        state == 'done'), but this header action has no such row-level
-        filter if a user selects a mix of draft and already-validated rows.
-
-        The button is display="always" (see the view), so it isn't gated
-        on the user having checkbox-selected anything - same reasoning as
-        stock.quant's own action_apply_all. That means `self` here may not
-        reflect "everything currently on screen", so - matching that same
-        core method - re-query the list's own active_domain when one is
-        present, falling back to `self` only if it isn't (e.g. called some
-        other way than from this exact list).
+        creates a second, duplicate stock.move rather than erroring. So
+        selecting a mix of draft and already-validated rows and clicking
+        "Validate All" is safe - the done ones are simply skipped, not
+        re-processed.
         """
-        records = self
-        active_domain = self.env.context.get('active_domain')
-        if active_domain is not None:
-            records = self.search(active_domain)
-        for scrap in records.filtered(lambda s: s.state != 'done'):
+        for scrap in self.filtered(lambda s: s.state != 'done'):
             result = scrap.action_validate()
             if isinstance(result, dict):
                 return result

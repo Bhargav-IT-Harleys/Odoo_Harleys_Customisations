@@ -8,7 +8,7 @@ from odoo import fields, models
 
 class HrAttributionLog(models.Model):
     _name = 'hr.attribution.log'
-    _description = "Employee Attribution Log (fallback for deletions with no parent to log to)"
+    _description = "Master Data Deletion Log (fallback for deletions with no parent to log to)"
     _order = 'logged_at desc'
     _log_access = False
 
@@ -21,4 +21,4 @@ class HrAttributionLog(models.Model):
     action = fields.Selection([
         ('deleted', "Deleted"),
     ], string="Action", required=True, default='deleted')
-    logged_at = fields.Datetime(string="Logged At", default=fields.Datetime.now, required=True)
+    logged_at = fields.Datetime(string="Deleted At", default=fields.Datetime.now, required=True)

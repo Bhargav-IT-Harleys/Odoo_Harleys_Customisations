@@ -145,15 +145,26 @@ export class StockMoveLineBatchField extends Component {
     ]).toList(this.props.context);
   }
 
+  // Same reason update()/quickCreate()/createNewBatch() all save
+  // immediately after their write: _set_lot_ids only recomputes real
+  // move-line data (quantity, which lines still exist) on an actual
+  // server write, never during onchange simulation - confirmed for the
+  // add path in stock_move_line_rows.js. Without the save here too, a
+  // deletion stays purely client-side: it looks gone until some later,
+  // unrelated recompute reloads the real (still-unchanged) server data
+  // and the "deleted" batch reappears - which is exactly what looks like
+  // "sometimes I can't delete it" from the outside.
   async deleteLot(lot) {
     await this.props.record.data[this.props.name].forget(lot);
+    await this.props.record.model.root.save();
   }
 
   // Fallback rows (see stock_move_line_rows.js) have no lot_ids entry to
   // forget(); move_line_ids is a One2many, so removing the batch means
-  // deleting the line itself.
+  // deleting the line itself. Same save requirement as deleteLot() above.
   async deleteLine(line) {
     await this.props.record.data.move_line_ids.delete(line);
+    await this.props.record.model.root.save();
   }
 
   showAddInput() {
