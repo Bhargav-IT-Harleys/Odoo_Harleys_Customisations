@@ -1,5 +1,6 @@
 from odoo import _, api, fields, models, SUPERUSER_ID
 from odoo.exceptions import AccessError
+from odoo.tools.safe_eval import safe_eval
 
 
 class StockPicking(models.Model):
@@ -139,6 +140,45 @@ class StockScrap(models.Model):
         check_company=True,
         default=False
     )
+
+    @api.model
+    def action_view_inv_adjustments(self):
+        """Open Inv Adjustments (stock.action_stock_scrap) restricted to
+        the current user's allowed locations.
+
+        core's action_stock_scrap is a plain ir.actions.act_window, not a
+        Python method, so there's no override point to inject a per-user
+        domain/context the way stock.quant's action_view_inventory() does
+        for Physical Inventory - this method plus the server action/menu
+        rewiring in stock_scrap_views.xml recreates that same pattern here,
+        reusing the location-level allow-list that already exists
+        (_get_allowed_location_ids) rather than a second, warehouse-level
+        mechanism alongside it.
+
+        The domain restriction (not just context) matters for the search
+        panel added in the view: confirmed against web/models/models.py's
+        search_panel_select_range, a select="one" category's value list is
+        computed from the CURRENT model's own records filtered by the
+        action's domain, not by applying location_id's own field domain to
+        the comodel - so without this domain, the panel would list every
+        location that has ever had an adjustment, not just allowed ones.
+        """
+        action = self.env["ir.actions.act_window"]._for_xml_id("stock.action_stock_scrap")
+        allowed_location_ids = self._get_allowed_location_ids().ids
+
+        # _for_xml_id() reads the action record's raw stored field values -
+        # domain/context come back as unparsed Python-literal strings (or
+        # False if unset), not actual list/dict objects (confirmed: dict()
+        # on the raw string blew up trying to treat each character as a
+        # key-value pair). safe_eval is Odoo's own standard way to turn
+        # these stored expressions back into real Python objects.
+        domain = safe_eval(action.get("domain") or "[]")
+        context = safe_eval(action.get("context") or "{}")
+
+        action["domain"] = domain + [("location_id", "in", allowed_location_ids)]
+        action["context"] = context
+        action["context"]["user_allowed_location_ids"] = allowed_location_ids
+        return action
 
     def action_validate_multi(self):
         """Validate several draft Inv Adjustment lines in one action.

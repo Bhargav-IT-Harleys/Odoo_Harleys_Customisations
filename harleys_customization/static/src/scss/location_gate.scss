@@ -1,0 +1,7 @@
+// Widen the search bar only where it sits next to the "Your Current
+// Location" badge (Physical Inventory / Inv Adjustments) - scoped via the
+// adjacent-sibling selector so other list views are untouched.
+.o_harleys_current_location + .o_searchview {
+    min-width: 500px;
+    flex: 1 1 auto;
+}

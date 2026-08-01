@@ -74,4 +74,49 @@
             </field>
         </field>
     </record>
+
+    <!-- Location search panel: a persistent, always-visible, single-select
+         list (not the generic Filters dropdown) so a non-technical user
+         picks their working location by clicking it, and can switch it
+         the same way later - rather than needing to know how to build a
+         custom filter. Restricted to _get_allowed_location_ids() via the
+         user_allowed_location_ids context key (see
+         action_view_inv_adjustments below, which sets it - core's
+         action_stock_scrap has no Python method to inject context into,
+         so the menu is repointed at a server action that does this first). -->
+    <record id="stock_scrap_search_view_location_panel" model="ir.ui.view">
+        <field name="name">stock.scrap.search.location.panel</field>
+        <field name="model">stock.scrap</field>
+        <field name="inherit_id" ref="stock.stock_scrap_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <!-- select="one" categories cannot carry a domain= at all
+                     (Odoo raises "Searchpanel item with select multi cannot
+                     have a domain" otherwise - confirmed against
+                     ir_ui_view.py's own validation: domain= is only legal
+                     when select="multi"). location_id already has its
+                     allowed-location restriction baked in as a real Python
+                     field domain (see the model above), so this relies on
+                     that being picked up automatically rather than
+                     restating it here. -->
+                <!-- depth: auto-expand sub-locations (e.g. HYD-BJH/Stock)
+                     under each warehouse by default - see the matching
+                     comment in stock_quant_views.xml. -->
+                <searchpanel>
+                    <field name="location_id" select="one" string="Location" icon="fa-map-marker" depth="10"/>
+                </searchpanel>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_view_inv_adjustments" model="ir.actions.server">
+        <field name="name">Inv Adjustments</field>
+        <field name="model_id" ref="stock.model_stock_scrap"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_view_inv_adjustments()</field>
+    </record>
+
+    <record id="stock.menu_stock_scrap" model="ir.ui.menu">
+        <field name="action" ref="action_view_inv_adjustments"/>
+    </record>
 </odoo>

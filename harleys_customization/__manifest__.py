@@ -49,6 +49,7 @@
     'assets': {
         'web.assets_backend': [
             'harleys_customization/static/src/js/searchable_x2many.js',
+            'harleys_customization/static/src/js/location_gate.js',
             'harleys_customization/static/src/js/stock_move_line_rows.js',
             'harleys_customization/static/src/js/stock_move_line_row_field.js',
             'harleys_customization/static/src/js/stock_move_line_batch_field.js',
@@ -56,11 +57,13 @@
             'harleys_customization/static/src/js/stock_scrap_list.js',
             'harleys_customization/static/src/js/stock_quant_new_confirm.js',
             'harleys_customization/static/src/xml/searchable_x2many.xml',
+            'harleys_customization/static/src/xml/location_gate_list_view.xml',
             'harleys_customization/static/src/xml/stock_move_line_row_field.xml',
             'harleys_customization/static/src/xml/stock_move_line_batch_field.xml',
             'harleys_customization/static/src/xml/stock_move_line_batch_quickcreate.xml',
             'harleys_customization/static/src/xml/loading_indicator.xml',
             'harleys_customization/static/src/scss/searchable_x2many.scss',
+            'harleys_customization/static/src/scss/location_gate.scss',
             'harleys_customization/static/src/scss/stock_picking_close_confirm.scss',
             'harleys_customization/static/src/scss/stock_picking_operations.scss',
             'harleys_customization/static/src/scss/loading_indicator.scss',
