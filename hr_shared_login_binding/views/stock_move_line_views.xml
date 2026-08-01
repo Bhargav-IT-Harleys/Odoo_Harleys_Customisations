@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_line_tree_employee" model="ir.ui.view">
+        <field name="name">stock.move.line.list.employee</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <field name="create_uid" position="replace">
+                <field name="done_by_display" string="Done By"/>
+            </field>
+        </field>
+    </record>
+</odoo>
