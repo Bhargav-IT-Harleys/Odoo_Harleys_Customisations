@@ -26,9 +26,9 @@
             <xpath expr="//button[@name='action_post'][2]" position="attributes">
                 <attribute name="groups">account.group_account_manager</attribute>
             </xpath>
-            <xpath expr="//field[@name='ref']" position="attributes">
+            <!-- <xpath expr="//field[@name='ref']" position="attributes">
                 <attribute name="required">move_type == 'in_invoice'</attribute>
-            </xpath>
+            </xpath> -->
             <xpath expr="//field[@name='invoice_date']" position="attributes">
                 <attribute name="required">move_type == 'in_invoice'</attribute>
             </xpath>
