@@ -1,0 +1,12 @@
+.o_harleys_company_popup_backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    cursor: not-allowed;
+}
+
+.o_harleys_company_popup_list {
+    max-height: 320px;
+    overflow-y: auto;
+}

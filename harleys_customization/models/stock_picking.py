@@ -107,11 +107,6 @@ class StockScrap(models.Model):
     )
 
     def _get_allowed_location_ids(self):
-        """
-        Return stock.location recordset the current user is allowed to use,
-        derived from their allowed_warehouse_ids on res.users.
-        Falls back to all active internal locations for the company.
-        """
         user = self.env.user
         allowed_warehouses = getattr(user, 'allowed_warehouse_ids', self.env['stock.warehouse'])
 
@@ -143,35 +138,9 @@ class StockScrap(models.Model):
 
     @api.model
     def action_view_inv_adjustments(self):
-        """Open Inv Adjustments (stock.action_stock_scrap) restricted to
-        the current user's allowed locations.
-
-        core's action_stock_scrap is a plain ir.actions.act_window, not a
-        Python method, so there's no override point to inject a per-user
-        domain/context the way stock.quant's action_view_inventory() does
-        for Physical Inventory - this method plus the server action/menu
-        rewiring in stock_scrap_views.xml recreates that same pattern here,
-        reusing the location-level allow-list that already exists
-        (_get_allowed_location_ids) rather than a second, warehouse-level
-        mechanism alongside it.
-
-        The domain restriction (not just context) matters for the search
-        panel added in the view: confirmed against web/models/models.py's
-        search_panel_select_range, a select="one" category's value list is
-        computed from the CURRENT model's own records filtered by the
-        action's domain, not by applying location_id's own field domain to
-        the comodel - so without this domain, the panel would list every
-        location that has ever had an adjustment, not just allowed ones.
-        """
         action = self.env["ir.actions.act_window"]._for_xml_id("stock.action_stock_scrap")
         allowed_location_ids = self._get_allowed_location_ids().ids
 
-        # _for_xml_id() reads the action record's raw stored field values -
-        # domain/context come back as unparsed Python-literal strings (or
-        # False if unset), not actual list/dict objects (confirmed: dict()
-        # on the raw string blew up trying to treat each character as a
-        # key-value pair). safe_eval is Odoo's own standard way to turn
-        # these stored expressions back into real Python objects.
         domain = safe_eval(action.get("domain") or "[]")
         context = safe_eval(action.get("context") or "{}")
 
@@ -181,24 +150,6 @@ class StockScrap(models.Model):
         return action
 
     def action_validate_multi(self):
-        """Validate several draft Inv Adjustment lines in one action.
-
-        Does not change action_validate() itself - just calls the existing,
-        single-record method once per record. If a record can't be
-        validated (e.g. insufficient quantity), action_validate() returns
-        a warning wizard instead of completing; that's surfaced immediately
-        and the loop stops there, so nothing after it is silently skipped -
-        records already validated earlier in the loop stay validated, and
-        re-running this after resolving the warning picks up where it left off.
-
-        Already-done records are skipped rather than re-validated: core's
-        action_validate()/do_scrap() has no guard against being called
-        twice on the same record, and confirmed by testing, doing so
-        creates a second, duplicate stock.move rather than erroring. So
-        selecting a mix of draft and already-validated rows and clicking
-        "Validate All" is safe - the done ones are simply skipped, not
-        re-processed.
-        """
         for scrap in self.filtered(lambda s: s.state != 'done'):
             result = scrap.action_validate()
             if isinstance(result, dict):

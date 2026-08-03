@@ -73,3 +73,12 @@ class Home(web_home.Home):
             raise AccessDenied(_("This employee is not authorized to use this account."))
 
         return employee
+
+    def _login_redirect(self, uid, redirect=None):
+        request.session['harleys_company_selection_pending'] = True
+        return super()._login_redirect(uid, redirect=redirect)
+
+    @http.route('/harleys_company_login_popup/dismiss', type='jsonrpc', auth='user')
+    def dismiss_company_selection(self):
+        request.session.pop('harleys_company_selection_pending', None)
+        return True

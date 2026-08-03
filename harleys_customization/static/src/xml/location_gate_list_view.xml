@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates id="template" xml:space="preserve">
 
-    <!-- Shared by any ListController mixed with LocationGateListController
-         (location_gate.js): hides the "New" button and the actual list
-         renderer entirely until a location is picked in the search panel,
-         showing a placeholder instead - covers both Physical Inventory
-         (stock.quant) and Inv Adjustments (stock.scrap). -->
     <t t-name="harleys_customization.LocationGatedListView" t-inherit="web.ListView">
         <xpath expr="//button[hasclass('o_list_button_add')]" position="attributes">
             <attribute name="t-if">!editedRecord and activeActions.create and props.showButtons and selectedLocation</attribute>
@@ -21,17 +16,9 @@
                 <p>Pick a location from the panel on the left before viewing or adding records.</p>
             </div>
         </xpath>
-        <!-- headerButtons with display="always" (e.g. stock.quant's "Apply
-             All") render in this slot regardless of row selection, so they
-             stay clickable even while the renderer above is hidden unless
-             gated here too. -->
         <xpath expr="//t[@t-set-slot='control-panel-always-buttons']//MultiRecordViewButton" position="attributes">
             <attribute name="t-if">button.display === 'always' and selectedLocation</attribute>
         </xpath>
-        <!-- layout-actions renders in the same control-panel row as the
-             search bar, immediately to its left - putting the current
-             location indicator here (before SearchBar) is what puts it
-             top-left of the search bar. -->
         <xpath expr="//t[@t-set-slot='layout-actions']/SearchBar" position="before">
             <div t-if="selectedLocation" class="o_harleys_current_location d-flex align-items-center me-2 flex-shrink-0">
                 <span class="fw-bold me-1">Your Current Location:</span>

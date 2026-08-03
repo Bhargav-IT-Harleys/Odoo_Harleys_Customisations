@@ -2,8 +2,6 @@ import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 
-// Must match the field name used on the <searchpanel> category in
-// stock_scrap_views.xml / stock_quant_views.xml.
 export const LOCATION_GATE_FIELD = "location_id";
 
 export function getLocationCategory(searchModel) {
@@ -13,11 +11,6 @@ export function getLocationCategory(searchModel) {
     return category;
 }
 
-// search panel categories default their activeValueId to false (the built-in
-// "All" value - confirmed against search_model.js's _createCategoryTree,
-// category.rootIds always starts with [false]) - so "nothing picked yet" and
-// "All explicitly picked" are the same state here, which is what we want:
-// there is no "All" option surfaced to these users at all.
 export function getSelectedLocationValue(searchModel) {
     const category = getLocationCategory(searchModel);
     if (!category || !category.activeValueId) {
@@ -26,11 +19,6 @@ export function getSelectedLocationValue(searchModel) {
     return category.values.get(category.activeValueId) || null;
 }
 
-// Mixin applied to a ListController subclass: hides/blocks the list (via the
-// harleys_customization.LocationGatedListView template) and the create flow
-// until a location category value is selected, then stamps that location
-// onto every new inline row instead of whatever default the field would
-// otherwise pick.
 export const LocationGateListController = (Base) =>
     class extends Base {
         setup() {

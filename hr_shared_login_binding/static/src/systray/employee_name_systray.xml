@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="hr_shared_login_binding.EmployeeNameSystray">
+    <div class="o_harleys_employee_name_systray d-none d-md-flex align-items-center px-2 text-truncate border-end"
+         t-att-title="tooltip">
+        <span class="text-truncate small" t-esc="label"/>
+    </div>
+</t>
+
+</templates>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="hr_shared_login_binding.CompanySelectionOverlay">
+    <t t-if="state.visible">
+        <div class="o_harleys_company_popup_backdrop"/>
+        <div class="modal d-block" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content p-4">
+                    <p t-esc="message"/>
+                    <div class="o_harleys_company_popup_list border rounded mb-3">
+                        <t t-foreach="companies" t-as="entry" t-key="entry.company.id">
+                            <SwitchCompanyItem company="entry.company" level="entry.level"/>
+                        </t>
+                    </div>
+                    <button class="btn btn-primary w-100" t-att-disabled="!canConfirm" t-on-click="() => this.confirm()">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+</t>
+
+</templates>

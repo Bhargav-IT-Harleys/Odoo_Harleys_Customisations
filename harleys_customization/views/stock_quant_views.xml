@@ -8,6 +8,10 @@
         <field name="model">stock.quant</field>
         <field name="inherit_id" ref="stock.view_stock_quant_tree_inventory_editable"/>
         <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="editable">top</attribute>
+                <attribute name="default_order">write_date desc</attribute>
+            </xpath>
             <field name="last_count_date" position="attributes">
                 <attribute name="optional">show</attribute>
             </field>
@@ -18,33 +22,12 @@
         </field>
     </record>
 
-    <!-- Same location search panel as Inv Adjustments (stock_scrap_views.xml),
-         for the same reason: a persistent, click-to-pick location list
-         instead of the generic Filters dropdown.
-
-         No domain= here on purpose - select="one" categories can't carry
-         one at all (confirmed against ir_ui_view.py's own validation), and
-         more importantly, a category's value list is computed from the
-         CURRENT model's own records filtered by the ACTION's domain, not
-         by applying a domain to the comodel (confirmed against
-         web/models/models.py search_panel_select_range). The
-         user_warehouse_restriction app (Cybrosys) already adds exactly
-         that domain restriction in its action_view_inventory() override
-         ('location_id.warehouse_id', 'in', allowed_warehouse_ids) - so
-         this panel is correctly restricted for free, with nothing more
-         needed here than adding it. -->
     <record id="quant_search_view_location_panel" model="ir.ui.view">
         <field name="name">stock.quant.search.location.panel</field>
         <field name="model">stock.quant</field>
         <field name="inherit_id" ref="stock.quant_search_view"/>
         <field name="arch" type="xml">
             <xpath expr="//search" position="inside">
-                <!-- depth: how many levels under each root value get
-                     auto-expanded on first load (confirmed against
-                     search_arch_parser.js - defaults to 0, meaning fully
-                     collapsed, if omitted). A high value here means every
-                     sub-location (e.g. HYD-BJH/Stock) is visible under its
-                     warehouse without the user having to click to expand. -->
                 <searchpanel>
                     <field name="location_id" select="one" string="Location" icon="fa-map-marker" depth="10"/>
                 </searchpanel>

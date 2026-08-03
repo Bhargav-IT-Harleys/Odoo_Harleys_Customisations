@@ -22,34 +22,18 @@
         </field>
     </record>
 
-    <!-- Inv Adjustments, Option 1 (save = draft, separate bulk-validate step).
-         This inherits core's own stock_scrap_tree_view rather than
-         replacing it - every existing field (Reference, Date, Product,
-         Quantity, Unit, Source Location, Inv Adj Location, Company,
-         Status) stays exactly as core defined it. Only additions:
-         editable="bottom" (core's version was multi_edit-only - selecting
-         several rows to bulk-edit one shared field - not inline row
-         creation), a header "Validate All" and per-row "Validate" button,
-         and two fields core's read-only list never needed but inline
-         creation does: Inv Adj Reason (required to validate) and Batch
-         (required for lot/serial-tracked products - see action_validate's
-         check, this was missed once already and had to be added back). -->
     <record id="stock_scrap_tree_view_editable" model="ir.ui.view">
         <field name="name">stock.scrap.list.editable</field>
         <field name="model">stock.scrap</field>
         <field name="inherit_id" ref="stock.stock_scrap_tree_view"/>
         <field name="arch" type="xml">
             <xpath expr="//list" position="attributes">
-                <attribute name="editable">bottom</attribute>
+                <attribute name="editable">top</attribute>
                 <attribute name="js_class">stock_scrap_list</attribute>
+                <attribute name="default_order">id desc</attribute>
             </xpath>
             <xpath expr="//list" position="inside">
                 <header>
-                    <!-- Default Odoo header-button behaviour on purpose: only
-                         appears once rows are checkbox-selected, not always
-                         visible. Selecting a mix that includes already-done
-                         rows is still safe - action_validate_multi() skips
-                         them rather than re-validating (see that method). -->
                     <button name="action_validate_multi" string="Validate All" type="object" class="btn-primary"/>
                 </header>
             </xpath>
@@ -75,33 +59,12 @@
         </field>
     </record>
 
-    <!-- Location search panel: a persistent, always-visible, single-select
-         list (not the generic Filters dropdown) so a non-technical user
-         picks their working location by clicking it, and can switch it
-         the same way later - rather than needing to know how to build a
-         custom filter. Restricted to _get_allowed_location_ids() via the
-         user_allowed_location_ids context key (see
-         action_view_inv_adjustments below, which sets it - core's
-         action_stock_scrap has no Python method to inject context into,
-         so the menu is repointed at a server action that does this first). -->
     <record id="stock_scrap_search_view_location_panel" model="ir.ui.view">
         <field name="name">stock.scrap.search.location.panel</field>
         <field name="model">stock.scrap</field>
         <field name="inherit_id" ref="stock.stock_scrap_search_view"/>
         <field name="arch" type="xml">
             <xpath expr="//search" position="inside">
-                <!-- select="one" categories cannot carry a domain= at all
-                     (Odoo raises "Searchpanel item with select multi cannot
-                     have a domain" otherwise - confirmed against
-                     ir_ui_view.py's own validation: domain= is only legal
-                     when select="multi"). location_id already has its
-                     allowed-location restriction baked in as a real Python
-                     field domain (see the model above), so this relies on
-                     that being picked up automatically rather than
-                     restating it here. -->
-                <!-- depth: auto-expand sub-locations (e.g. HYD-BJH/Stock)
-                     under each warehouse by default - see the matching
-                     comment in stock_quant_views.xml. -->
                 <searchpanel>
                     <field name="location_id" select="one" string="Location" icon="fa-map-marker" depth="10"/>
                 </searchpanel>
