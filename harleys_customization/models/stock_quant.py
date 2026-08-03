@@ -11,6 +11,12 @@ class StockQuant(models.Model):
         help="Draft: a counted quantity has been entered but not yet "
              "applied to on-hand stock.")
 
+    user_id = fields.Many2one(
+        "res.users",
+        string="User",
+        default=lambda self: self.env.user,
+    )
+
     @api.depends('inventory_quantity_set')
     def _compute_adjustment_status(self):
         for quant in self:

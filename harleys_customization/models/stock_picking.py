@@ -141,7 +141,6 @@ class StockScrap(models.Model):
         default=False
     )
 
-<<<<<<< Updated upstream
     @api.model
     def action_view_inv_adjustments(self):
         """Open Inv Adjustments (stock.action_stock_scrap) restricted to
@@ -205,13 +204,3 @@ class StockScrap(models.Model):
             if isinstance(result, dict):
                 return result
         return {'type': 'ir.actions.act_window_close'}
-=======
-class StockQuant(models.Model):
-    _inherit = "stock.quant"
-
-    user_id = fields.Many2one(
-        "res.users",
-        string="User",
-        default=lambda self: self.env.user,
-    )
->>>>>>> Stashed changes
