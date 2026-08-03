@@ -18,6 +18,9 @@
             <field name="partner_ref" position="after">
                 <field name="purchase_type" required="1"/>
             </field>
+            <xpath expr="//button[@name='action_rfq_send']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
         </field>
     </record>
     <record id="purchase_order_tree_inherit" model="ir.ui.view">
