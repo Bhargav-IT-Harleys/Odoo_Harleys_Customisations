@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_stock_picking_qty_mismatch_confirm_form" model="ir.ui.view">
+        <field name="name">stock.picking.qty.mismatch.confirm.form</field>
+        <field name="model">stock.picking.qty.mismatch.confirm</field>
+        <field name="arch" type="xml">
+
+            <form string="Quantity Mismatch">
+
+                <sheet>
+
+                    <div class="alert alert-warning o_margin_bottom">
+                        <p style="font-size: 1rem;">
+                            Trans Qty DOES NOT match Demand for the products below.
+                        </p>
+                        <strong style="font-size: 1.6rem; margin-top: 6px; margin-bottom: 0;">
+                            Please recheck the
+                            <span style="font-weight: 400; background-color: #ba1010; padding: 0 4px; border-radius: 3px;">QUANTITIES</span>
+                            along with
+                            <span style="font-weight: 400; background-color: #ba1010; padding: 0 4px; border-radius: 3px;">UOM</span>
+                            before confirming or Go back and edit.
+                        </strong>
+                    </div>
+
+                    <field name="mismatch_move_ids" nolabel="1">
+                        <list create="false" edit="false" delete="false">
+                            <field name="product_id" string="Product"/>
+                            <field name="product_uom_qty" string="Demand"/>
+                            <field name="quantity" string="Trans Qty"/>
+                            <field name="product_uom" string="UoM"/>
+                        </list>
+                    </field>
+
+                </sheet>
+
+                <footer>
+
+                    <button
+                        name="action_confirm"
+                        type="object"
+                        string="Confirm &amp; Validate"
+                        class="btn-primary"
+                    />
+
+                    <button
+                        name="action_cancel"
+                        type="object"
+                        string="Go back and edit"
+                        class="btn-secondary"
+                    />
+
+                </footer>
+
+            </form>
+
+        </field>
+    </record>
+
+</odoo>

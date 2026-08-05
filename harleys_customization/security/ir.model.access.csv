@@ -25,6 +25,8 @@ access_indent_close_confirm_user,Indent Close Confirm User,model_indent_close_co
 access_indent_close_confirm_admin,Indent Close Confirm Admin,model_indent_close_confirm,harleys_customization.group_indent_admin,1,1,1,1
 access_stock_picking_close_confirm_user,Stock Picking Close Confirm User,model_stock_picking_close_confirm,stock.group_stock_user,1,0,1,0
 access_stock_picking_close_confirm_admin,Stock Picking Close Confirm Admin,model_stock_picking_close_confirm,stock.group_stock_manager,1,1,1,1
+access_stock_picking_qty_mismatch_confirm_user,Stock Picking Qty Mismatch Confirm User,model_stock_picking_qty_mismatch_confirm,stock.group_stock_user,1,0,1,0
+access_stock_picking_qty_mismatch_confirm_admin,Stock Picking Qty Mismatch Confirm Admin,model_stock_picking_qty_mismatch_confirm,stock.group_stock_manager,1,1,1,1
 
 access_service_type_admin,Service Type Admin,model_service_type,base.group_user,1,1,1,1
 access_production_section,access.production.section,model_production_section,,1,1,1,1

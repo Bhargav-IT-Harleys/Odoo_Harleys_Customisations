@@ -43,6 +43,7 @@
         'wizard/indent_zero_qty_warning_views.xml',
         'wizard/indent_close_confirm_views.xml',
         'wizard/stock_picking_close_confirm_views.xml',
+        'wizard/stock_picking_qty_mismatch_confirm_views.xml',
         'views/account_move_views.xml'
         
     ],

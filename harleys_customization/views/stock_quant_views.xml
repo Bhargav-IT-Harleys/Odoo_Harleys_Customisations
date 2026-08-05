@@ -15,6 +15,9 @@
             <field name="last_count_date" position="attributes">
                 <attribute name="optional">show</attribute>
             </field>
+            <!-- <field name="user_id" position="attributes">
+                <attribute name="column_invisible">1</attribute>
+            </field> -->
             <button name="action_inventory_history" position="before">
                 <field name="adjustment_status" widget="badge"
                        decoration-warning="adjustment_status == 'draft'" optional="show"/>
