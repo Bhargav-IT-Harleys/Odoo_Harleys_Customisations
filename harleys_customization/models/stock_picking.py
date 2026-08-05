@@ -108,6 +108,14 @@ class StockLot(models.Model):
     def _check_unique_lot(self):
         return
 
+    def action_get_batch_availability(self, location_id):
+        self.ensure_one()
+        quants = self.env['stock.quant'].search([
+            ('lot_id', '=', self.id),
+            ('location_id', '=', location_id),
+        ])
+        return sum(quants.mapped('available_quantity'))
+
 class StockScrap(models.Model):
     _inherit = "stock.scrap"
 

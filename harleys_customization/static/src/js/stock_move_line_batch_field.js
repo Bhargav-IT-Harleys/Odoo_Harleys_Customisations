@@ -5,7 +5,6 @@ import { evaluateBooleanExpr } from "@web/core/py_js/py";
 import {
   Many2XAutocomplete,
   useActiveActions,
-  useX2ManyCrud,
 } from "@web/views/fields/relational_utils";
 import { getFieldDomain } from "@web/model/relational_model/utils";
 import { useService } from "@web/core/utils/hooks";
@@ -43,30 +42,19 @@ export class StockMoveLineBatchField extends Component {
     this.ui = useState({
       adding: false,
     });
+    this.availabilityByLotId = useState({});
 
-    // Receipts only: opens StockMoveLineBatchQuickCreate (live batch
-    // search + optional expiry date entry).
     this.batchPopover = usePopover(StockMoveLineBatchQuickCreate, {
       position: "bottom-start",
       popoverClass: "o_harleys_batch_popover_wrapper",
     });
-    // Anchored to the cell, not the "Add" button: the button is only
-    // visible via :hover and collapses to a zero-size rect as soon as the
-    // mouse moves toward the popover, which throws position tracking off.
     this.cellRootRef = useRef("cellRoot");
-
-    const { saveRecord, removeRecord } = useX2ManyCrud(
-      () => this.props.record.data[this.props.name],
-      true,
-    );
-    this.crudSaveRecord = saveRecord;
 
     this.activeActions = useActiveActions({
       fieldType: "many2many",
       crudOptions: {
         create: this.props.canCreate && this.props.createDomain,
         createEdit: this.props.canCreateEdit,
-        onDelete: removeRecord,
       },
       getEvalParams: (props) => ({
         evalContext: this.props.record.evalContext,
@@ -75,30 +63,24 @@ export class StockMoveLineBatchField extends Component {
     });
 
     this.update = async (recordlist) => {
-      const currentIds = this.props.record.data[this.props.name].currentIds;
+      const existingLotIds = this.rows.map((row) => row.lotId);
       recordlist = (recordlist || []).filter(
-        (el) => !currentIds.includes(el.id),
+        (el) => !existingLotIds.includes(el.id),
       );
-      if (!recordlist.length) {
-        return;
+      for (const rec of recordlist) {
+        await this.addPendingBatch(rec.id);
       }
-      await this.crudSaveRecord(recordlist.map((rec) => rec.id));
-      await this.props.record.model.root.save();
       this.closeAddUI();
     };
 
     if (this.props.canQuickCreate) {
       this.quickCreate = async (name) => {
-        const created = await this.orm.call(
+        const [newId] = await this.orm.create(
           this.relation,
-          "name_create",
-          [name],
-          {
-            context: this.props.context,
-          },
+          [{ name }],
+          { context: this.props.context },
         );
-        await this.crudSaveRecord([created[0]]);
-        await this.props.record.model.root.save();
+        await this.addPendingBatch(newId);
         this.closeAddUI();
       };
     }
@@ -129,8 +111,6 @@ export class StockMoveLineBatchField extends Component {
     );
   }
 
-  // stock.move's own field is picking_code; picking_type_code (used in
-  // the view's column_invisible conditions) lives on stock.picking.
   get isReceipt() {
     return this.props.record.data.picking_code === "incoming";
   }
@@ -145,26 +125,50 @@ export class StockMoveLineBatchField extends Component {
     ]).toList(this.props.context);
   }
 
-  // Same reason update()/quickCreate()/createNewBatch() all save
-  // immediately after their write: _set_lot_ids only recomputes real
-  // move-line data (quantity, which lines still exist) on an actual
-  // server write, never during onchange simulation - confirmed for the
-  // add path in stock_move_line_rows.js. Without the save here too, a
-  // deletion stays purely client-side: it looks gone until some later,
-  // unrelated recompute reloads the real (still-unchanged) server data
-  // and the "deleted" batch reappears - which is exactly what looks like
-  // "sometimes I can't delete it" from the outside.
-  async deleteLot(lot) {
-    await this.props.record.data[this.props.name].forget(lot);
-    await this.props.record.model.root.save();
+  async addPendingBatch(lotId) {
+    const move = this.props.record;
+    await move.data.move_line_ids.addNewRecord({
+      mode: "readonly",
+      context: {
+        default_product_id: move.data.product_id?.id,
+        default_product_uom_id: move.data.product_uom?.id,
+        default_location_id: move.data.location_id?.id,
+        default_location_dest_id: move.data.location_dest_id?.id,
+        default_lot_id: lotId,
+        default_quantity: 0,
+      },
+    });
+    this.fetchAvailability(lotId);
   }
 
-  // Fallback rows (see stock_move_line_rows.js) have no lot_ids entry to
-  // forget(); move_line_ids is a One2many, so removing the batch means
-  // deleting the line itself. Same save requirement as deleteLot() above.
-  async deleteLine(line) {
-    await this.props.record.data.move_line_ids.delete(line);
-    await this.props.record.model.root.save();
+  async fetchAvailability(lotId) {
+    const locationId = this.props.record.data.location_id?.id;
+    if (!locationId) {
+      return;
+    }
+    try {
+      const qty = await this.orm.call(
+        "stock.lot", "action_get_batch_availability", [lotId],
+        { location_id: locationId },
+      );
+      this.availabilityByLotId[lotId] = qty;
+    } catch {
+    }
+  }
+
+  availabilityHint(row) {
+    const qty = this.availabilityByLotId[row.lotId];
+    return qty === undefined ? null : `Available: ${qty}`;
+  }
+
+  async deleteBatch(row) {
+    if (row.line) {
+      await this.props.record.data.move_line_ids.delete(row.line);
+    }
+    if (row.lot) {
+      await this.props.record.data[this.props.name].forget(row.lot);
+    }
+    delete this.availabilityByLotId[row.lotId];
   }
 
   showAddInput() {
@@ -211,8 +215,7 @@ export class StockMoveLineBatchField extends Component {
     const [newId] = await this.orm.create("stock.lot", [vals], {
       context: this.props.context,
     });
-    await this.crudSaveRecord([newId]);
-    await this.props.record.model.root.save();
+    await this.addPendingBatch(newId);
     this.closeAddUI();
   }
 
