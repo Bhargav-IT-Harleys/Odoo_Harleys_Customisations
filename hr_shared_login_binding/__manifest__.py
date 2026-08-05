@@ -23,7 +23,7 @@
         actually confirming a selection there.
     """,
     'category': 'Human Resources',
-    'depends': ['base', 'web', 'hr', 'mail', 'stock'],
+    'depends': ['base', 'web', 'hr', 'mail', 'stock', 'auth_timeout', 'bus'],
     'data': [
         'security/ir.model.access.csv',
         'views/res_users_views.xml',
@@ -32,6 +32,7 @@
         'views/attribution_log_views.xml',
         'views/stock_move_line_views.xml',
         'wizard/attribution_bulk_import_views.xml',
+        'views/login_templates.xml',
     ],
     'assets': {
         'web.assets_backend': [
@@ -41,6 +42,12 @@
             'hr_shared_login_binding/static/src/company_selection/company_selection.js',
             'hr_shared_login_binding/static/src/company_selection/company_selection.xml',
             'hr_shared_login_binding/static/src/company_selection/company_selection.scss',
+            'hr_shared_login_binding/static/src/js/inactivity_tracking/inactivity_tracking.js',
+            ('remove', 'auth_timeout/static/src/services/check_identity/*'),
+        ],
+        'web.assets_frontend': [
+            ('remove', 'auth_timeout/static/src/services/check_identity/*'),
+            ('remove', 'auth_timeout/static/src/scss/auth_timeout.scss'),
         ],
     },
     'installable': True,
