@@ -4,14 +4,11 @@
         <div class="o_harleys_batch_qty_editor o_harleys_batch_field d-flex flex-column gap-1"
             t-ref="cellRoot" t-att-class="{ o_harleys_batch_popover_open: batchPopover.isOpen }">
             <t t-foreach="rows" t-as="row" t-key="row.key">
-                <span class="o_harleys_batch_qty_value o_harleys_batch_lot_value">
+                <span class="o_harleys_batch_qty_value o_harleys_batch_lot_value"
+                    t-att-data-tooltip="availabilityHint(row)">
                     <t t-esc="row.lotName"/>
-                    <a t-if="!isLocked and row.lot" href="#" class="o_harleys_batch_lot_delete"
-                        t-on-click.prevent="() => this.deleteLot(row.lot)">
-                        <i class="oi oi-close"/>
-                    </a>
-                    <a t-elif="!isLocked" href="#" class="o_harleys_batch_lot_delete"
-                        t-on-click.prevent="() => this.deleteLine(row.line)">
+                    <a t-if="!isLocked" href="#" class="o_harleys_batch_lot_delete"
+                        t-on-click.prevent="() => this.deleteBatch(row)">
                         <i class="oi oi-close"/>
                     </a>
                 </span>
