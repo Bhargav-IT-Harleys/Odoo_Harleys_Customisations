@@ -12,8 +12,33 @@ class StockPicking(models.Model):
     #             line._compute_expiration_date()
     #     super().button_validate()
         
+    def _get_qty_mismatch_moves(self):
+        self.ensure_one()
+        if self.picking_type_code not in ('internal', 'incoming'):
+            return self.env['stock.move']
+        return self.move_ids.filtered(
+            lambda m: m.state not in ('done', 'cancel')
+            and m.product_uom.compare(m.quantity, m.product_uom_qty) != 0
+        )
+
     def button_validate(self):
         self = self.filtered(lambda p: p.state != 'done')
+
+        if len(self) == 1 and not self.env.context.get('skip_qty_mismatch_confirm'):
+            mismatch_moves = self._get_qty_mismatch_moves()
+            if mismatch_moves:
+                wizard = self.env['stock.picking.qty.mismatch.confirm'].create({
+                    'picking_id': self.id,
+                    'mismatch_move_ids': [(6, 0, mismatch_moves.ids)],
+                })
+                return {
+                    'type': 'ir.actions.act_window',
+                    'name': _('Quantity Mismatch'),
+                    'res_model': 'stock.picking.qty.mismatch.confirm',
+                    'res_id': wizard.id,
+                    'view_mode': 'form',
+                    'target': 'new',
+                }
 
         transit_picking_ids = self.with_user(SUPERUSER_ID).filtered(
             lambda picking: picking.location_id.usage == 'transit'
