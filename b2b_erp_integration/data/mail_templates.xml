@@ -1,0 +1,10 @@
+<odoo>
+    <data noupdate="1">
+        <record id="mail_template_vendor_notification" model="mail.template">
+            <field name="name">Vendor Notification</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="subject">Vendor update</field>
+            <field name="body_html"><![CDATA[<p>Vendor update</p>]]></field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_vendor_platform_list" model="ir.ui.view">
+        <field name="name">vendor.platform.list</field>
+        <field name="model">vendor.platform</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_vendor_platform_form" model="ir.ui.view">
+        <field name="name">vendor.platform.form</field>
+        <field name="model">vendor.platform</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="company_id"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_vendor_platform" model="ir.actions.act_window">
+        <field name="name">Vendor Platforms</field>
+        <field name="res_model">vendor.platform</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="menu_vendor_platforms"
+        parent="menu_b2b_erp_vendors"
+        action="action_vendor_platform"
+        sequence="1"/>
+
+</odoo>

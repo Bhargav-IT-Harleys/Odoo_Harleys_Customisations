@@ -1,0 +1,5 @@
+<odoo>
+    <menuitem id="menu_b2b_erp_root" name="B2B ERP" sequence="10"/>
+    <menuitem id="menu_b2b_erp_vendors" name="Vendors" parent="menu_b2b_erp_root" sequence="10"/>
+    <menuitem id="menu_b2b_erp_settings" name="Settings" parent="menu_b2b_erp_root" sequence="20"/>
+</odoo>

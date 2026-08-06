@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_vendor_api_log,vendor.api.log,model_vendor_api_log,,1,1,1,1
+access_vendor_auth_wizard,vendor.auth.wizard,model_vendor_auth_wizard,,1,1,1,1
+access_vendor_platform,vendor.platform,model_vendor_platform,,1,1,1,1
+access_vendor_account,vendor.account,model_vendor_account,,1,1,1,1
+access_vendor_outlet,vendor.outlet,model_vendor_outlet,,1,1,1,1
+access_vendor_webhook_log,vendor.webhook.log,model_vendor_webhook_log,,1,1,1,1
+access_sync_products_wizard,sync.products.wizard,model_sync_products_wizard,,1,1,1,1
