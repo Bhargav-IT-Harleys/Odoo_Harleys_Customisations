@@ -1,19 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <record id="view_account_move_form_harleys_restrict" model="ir.ui.view">
-        <field name="name">account.move.form.harleys.restrict</field>
+    <!-- <record id="view_move_form_inherit_bo" model="ir.ui.view">
+        <field name="name">account.move.form</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//header/button[@name='action_post']" position="attributes">
+            <xpath expr="//button[@name='action_post'][1]" position="attributes">
                 <attribute name="groups">account.group_account_manager</attribute>
             </xpath>
-            <xpath expr="//form//field[@name='ref']" position="attributes">
+            <xpath expr="//button[@name='action_post'][2]" position="attributes">
+                <attribute name="groups">account.group_account_user</attribute>
+                <attribute name="invisible">approval_state != 'to_approve'</attribute>
+            </xpath>
+        </field>
+    </record> -->
+
+    <record id="view_account_move_form_restrict_confirm" model="ir.ui.view">
+        <field name="name">account.move.form.restrict.confirm</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_post'][1]" position="attributes">
+                <attribute name="groups">account.group_account_manager</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_post'][2]" position="attributes">
+                <attribute name="groups">account.group_account_manager</attribute>
+            </xpath>
+            <xpath expr="//field[@name='ref']" position="attributes">
                 <attribute name="required">move_type == 'in_invoice'</attribute>
             </xpath>
-            <xpath expr="//form//field[@name='invoice_date']" position="attributes">
+            <xpath expr="//field[@name='invoice_date']" position="attributes">
                 <attribute name="required">move_type == 'in_invoice'</attribute>
             </xpath>
         </field>
     </record>
+
 </odoo>

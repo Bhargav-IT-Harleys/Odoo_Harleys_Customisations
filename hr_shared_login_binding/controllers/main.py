@@ -1,11 +1,70 @@
-from odoo import http, _
+import logging
+
+import odoo
+from odoo import http
 from odoo.exceptions import AccessDenied
 from odoo.http import request
-from odoo.addons.web.controllers import home as web_home
-from odoo.addons.web.controllers.utils import _get_login_redirect_url, ensure_db
+from odoo.addons.web.controllers.home import Home as WebHome, SIGN_UP_REQUEST_PARAMS, CREDENTIAL_PARAMS
+from odoo.addons.web.controllers.utils import ensure_db
+from odoo.tools.translate import _, LazyTranslate
+
+_lt = LazyTranslate(__name__)
+
+_logger = logging.getLogger(__name__)
 
 
-class Home(web_home.Home):
+class Home(WebHome):
+
+    @http.route('/web/login', type='http', auth='none', readonly=False, list_as_website_content=_lt("Login"))
+    def web_login(self, redirect=None, **kw):
+        ensure_db()
+        request.params['login_success'] = False
+        if request.httprequest.method == 'GET' and redirect and request.session.uid:
+            return request.redirect(redirect)
+
+        if request.env.uid is None:
+            if request.session.uid is None:
+                request.env["ir.http"]._auth_method_public()
+                if hasattr(request, 'website'):
+                    request.website = request.env['website'].browse(request.website.id)
+            else:
+                request.update_env(user=request.session.uid)
+
+        values = {k: v for k, v in request.params.items() if k in SIGN_UP_REQUEST_PARAMS}
+        try:
+            values['databases'] = http.db_list()
+        except odoo.exceptions.AccessDenied:
+            values['databases'] = None
+
+        if request.httprequest.method == 'POST':
+            try:
+                credential = {key: value for key, value in request.params.items() if key in CREDENTIAL_PARAMS and value}
+                credential.setdefault('type', 'password')
+                if request.env['res.users']._should_captcha_login(credential):
+                    request.env['ir.http']._verify_request_recaptcha_token('login')
+                auth_info = request.session.authenticate(request.env, credential)
+                request.params['login_success'] = True
+                return request.redirect(self._login_redirect(auth_info['uid'], redirect=redirect))
+            except odoo.exceptions.AccessDenied as e:
+                if e.args == odoo.exceptions.AccessDenied().args:
+                    values['error'] = _("Wrong login/password")
+                else:
+                    values['error'] = e.args[0]
+        else:
+            if 'error' in request.params and request.params.get('error') == 'access':
+                values['error'] = _('Only employees can access this database. Please contact the administrator.')
+
+        if 'login' not in values and request.session.get('auth_login'):
+            values['login'] = request.session.get('auth_login')
+
+        if not odoo.tools.config['list_db']:
+            values['disable_database_manager'] = True
+
+        response = request.render('web.login', values)
+        response.headers['Cache-Control'] = 'no-cache'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
+        return response
 
     @http.route(
         '/web/login/employee_verify',
@@ -71,36 +130,3 @@ class Home(web_home.Home):
     def dismiss_company_selection(self):
         request.session.pop('harleys_company_selection_pending', None)
         return True
-
-
-class CustomLoginController(http.Controller):
-    @http.route('/hr_shared_login_binding/login', type='http', auth='none', website=True, sitemap=False)
-    def custom_login(self, redirect=None, **kw):
-        ensure_db()
-        values = {
-            'redirect': redirect,
-            'databases': http.db_list(),
-        }
-        if request.httprequest.method == 'POST':
-            credential = {
-                'login': request.params.get('login'),
-                'password': request.params.get('password'),
-                'type': 'password',
-            }
-            try:
-                auth_info = request.session.authenticate(request.env, credential)
-                user = request.env['res.users'].sudo().browse(auth_info['uid'])
-                if user.is_shared_login:
-                    request.session['pre_uid'] = auth_info['uid']
-                    request.update_env(user=None)
-                    return request.redirect('/web/login/employee_verify')
-                request.session.finalize(request.env)
-                request.session['harleys_company_selection_pending'] = True
-                return request.redirect(_get_login_redirect_url(auth_info['uid'], redirect=redirect))
-            except AccessDenied as e:
-                values['error'] = e.args[0] if e.args else _("Wrong login/password")
-        response = request.render('hr_shared_login_binding.custom_login', values)
-        response.headers['Cache-Control'] = 'no-cache'
-        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
-        return response
