@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Pre-enable employee-attribution logging for the master-data models
+         retrofitted with mail.thread in chatter_mixins.py, so it's on the
+         moment the module installs/upgrades rather than a manual click per
+         environment. noupdate="1" so a later manual opt-out (Settings >
+         Technical > Models) survives future module upgrades instead of
+         being silently re-enabled. -->
+    <data noupdate="1">
+        <record id="base.model_res_company" model="ir.model">
+            <field name="employee_attribution_log_changes">True</field>
+            <field name="employee_attribution_log_deletions">True</field>
+        </record>
+        <record id="stock.model_stock_location" model="ir.model">
+            <field name="employee_attribution_log_changes">True</field>
+            <field name="employee_attribution_log_deletions">True</field>
+        </record>
+        <record id="stock.model_stock_warehouse" model="ir.model">
+            <field name="employee_attribution_log_changes">True</field>
+            <field name="employee_attribution_log_deletions">True</field>
+        </record>
+        <record id="stock.model_stock_picking_type" model="ir.model">
+            <field name="employee_attribution_log_changes">True</field>
+            <field name="employee_attribution_log_deletions">True</field>
+        </record>
+        <record id="stock.model_stock_route" model="ir.model">
+            <field name="employee_attribution_log_changes">True</field>
+            <field name="employee_attribution_log_deletions">True</field>
+        </record>
+        <record id="stock.model_stock_storage_category" model="ir.model">
+            <field name="employee_attribution_log_changes">True</field>
+            <field name="employee_attribution_log_deletions">True</field>
+        </record>
+    </data>
+</odoo>

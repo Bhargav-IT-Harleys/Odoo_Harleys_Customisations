@@ -10,6 +10,7 @@
             </xpath>
             <xpath expr="//field[@name='move_ids']//field[@name='quantity']" position="attributes">
                 <attribute name="string">Trans Qty</attribute>
+                <attribute name="readonly">not is_quantity_done_editable or (parent.picking_type_code in ('internal', 'incoming', 'outgoing') and has_tracking != 'none')</attribute>
             </xpath>
             <xpath expr="//header//button[@name='action_cancel']" position="replace">
                 <button name="action_cancel"

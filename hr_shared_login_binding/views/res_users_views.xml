@@ -16,6 +16,13 @@
                     </group>
                 </page>
             </xpath>
+            <!-- base.view_users_form ships with no chatter at all - every
+                 tracked change (is_shared_login, authorized_employee_ids,
+                 and anything else tracking gets enabled on) was already
+                 being logged, just with nowhere on this form to see it. -->
+            <xpath expr="//sheet" position="after">
+                <chatter/>
+            </xpath>
         </field>
     </record>
 </odoo>

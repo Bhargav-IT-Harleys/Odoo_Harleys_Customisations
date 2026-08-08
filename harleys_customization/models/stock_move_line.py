@@ -47,7 +47,6 @@ class StockMoveLine(models.Model):
                     "you added them, and may now be over-reserved - please "
                     "double check: %s", ', '.join(overbooked),
                 ),
-                'sticky': True,
             })
 
     # expiration_date = fields.Datetime(

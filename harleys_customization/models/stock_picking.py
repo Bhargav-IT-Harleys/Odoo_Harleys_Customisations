@@ -86,9 +86,34 @@ class StockPicking(models.Model):
                 picking.scheduled_date = max(moves_dates, default=picking.scheduled_date or fields.Datetime.now())
 
 
-    def generate_report(self):        
+    def generate_report(self):
         report_action = self.env.ref('stock.action_report_delivery')
         return report_action.with_user(SUPERUSER_ID).report_action(self)
+
+    def _get_indent_request(self):
+        """The indent.request that generated this picking, if any.
+
+        Both legs of an indent's Dispatch/Transit/Receipt pair are created
+        with origin = the indent number (see make_internal_transfer_draft),
+        so this is an exact, unambiguous match - it can never pick up a
+        sale/MO/PO/replenishment picking, whose origin is never an indent
+        number.
+        """
+        self.ensure_one()
+        if self.picking_type_code != 'internal' or not self.origin:
+            return self.env['indent.request']
+        return self.env['indent.request'].sudo().search([('name', '=', self.origin)], limit=1)
+
+    def _get_indent_transit_sibling(self):
+        self.ensure_one()
+        if not self._get_indent_request():
+            return self.env['stock.picking']
+        return self.sudo().search([
+            ('id', '!=', self.id),
+            ('origin', '=', self.origin),
+            ('picking_type_code', '=', 'internal'),
+            ('company_id', '=', self.company_id.id),
+        ], limit=1)
 
 
 class StockMove(models.Model):
@@ -101,6 +126,74 @@ class StockMove(models.Model):
         if self.picking_code == 'incoming':
             vals['quantity'] = 0
         return vals
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        moves = super().create(vals_list)
+        if not self.env.context.get('skip_indent_transit_sync'):
+            moves._sync_indent_transit_add()
+        return moves
+
+    def write(self, vals):
+        result = super().write(vals)
+        if 'product_uom_qty' in vals and not self.env.context.get('skip_indent_transit_sync'):
+            for move in self:
+                paired = move.move_dest_ids or move.move_orig_ids
+                if (
+                    paired
+                    and paired.state not in ('done', 'cancel')
+                    and paired.product_uom_qty != vals['product_uom_qty']
+                ):
+                    paired.with_context(skip_indent_transit_sync=True).write({
+                        'product_uom_qty': vals['product_uom_qty'],
+                    })
+        return result
+
+    def _sync_indent_transit_add(self):
+        """Mirror a line manually added on one leg of an indent's chained
+        transfer (Dispatch <-> Receipt) onto the other leg, so both legs
+        keep representing the same shipment. Only ever touches pickings
+        whose origin matches an indent.request - see _get_indent_request.
+        """
+        for move in self:
+            if move.move_dest_ids or move.move_orig_ids:
+                continue
+            picking = move.picking_id
+            if not picking or picking.state in ('done', 'cancel'):
+                continue
+            indent = picking._get_indent_request()
+            if not indent:
+                continue
+            sibling = picking._get_indent_transit_sibling()
+            if not sibling or sibling.state in ('done', 'cancel'):
+                continue
+            # Capture before adding the mirror: a fresh draft move on the
+            # sibling would otherwise drag its computed state back to
+            # 'draft' (stock.picking._compute_state treats any draft move
+            # as making the whole picking draft), and unlike a line added
+            # through the picking form, this move is created directly via
+            # the ORM so stock.picking.write()'s own
+            # _autoconfirm_picking() never runs for it.
+            sibling_already_confirmed = sibling.state not in ('draft',)
+            if picking.picking_type_id == indent.picking_type_id:
+                is_upstream = True
+            elif picking.picking_type_id == indent.via_picking_type_id:
+                is_upstream = False
+            else:
+                continue
+            mirror = self.env['stock.move'].sudo().with_context(skip_indent_transit_sync=True).create({
+                'product_id': move.product_id.id,
+                'product_uom_qty': move.product_uom_qty,
+                'product_uom': move.product_uom.id,
+                'picking_id': sibling.id,
+                'company_id': sibling.company_id.id,
+            })
+            if is_upstream:
+                move.move_dest_ids = [(4, mirror.id)]
+            else:
+                mirror.move_dest_ids = [(4, move.id)]
+            if sibling_already_confirmed:
+                mirror._action_confirm()
 
 class StockLot(models.Model):
     _inherit = 'stock.lot'

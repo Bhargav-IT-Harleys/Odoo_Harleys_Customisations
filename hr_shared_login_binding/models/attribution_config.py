@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 # Logging here risks recursion or noise in the mail/system internals -
 # never selectable, regardless of admin intent.
 _ATTRIBUTION_EXCLUDED_PREFIXES = (
-    'mail.', 'bus.', 'ir.', 'base_automation', 'iap.', 'studio.', 'res.users',
+    'mail.', 'bus.', 'ir.', 'base_automation', 'iap.', 'studio.',
 )
 
 

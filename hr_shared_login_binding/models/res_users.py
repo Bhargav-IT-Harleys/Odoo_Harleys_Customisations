@@ -2,10 +2,18 @@ from odoo import models, fields
 
 
 class ResUsers(models.Model):
-    _inherit = 'res.users'
+    _name = 'res.users'
+    # res.users has no chatter in core - it inherits res.partner (for
+    # contact/address data) but not mail.thread. Adding mail.thread here is
+    # what makes the tracking=True fields below actually generate messages,
+    # gives this model a working <chatter/>, and (via message_attribution.py,
+    # which extends mail.thread generically) picks up employee-attribution
+    # tagging for free.
+    _inherit = ['res.users', 'mail.thread']
 
     is_shared_login = fields.Boolean(
         string="Shared / Functional Login",
+        tracking=True,
         help="Enable for role-based accounts used by more than one employee "
              "(e.g. Purchase Manager, Accountant). Anyone signing in to this "
              "account must additionally confirm their own employee login "
@@ -16,6 +24,7 @@ class ResUsers(models.Model):
         'res_users_authorized_employee_rel',
         'user_id', 'employee_id',
         string="Authorized Employees",
+        tracking=True,
         help="Employees allowed to bind their identity to this shared "
              "login. Leave empty to allow any employee with a valid "
              "employee login to use this account.")

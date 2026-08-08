@@ -186,7 +186,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
             })
 
             for line_data in internal_transfer_data[data]['lines']:
-                move1 = self.env['stock.move'].create({
+                move1 = self.env['stock.move'].with_context(skip_indent_transit_sync=True).create({
                     'product_id': line_data['product_id'],
                     'product_uom_qty': line_data['product_qty'],
                     'product_uom': line_data['product_uom_id'],
@@ -195,7 +195,7 @@ class IndentRequestLineMakeManufacturingOrder(models.TransientModel):
                     # 'location_dest_id': via_location.id,
                     'company_id': current_company.id,
                 })
-                move2 = self.env['stock.move'].create({
+                move2 = self.env['stock.move'].with_context(skip_indent_transit_sync=True).create({
                     'product_id': line_data['product_id'],
                     'product_uom_qty': line_data['product_qty'],
                     'product_uom': line_data['product_uom_id'],

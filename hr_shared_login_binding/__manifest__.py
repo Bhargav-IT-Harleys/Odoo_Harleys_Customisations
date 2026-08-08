@@ -26,7 +26,9 @@
     'depends': ['base', 'web', 'hr', 'mail', 'stock'],
     'data': [
         'security/ir.model.access.csv',
+        'data/attribution_config_data.xml',
         'views/res_users_views.xml',
+        'views/chatter_views.xml',
         'views/employee_verify_templates.xml',
         'views/ir_model_views.xml',
         'views/attribution_log_views.xml',
