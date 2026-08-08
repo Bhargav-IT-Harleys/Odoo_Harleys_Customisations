@@ -2,14 +2,17 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="harleys_customization.LocationGatedListView" t-inherit="web.ListView">
+        <xpath expr="//div[@t-ref='root']" position="attributes">
+            <attribute name="t-att-class">className + (locationGateMode === 'none' ? ' o_harleys_location_gate_none' : '')</attribute>
+        </xpath>
         <xpath expr="//button[hasclass('o_list_button_add')]" position="attributes">
             <attribute name="t-if">!editedRecord and activeActions.create and props.showButtons and selectedLocation</attribute>
         </xpath>
         <xpath expr="//t[@t-component='props.Renderer']" position="attributes">
-            <attribute name="t-if">model.isReady and selectedLocation</attribute>
+            <attribute name="t-if">model.isReady and locationGateMode !== 'none'</attribute>
         </xpath>
         <xpath expr="//t[@t-component='props.Renderer']" position="before">
-            <div t-if="model.isReady and !selectedLocation"
+            <div t-if="model.isReady and locationGateMode === 'none'"
                  class="o_harleys_location_gate_placeholder w-100 d-flex flex-column align-items-center justify-content-center text-center text-muted py-5">
                 <i class="fa fa-map-marker fa-3x mb-3"/>
                 <h4>Select a location to continue</h4>

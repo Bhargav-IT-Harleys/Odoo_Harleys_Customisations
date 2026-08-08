@@ -2,7 +2,7 @@ import { registry } from "@web/core/registry";
 import { listView } from "@web/views/list/list_view";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { ListController } from "@web/views/list/list_controller";
-import { LocationGateListController } from "./location_gate";
+import { LocationGateListController, LocationGateSearchPanel } from "./location_gate";
 
 export class StockScrapListRenderer extends ListRenderer {
     isInlineEditable(record) {
@@ -18,6 +18,7 @@ export const stockScrapListView = {
     ...listView,
     Renderer: StockScrapListRenderer,
     Controller: StockScrapListController,
+    SearchPanel: LocationGateSearchPanel,
 };
 
 registry.category("views").add("stock_scrap_list", stockScrapListView);

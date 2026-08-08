@@ -3,7 +3,7 @@ import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { ListController } from "@web/views/list/list_controller";
-import { LocationGateListController } from "./location_gate";
+import { LocationGateListController, LocationGateSearchPanel } from "./location_gate";
 
 class PhysicalInventoryListController extends LocationGateListController(ListController) {
   static template = "harleys_customization.LocationGatedListView";
@@ -33,6 +33,10 @@ class PhysicalInventoryListController extends LocationGateListController(ListCon
 
 registry.category("views").add(
   "inventory_report_list",
-  { ...registry.category("views").get("inventory_report_list"), Controller: PhysicalInventoryListController },
+  {
+    ...registry.category("views").get("inventory_report_list"),
+    Controller: PhysicalInventoryListController,
+    SearchPanel: LocationGateSearchPanel,
+  },
   { force: true }
 );

@@ -2,3 +2,10 @@
     min-width: 500px;
     flex: 1 1 auto;
 }
+
+.o_harleys_location_gate_none .o_search_panel_category_value > header.active {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    color: inherit !important;
+    font-weight: normal !important;
+}

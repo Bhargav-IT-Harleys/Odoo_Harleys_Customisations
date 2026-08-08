@@ -1,8 +1,11 @@
+import { useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
-import { useService } from "@web/core/utils/hooks";
+import { useBus, useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { SearchPanel } from "@web/search/search_panel/search_panel";
 
 export const LOCATION_GATE_FIELD = "location_id";
+export const LOCATION_GATE_ALL_CLICKED_EVENT = "harleys_location_gate_all_clicked";
 
 export function getLocationCategory(searchModel) {
     const [category] = searchModel.getSections(
@@ -24,10 +27,23 @@ export const LocationGateListController = (Base) =>
         setup() {
             super.setup();
             this.locationGateDialog = useService("dialog");
+            this.locationGateState = useState({ hasInteracted: false });
+            const markInteracted = () => {
+                this.locationGateState.hasInteracted = true;
+            };
+            useBus(this.env.searchModel, "update", markInteracted);
+            useBus(this.env.searchModel, LOCATION_GATE_ALL_CLICKED_EVENT, markInteracted);
         }
 
         get selectedLocation() {
             return getSelectedLocationValue(this.env.searchModel);
+        }
+
+        get locationGateMode() {
+            if (this.selectedLocation) {
+                return "specific";
+            }
+            return this.locationGateState.hasInteracted ? "all" : "none";
         }
 
         async createRecord(...args) {
@@ -52,3 +68,16 @@ export const LocationGateListController = (Base) =>
             return result;
         }
     };
+
+export class LocationGateSearchPanel extends SearchPanel {
+    async toggleCategory(category, value) {
+        if (
+            category.type === "category" &&
+            category.fieldName === LOCATION_GATE_FIELD &&
+            category.activeValueId === value.id
+        ) {
+            this.env.searchModel.trigger(LOCATION_GATE_ALL_CLICKED_EVENT);
+        }
+        return super.toggleCategory(category, value);
+    }
+}
