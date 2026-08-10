@@ -33,9 +33,6 @@
         'views/stock_move_line_views.xml',
         'wizard/attribution_bulk_import_views.xml',
     ],
-    'test': [
-        'tests/test_inactivity_timeout.py',
-    ],
     'assets': {
         'web.assets_backend': [
             'hr_shared_login_binding/static/src/systray/employee_name_systray.js',

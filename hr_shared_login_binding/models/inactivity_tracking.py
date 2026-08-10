@@ -26,7 +26,12 @@ class IrHttp(models.AbstractModel):
 
         try:
             user = request.env(user=session.uid).user
-        except Exception:
+        except Exception as e:
+            _logger.debug(
+                "_check_session_expiry: skipped for session uid=%s: %s",
+                session.uid,
+                e,
+            )
             return
 
         timeout = cls._get_effective_timeout(user)
@@ -76,6 +81,13 @@ class IrHttp(models.AbstractModel):
         return False
 
     def _set_session_inactivity(self, session, inactivity_period=0, force=False):
+        """Intentionally no-op.
+
+        auth_timeout uses this to record the inactivity period on the session
+        and later trigger its check-identity wizard.  Our module replaces that
+        flow with server-side ``_check_session_expiry``, so we suppress the
+        stock identity-check here.
+        """
         pass
 
     def _session_info_common_hr_inactivity(self, session_info):
