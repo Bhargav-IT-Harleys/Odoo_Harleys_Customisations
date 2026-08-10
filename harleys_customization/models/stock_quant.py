@@ -3,7 +3,6 @@ from odoo import api, fields, models
 
 class StockQuant(models.Model):
     _inherit = 'stock.quant'
-    last_count_date = fields.Date(store=True)
 
     adjustment_status = fields.Selection(
         [('draft', "Draft")], string="Status",
