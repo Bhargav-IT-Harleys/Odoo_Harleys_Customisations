@@ -72,7 +72,8 @@ class MergeMrpProductionWizard(models.TransientModel):
 
         if not productions:
             raise UserError(_("No Manufacturing Orders found for the selected filters."))
-        if len(productions) < 2:
-            raise UserError(_("At least two Manufacturing Orders are required to merge."))
-
-        return productions.action_merge()
+        products_group = productions.grouped('product_id')
+        for product, production in products_group.items():
+            if len(production) > 1:
+                production.action_merge()
+        return True
