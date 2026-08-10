@@ -25,9 +25,8 @@ class ResUsers(models.Model):
         'user_id', 'employee_id',
         string="Authorized Employees",
         tracking=True,
-        help="Employees allowed to bind their identity to this shared "
-             "login. Leave empty to allow any employee with a valid "
-             "employee login to use this account.")
+        help="Employees authorized to use this shared login."
+             "At least one employee must be selected to allow access to this account.")
 
     def _mfa_type(self):
         # Chain rather than override: an account that already has another
