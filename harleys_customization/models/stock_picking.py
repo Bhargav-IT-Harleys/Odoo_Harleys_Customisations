@@ -54,6 +54,11 @@ class StockPicking(models.Model):
                 result = super(StockPicking, transit_pickings).button_validate()
             except AccessError:
                 result = super(StockPicking, transit_pickings.with_user(SUPERUSER_ID)).button_validate()
+
+        # The second leg must reflect what was actually dispatched, including
+        # the selected batches.  Do this only once the first leg is done: the
+        # batches are then physically available in transit for the second leg.
+        self.filtered(lambda picking: picking.state == 'done')._sync_indent_downstream_batches()
         return result
 
     def action_cancel(self):
@@ -114,6 +119,75 @@ class StockPicking(models.Model):
             ('picking_type_code', '=', 'internal'),
             ('company_id', '=', self.company_id.id),
         ], limit=1)
+
+    def _sync_indent_downstream_batches(self):
+        """Copy completed dispatch batch quantities to the indent receipt leg.
+
+        Demand remains the original request.  The receipt move's Trans Qty is
+        computed from its move lines, so synchronising those lines is the only
+        reliable way to show the dispatched quantity on the sibling picking.
+        """
+        MoveLine = self.env['stock.move.line'].sudo()
+        for picking in self:
+            indent = picking._get_indent_request()
+            if not indent or picking.picking_type_id != indent.picking_type_id:
+                continue
+
+            sibling = picking._get_indent_transit_sibling()
+            if not sibling or sibling.state in ('done', 'cancel'):
+                continue
+
+            for source_move in picking.move_ids.filtered(
+                lambda move: move.state == 'done' and move.move_dest_ids
+            ):
+                destination_move = source_move.move_dest_ids.filtered(
+                    lambda move: move.picking_id == sibling and move.state not in ('done', 'cancel')
+                )[:1]
+                if not destination_move:
+                    continue
+
+                # A source lot can be represented by more than one operation
+                # line.  Consolidate it before applying it to the receipt move.
+                quantities_by_lot = {}
+                for line in source_move.move_line_ids.filtered(
+                    lambda line: line.lot_id and not line.product_uom_id.is_zero(line.quantity)
+                ):
+                    quantities_by_lot[line.lot_id.id] = (
+                        quantities_by_lot.get(line.lot_id.id, 0.0) + line.quantity
+                    )
+
+                if not quantities_by_lot:
+                    continue
+
+                # The dispatch is the source of truth.  Reset existing batch
+                # quantities first, including any values entered on the receipt
+                # leg before the dispatch was validated.
+                destination_move.move_line_ids.filtered(
+                    lambda line: line.lot_id
+                ).with_context(skip_indent_transit_batch_sync=True).write({'quantity': 0})
+
+                destination_lines_by_lot = {
+                    line.lot_id.id: line
+                    for line in destination_move.move_line_ids.filtered(lambda line: line.lot_id)
+                }
+                for lot_id, quantity in quantities_by_lot.items():
+                    destination_line = destination_lines_by_lot.get(lot_id)
+                    if destination_line:
+                        destination_line.with_context(skip_indent_transit_batch_sync=True).write({
+                            'quantity': quantity,
+                        })
+                    else:
+                        MoveLine.with_context(skip_indent_transit_batch_sync=True).create({
+                            'move_id': destination_move.id,
+                            'picking_id': sibling.id,
+                            'product_id': destination_move.product_id.id,
+                            'product_uom_id': destination_move.product_uom.id,
+                            'lot_id': lot_id,
+                            'location_id': destination_move.location_id.id,
+                            'location_dest_id': destination_move.location_dest_id.id,
+                            'company_id': sibling.company_id.id,
+                            'quantity': quantity,
+                        })
 
 
 class StockMove(models.Model):
