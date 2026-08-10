@@ -7,9 +7,11 @@
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
-                <field name="platform_id"/>
-                <field name="outlet_code"/>
+                <field name="vendor_account_id"/>
+                <field name="outlet_id"/>
                 <field name="company_id"/>
+                <field name="warehouse_id"/>
+                <field name="active"/>
             </list>
         </field>
     </record>
@@ -22,9 +24,12 @@
                 <sheet>
                     <group>
                         <field name="name"/>
-                        <field name="platform_id"/>
-                        <field name="outlet_code"/>
+                        <field name="vendor_account_id"/>
+                        <field name="outlet_id"/>
                         <field name="company_id"/>
+                        <field name="warehouse_id"/>
+                        <field name="partner_id"/>
+                        <field name="active"/>
                     </group>
                 </sheet>
             </form>

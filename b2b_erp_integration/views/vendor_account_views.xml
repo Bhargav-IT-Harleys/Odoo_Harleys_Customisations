@@ -8,8 +8,9 @@
             <list>
                 <field name="name"/>
                 <field name="platform_id"/>
-                <field name="partner_id"/>
-                <field name="mobile_number"/>
+                <field name="account_id"/>
+                <field name="vendor_partner_id"/>
+                <field name="client_name"/>
                 <field name="active"/>
                 <field name="otp_verified"/>
             </list>
@@ -25,17 +26,18 @@
                     <group>
                         <field name="name"/>
                         <field name="platform_id"/>
-                        <field name="partner_id"/>
+                        <field name="vendor_partner_id"/>
                         <field name="company_id"/>
                     </group>
 
                     <group>
+                        <field name="account_id"/>
+                        <field name="client_name"/>
                         <field name="mobile_number"/>
-                        <field name="outlet_id"/>
-                        <field name="vendor_code"/>
                     </group>
 
                     <group>
+                        <field name="api_access_key" password="True"/>
                         <field name="base_url"/>
                         <field name="auth_url"/>
                         <field name="order_url"/>

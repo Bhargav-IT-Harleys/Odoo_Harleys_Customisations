@@ -3,18 +3,18 @@
     'summary': 'Synchronize Odoo Purchase Orders with Vendor Systems.',
 
     'description': """
-        B2B ERP Integration
+B2B ERP Integration
 
-        Features
-        --------
-        * OTP Authentication
-        * Vendor Configuration
-        * Product Mapping
-        * Purchase Order Synchronization
-        * API Logging
-        * Webhook Integration
-        * GRN Synchronization (Future)
-        """,
+Features
+--------
+* OTP Authentication
+* Vendor Configuration
+* Product Mapping
+* Purchase Order Synchronization
+* API Logging
+* Webhook Integration
+* GRN Synchronization (Future)
+""",
 
     'author': 'Bhargav',
     'category': 'Inventory/Purchase',
@@ -30,6 +30,7 @@
 
     'data': [
         'security/ir.model.access.csv',
+        'security/security.xml',
         'data/ir_config_parameter.xml',
         'data/scheduled_jobs.xml',
         'data/mail_templates.xml',

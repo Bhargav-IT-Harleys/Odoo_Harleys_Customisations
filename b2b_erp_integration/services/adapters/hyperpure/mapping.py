@@ -24,6 +24,7 @@ class HyperpureMappingService:
 
     @staticmethod
     def _get_supplierinfo(line):
-        return line.product_id.seller_ids.filtered(
+        supplierinfos = line.product_id.seller_ids.filtered(
             lambda seller: seller.partner_id == line.order_id.partner_id
-        )[:1]
+        )
+        return supplierinfos[:1] if supplierinfos else False
