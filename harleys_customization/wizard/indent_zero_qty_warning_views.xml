@@ -10,7 +10,7 @@
 
                 <sheet>
 
-                    <div class="alert alert-warning o_margin_bottom">
+                    <div class="alert alert-warning o_margin_bottom" role="alert">
                         <strong>
                             The following products have a Demand Quantity of 0.
                         </strong>

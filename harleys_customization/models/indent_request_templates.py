@@ -115,15 +115,13 @@ class IndentRequestLineTemplates(models.Model):
         ondelete="cascade",
         readonly=True,
         index=True,
-        auto_join=True,
     )
 
-    name = fields.Char(string="Description", tracking=True)
+    name = fields.Char(string="Description")
     product_id = fields.Many2one(
         comodel_name="product.product",
         string="Product",
         required=True,
-        tracking=True,
     )
     categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)
     default_code = fields.Char(string="Internal Reference", related="product_id.default_code")
@@ -133,7 +131,7 @@ class IndentRequestLineTemplates(models.Model):
         string="UoM"
     )
     product_qty = fields.Float(
-        string="Qty", tracking=True, digits="Product Unit of Measure"
+        string="Qty", digits="Product Unit of Measure"
     )
     comments = fields.Char(string="Comments")
 

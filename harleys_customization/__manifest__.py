@@ -2,7 +2,8 @@
     'name': "Harleys Customization",
 
     'summary': "Harleys Customization",
-    "version": "19.0.0.0.0",
+    "version": "19.0.0.0.1",
+    'author': "Harleys",
     'description': """
            Harleys Customization
     """,
@@ -44,7 +45,6 @@
         'wizard/indent_close_confirm_views.xml',
         'wizard/stock_picking_close_confirm_views.xml',
         'wizard/stock_picking_qty_mismatch_confirm_views.xml',
-        'views/account_move_views.xml'
         
     ],
     'assets': {

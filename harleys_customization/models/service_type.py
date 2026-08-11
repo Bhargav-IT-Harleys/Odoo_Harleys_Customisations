@@ -10,6 +10,7 @@ PRIORITY = [
 
 class ServiceType(models.Model):
     _name = 'service.type'
+    _description = 'Service Type'
 
     name = fields.Char(string="Service", required=True)
-    priority = fields.Selection(PRIORITY, string='Priority', default='0', tracking=True, required=True)
+    priority = fields.Selection(PRIORITY, string='Priority', default='0', required=True)

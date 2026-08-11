@@ -224,11 +224,10 @@ class IndentRequestLineWizard(models.TransientModel):
         store=True
     )
 
-    name = fields.Char(string="Description", tracking=True, store=True)
+    name = fields.Char(string="Description", store=True)
     product_id = fields.Many2one(
         comodel_name="product.product",
         string="Product",
-        tracking=True,
         store=True
     )
     qty_available = fields.Float(
@@ -246,7 +245,7 @@ class IndentRequestLineWizard(models.TransientModel):
         store=True
     )
     product_qty = fields.Float(
-        string="Production Qty", tracking=True, digits="Product Unit", store=True, compute="_compute_product_qty")
+        string="Production Qty", digits="Product Unit", store=True, compute="_compute_product_qty")
     demanded_qty = fields.Float(string="Demanded Qty", readonly=True, store=True)
     comments = fields.Char(string="Comments", store=True)
     batch_size = fields.Float(string="Batch Size", related="product_id.batch_size")

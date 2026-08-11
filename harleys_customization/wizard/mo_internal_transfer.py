@@ -17,11 +17,11 @@ class MoInternalTransferWizard(models.TransientModel):
     #     tracking=True)
     location_id = fields.Many2one(
         'stock.location', "Source Location",
-        store=True, precompute=True, readonly=False,
+        store=True, readonly=False,
         check_company=True, required=True)
     location_dest_id = fields.Many2one(
         'stock.location', "Destination Location",
-        store=True, precompute=True, readonly=False,
+        store=True, readonly=False,
         check_company=True, required=True)
 
     # @api.onchange("picking_type_id")
@@ -153,11 +153,10 @@ class MoInternalTransferLineWizard(models.TransientModel):
         store=True
     )
 
-    name = fields.Char(string="Description", tracking=True, store=True)
+    name = fields.Char(string="Description", store=True)
     product_id = fields.Many2one(
         comodel_name="product.product",
         string="Product",
-        tracking=True,
         store=True
     )
     product_uom_id = fields.Many2one(
@@ -168,7 +167,7 @@ class MoInternalTransferLineWizard(models.TransientModel):
         store=True
     )
     demanded_qty = fields.Float(
-        string="Demanded Qty", tracking=True, readonly=True, digits="Product Unit", store=True)
+        string="Demanded Qty", readonly=True, digits="Product Unit", store=True)
 
     mo_number = fields.Char(
         string="MO Number",
