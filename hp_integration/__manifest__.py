@@ -41,10 +41,6 @@
         'wizard/hp_otp_wizard_views.xml',
     ],
 
-    'images': [
-        'static/description/banner.png',
-    ],
-
     'license': 'LGPL-3',
     'installable': True,
     'application': False,
