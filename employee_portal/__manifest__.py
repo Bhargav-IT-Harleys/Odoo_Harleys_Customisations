@@ -3,6 +3,8 @@
     'name': "Employee Portal",
     'version': '19.0.0.0.0',
     'summary': "Adding Hr Portal",
+    'author': 'Harleys',
+    'license': 'LGPL-3',
     'depends': [
         'base',
         'mrp',

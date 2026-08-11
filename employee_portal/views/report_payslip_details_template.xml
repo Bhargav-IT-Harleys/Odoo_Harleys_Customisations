@@ -136,9 +136,24 @@
                                     <th style="width:16%">Deduction</th>
                                     <th class="text-end" style="width:16%">Amount</th>
                                     <th class="text-end" style="width:16%" t-if="o.ytd_computation">YTD</th>
+                                    <!-- Compatibility anchors used by localization
+                                         report inheritances after this template
+                                         replaces the standard payslip body. -->
+                                    <t t-if="False">
+                                        <th id="line_header_amount"/>
+                                        <th id="line_header_quantity"/>
+                                        <th id="line_header_rate"/>
+                                    </t>
                                 </tr>
                             </thead>
                             <tbody>
+                                <t t-if="False">
+                                    <tr>
+                                        <td id="payslip_line_amount"/>
+                                        <td id="payslip_line_quantity"/>
+                                        <td id="payslip_line_rate"/>
+                                    </tr>
+                                </t>
                                 <t t-set="earn_lines" t-value="o.line_ids.filtered(lambda line: line.appears_on_payslip and line.category_id.name in ('Basic', 'Allowance', 'Taxable Salary') and not((line.name == 'Bonus' or line.name == 'Performance Bonus') and line.total == 0))"/>
                                 <t t-set="deduct_lines" t-value="o.line_ids.filtered(lambda line: line.appears_on_payslip and line.category_id.name not in ('Basic', 'Allowance', 'Taxable Salary', 'Net') and not(line.name == 'Deduction Towards Leave Availed' and line.total == 0))"/>
                                 <t t-set="max_lines" t-value="max(len(earn_lines), len(deduct_lines))"/>

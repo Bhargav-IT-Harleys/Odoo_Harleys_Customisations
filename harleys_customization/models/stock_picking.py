@@ -299,13 +299,6 @@ class StockScrap(models.Model):
         compute='_compute_allowed_location_ids',
     )
 
-    location_id = fields.Many2one(
-        'stock.location',
-        string='Source Location',
-        required=True,
-        states={'done': [('readonly', True)]},
-    )
-
     def _get_allowed_location_ids(self):
         user = self.env.user
         allowed_warehouses = getattr(user, 'allowed_warehouse_ids', self.env['stock.warehouse'])
@@ -331,7 +324,6 @@ class StockScrap(models.Model):
         string='Source Location',
         domain=lambda self: [('id', 'in', self._get_allowed_location_ids().ids)],
         required=True,
-        states={'done': [('readonly', True)]},
         check_company=True,
         default=False
     )

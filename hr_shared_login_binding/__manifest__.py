@@ -3,6 +3,7 @@
 
     'summary': "Attribute actions on shared/functional logins to the employee actually performing them",
     "version": "19.0.1.0.0",
+    'author': 'Harleys',
     'description': """
         Shared/functional accounts (e.g. Purchase Manager, Accountant) require an
         employee identity check at login before the session is granted, and every

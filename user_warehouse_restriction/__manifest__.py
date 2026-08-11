@@ -21,6 +21,9 @@
 ###############################################################################
 {
     'name': "User Warehouse Restriction",
+    'version': '19.0.1.0.0',
+    'author': 'Cybrosys Technologies',
+    'license': 'AGPL-3',
     'category': 'Warehouse',
     'summary': """Restrict Warehouses and location for users.""",
     'description': """This module helps you to restrict warehouse and stock 

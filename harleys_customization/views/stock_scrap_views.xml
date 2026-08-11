@@ -40,6 +40,9 @@
             <field name="product_id" position="attributes">
                 <attribute name="readonly">state == 'done' or id</attribute>
             </field>
+            <field name="location_id" position="attributes">
+                <attribute name="readonly">state == 'done'</attribute>
+            </field>
             <field name="product_id" position="after">
                 <field name="tracking" column_invisible="True"/>
                 <field name="lot_id" string="Batch"
