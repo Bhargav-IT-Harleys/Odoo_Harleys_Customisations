@@ -2,7 +2,7 @@
     'name': "Harleys Customization",
 
     'summary': "Harleys Customization",
-    "version": "19.0.0.0.1",
+    "version": "19.0.0.0.2",
     'author': "Harleys",
     'description': """
            Harleys Customization

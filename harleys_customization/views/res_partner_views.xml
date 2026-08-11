@@ -54,7 +54,4 @@
        </field>
     </record>
 
-    <!-- Odoo 19 already restricts the payroll page in its core HR/payroll views.
-         Remove the obsolete custom override, including existing database copies. -->
-    <delete id="hr_employee_form_payroll_page_inherit" model="ir.ui.view"/>
 </odoo>
