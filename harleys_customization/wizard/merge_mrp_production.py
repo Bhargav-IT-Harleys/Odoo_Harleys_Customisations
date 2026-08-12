@@ -10,6 +10,11 @@ class MergeMrpProductionWizard(models.TransientModel):
     _name = "merge.mrp.production.wizard"
     _description = "Merge Manufacturing Order Wizard"
 
+    company_id = fields.Many2one(
+        "res.company",
+        default=lambda self: self.env.company,
+        readonly=True,
+    )
     schedule_date = fields.Date(string="Schedule Date", required=True)
     finished_goods_location_id = fields.Many2one(
         "stock.location",

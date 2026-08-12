@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <form string="Merge Manufacturing Orders">
                 <group>
+                    <field name="company_id" invisible="1"/>
                     <field name="schedule_date"/>
                     <field name="finished_goods_location_id" options="{'no_create': True}"/>
                     <field name="select_all_sections"/>

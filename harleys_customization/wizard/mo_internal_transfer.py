@@ -11,6 +11,8 @@ class MoInternalTransferWizard(models.TransientModel):
     _name = "mo.internal.transfer.wizard"
     _description = "Mo to Internal Transfer Wizard"
 
+    company_id = fields.Many2one(
+        'res.company', default=lambda self: self.env.company, readonly=True)
     # picking_type_id = fields.Many2one(
     #     'stock.picking.type', 'Operation Type',
     #     required=True, index=True,

@@ -8,6 +8,7 @@
             <form string="Internal Transfer to store">
                 <newline />
                 <group>
+                    <field name="company_id" invisible="1"/>
                     <!-- <field name="picking_type_id" options="{'no_create': True}" domain="[('code', 'in', ('internal'))]"/> -->
                     <field name="location_id" options="{'no_create': True}"/>
                     <field name="location_dest_id" options="{'no_create': True}"/>
