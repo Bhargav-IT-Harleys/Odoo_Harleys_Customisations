@@ -64,7 +64,7 @@
                     </h1>
                     <group>
                         <group>
-                            <field name="indent_template" readonly="state in ['locked', 'closed']" options="{'no_create': True}" force_save="1"/>
+                            <field name="indent_template" readonly="state in ['sent','locked', 'closed']" options="{'no_create': True}" force_save="1"/>
                             <field name="indent_date" readonly="1" force_save="1"/>
                             <field name="picking_type_id" readonly="1" invisible="0" force_save="1"/>
                             <field name="via_picking_type_id" readonly="1" invisible="0" force_save="1"/>
@@ -77,11 +77,11 @@
                         </group>
                         <group>
                             <field name="requested_by" readonly="1" force_save="1"/>
-                            <field name="received_date" readonly="state in ['locked', 'closed']" force_save="1"/>
+                            <field name="received_date" readonly="state in ['sent','locked', 'closed']" force_save="1"/>
                             <!-- <field name="employee_id"/> -->
                             <label for="password" string="Enter Password" class="text-danger" readonly="state in ['closed']"/>
                             <div>
-                                <field name="password" password="True" nolabel="1" readonly="state in ['closed']" class="o_field_password" style="width: 60%;"/>
+                                <field name="password" password="True" nolabel="1" readonly="state in ['sent','closed']" class="o_field_password" style="width: 60%;"/>
                                 <button
                                     type="object"
                                     name="action_verify_template"
@@ -94,7 +94,7 @@
                     </group>
                     <notebook>
                         <page string="Products" name="line_ids" invisible="is_valid == False">
-                            <field name="line_ids" widget="searchable_x2many" readonly="state in ['locked', 'closed']">
+                            <field name="line_ids" widget="searchable_x2many" readonly="state in ['sent','locked', 'closed']">
                                 <list string="Indent Request Lines" editable="bottom" limit="200">
                                     <field name="request_id" column_invisible="True"/>
                                     <field name="product_id" options="{'no_create': True}" force_save="1" domain="[('state', '=', 'approved')]"/>
