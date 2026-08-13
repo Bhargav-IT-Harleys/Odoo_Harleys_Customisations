@@ -24,7 +24,7 @@
         actually confirming a selection there.
     """,
     'category': 'Human Resources',
-    'depends': ['base', 'web', 'hr', 'mail', 'stock'],
+    'depends': ['base', 'web', 'hr', 'mail', 'stock', 'auth_timeout'],
     'data': [
         'security/ir.model.access.csv',
         'data/attribution_config_data.xml',
@@ -44,6 +44,10 @@
             'hr_shared_login_binding/static/src/company_selection/company_selection.js',
             'hr_shared_login_binding/static/src/company_selection/company_selection.xml',
             'hr_shared_login_binding/static/src/company_selection/company_selection.scss',
+            'hr_shared_login_binding/static/src/auth_timeout/inactivity_logout.js',
+        ],
+        'web.assets_frontend': [
+            'hr_shared_login_binding/static/src/auth_timeout/inactivity_logout.js',
         ],
     },
     'installable': True,

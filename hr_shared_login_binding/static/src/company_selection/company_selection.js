@@ -12,13 +12,24 @@ function getCompany(id) {
     return user.allowedCompaniesWithAncestors.find((c) => c.id === id);
 }
 
+class LoginCompanySelectionItem extends SwitchCompanyItem {
+    static template = "hr_shared_login_binding.LoginCompanySelectionItem";
+
+    onCheckboxKeydown(event) {
+        if (event.key === " " || event.key === "Enter") {
+            event.preventDefault();
+            this.toggleCompany();
+        }
+    }
+}
+
 export class CompanySelectionOverlay extends Component {
     static template = "hr_shared_login_binding.CompanySelectionOverlay";
-    static components = { SwitchCompanyItem };
+    static components = { SwitchCompanyItem: LoginCompanySelectionItem };
     static props = {};
 
     setup() {
-        this.state = useState({ visible: this._shouldShow() });
+        this.state = useState({ visible: this._shouldShow(), confirming: false });
         const actionService = useService("action");
         this.companySelector = useState(new CompanySelector(actionService, {}));
         this.companySelector.selectedCompaniesIds.splice(0);
@@ -46,7 +57,7 @@ export class CompanySelectionOverlay extends Component {
     }
 
     get canConfirm() {
-        return this.companySelector.selectedCompaniesIds.length > 0;
+        return !this.state.confirming && this.companySelector.selectedCompaniesIds.length > 0;
     }
 
     get message() {
@@ -57,12 +68,19 @@ export class CompanySelectionOverlay extends Component {
         if (!this.canConfirm) {
             return;
         }
-        // apply() ends in a real browser reload (router.pushState with
-        // reload:true) - the ack must be awaited and complete first, or the
-        // reload races it and the server never sees it, showing this again.
-        await rpc("/harleys_company_login_popup/dismiss", {}).catch(() => {});
-        this.state.visible = false;
-        this.companySelector.apply();
+        this.state.confirming = true;
+        try {
+            await rpc("/harleys_company_login_popup/dismiss", {});
+            this.state.visible = false;
+            await user.activateCompanies(this.companySelector.selectedCompaniesIds, {
+                includeChildCompanies: false,
+                reload: false,
+            });
+        } catch (error) {
+            this.state.visible = true;
+            this.state.confirming = false;
+            throw error;
+        }
     }
 
     dismiss() {

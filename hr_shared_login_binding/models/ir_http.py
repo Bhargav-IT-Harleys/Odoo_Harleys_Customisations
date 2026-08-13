@@ -1,9 +1,25 @@
+import time
+
 from odoo import models
 from odoo.http import request
 
 
 class IrHttp(models.AbstractModel):
     _inherit = 'ir.http'
+
+    @classmethod
+    def _must_check_identity(cls):
+        session = request.session
+        user = request.env(user=session.uid).user
+        inactivity_timeout = user._get_lock_timeout_inactivity()
+        inactivity_deadline = session.get('identity-check-next')
+        if (
+            inactivity_timeout
+            and inactivity_deadline is not None
+            and inactivity_deadline <= time.time()
+        ):
+            return {'logout': True}
+        return None
 
     def session_info(self):
         session_info = super().session_info()
