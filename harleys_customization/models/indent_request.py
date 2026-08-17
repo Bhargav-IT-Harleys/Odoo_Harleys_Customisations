@@ -115,6 +115,21 @@ class IndentRequest(models.Model):
         tracking=True,
     )
 
+    categ_ids = fields.Many2many(
+        'product.category', string="Product Categories",
+        compute='_compute_line_aggregates', store=True,
+    )
+    section_ids = fields.Many2many(
+        'production.section', string="Production Sections",
+        compute='_compute_line_aggregates', store=True,
+    )
+
+    @api.depends('line_ids.categ_id', 'line_ids.section_id')
+    def _compute_line_aggregates(self):
+        for request in self:
+            request.categ_ids = request.line_ids.categ_id
+            request.section_ids = request.line_ids.section_id
+
     employee_id = fields.Many2one('hr.employee', string="Requested Employee", copy=False)
     password = fields.Char(string="Enter Password")
     is_valid = fields.Boolean("Is Valid", readonly=True)
@@ -236,14 +251,13 @@ class IndentRequest(models.Model):
         for rec in self:
             if bool(rec.indent_template) != bool(rec.password):
                 raise UserError("Invalid password for the selected outlet.")
-            else:
-                rec.is_valid = True
-
-            if rec.indent_template and rec.password:
-                if rec.password != rec.indent_template.password:
-                    raise UserError("Invalid password for the selected outlet.")
-                else:
-                    rec.is_valid = True
+            if (
+                rec.indent_template
+                and rec.password
+                and rec.password != rec.indent_template.password
+            ):
+                raise UserError("Invalid password for the selected outlet.")
+            rec.is_valid = True
 
     def action_verify_template(self):
         """Verify template and password, then set is_valid flag to show products section"""
@@ -498,7 +512,11 @@ class IndentRequestLine(models.Model):
     )
 
     categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)
-    
+    section_id = fields.Many2one(
+        'production.section', string="Production Section",
+        related='product_id.product_tmpl_id.section', readonly=True,
+    )
+
     qty_available = fields.Float(
         string="On Hand QTY",
         compute='_compute_quantities_custom',

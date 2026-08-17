@@ -76,7 +76,10 @@ class MailThread(models.AbstractModel):
     def create(self, vals_list):
         records = super().create(vals_list)
         try:
-            self._log_attribution_change(records, _("Created"))
+            _log_changes, _log_deletions, parent_field = \
+                self.env['ir.model']._get_employee_attribution_flags(self._name)
+            if parent_field:
+                self._log_attribution_change(records, _("Created"))
         except Exception:
             _logger.exception(
                 "Employee attribution (create) failed on %s; continuing "
@@ -85,15 +88,52 @@ class MailThread(models.AbstractModel):
         return records
 
     def write(self, vals):
+        watched_fields = [
+            f for f in ('active', 'state')
+            if f in self._fields and f in vals and not getattr(self._fields[f], 'tracking', False)
+        ]
+        other_fields = any(
+            self._fields[f].type not in ('one2many', 'many2many')
+            for f in vals
+            if f in self._fields and f not in ('active', 'state')
+        )
+        old_values = (
+            {record.id: {f: record[f] for f in watched_fields} for record in self}
+            if watched_fields else None
+        )
         result = super().write(vals)
-        try:
-            self._log_attribution_change(self, _("Updated"))
-        except Exception:
-            _logger.exception(
-                "Employee attribution (write) failed on %s%s; continuing "
-                "without it.", self._name, self.ids,
-            )
+        if old_values:
+            try:
+                self._log_attribution_status_change(watched_fields, old_values)
+            except Exception:
+                _logger.exception(
+                    "Employee attribution (write) failed on %s%s; continuing "
+                    "without it.", self._name, self.ids,
+                )
+        if other_fields:
+            try:
+                self._register_attribution_update()
+            except Exception:
+                _logger.exception(
+                    "Employee attribution (write) failed on %s%s; continuing "
+                    "without it.", self._name, self.ids,
+                )
         return result
+
+    def _register_attribution_update(self):
+        key = f'hr_shared_login_binding.attribution_update.{self._name}'
+        pending = self.env.cr.precommit.data.get(key)
+        if pending is None:
+            self.env.cr.precommit.data[key] = self
+            self.env.cr.precommit.add(self._flush_attribution_updates)
+        else:
+            self.env.cr.precommit.data[key] = pending | self
+
+    def _flush_attribution_updates(self):
+        key = f'hr_shared_login_binding.attribution_update.{self._name}'
+        records = self.env.cr.precommit.data.pop(key, None)
+        if records:
+            records._log_attribution_change(records, _("Updated"))
 
     def unlink(self):
         try:
@@ -144,6 +184,44 @@ class MailThread(models.AbstractModel):
             else:
                 body = _("%(action)s: %(count)s line(s).", action=action, count=len(recs))
             parent.message_post(body=body)
+
+    def _log_attribution_status_change(self, watched_fields, old_values):
+        log_changes, _log_deletions, parent_field = \
+            self.env['ir.model']._get_employee_attribution_flags(self._name)
+        if not log_changes:
+            return
+        employee = self._get_attribution_employee()
+        if not employee:
+            return
+        state_labels = (
+            dict(self.fields_get(['state'])['state']['selection'])
+            if 'state' in watched_fields else {}
+        )
+        by_target = {}
+        for record in self:
+            old = old_values.get(record.id)
+            if not old:
+                continue
+            lines = []
+            if 'active' in old and old['active'] != record.active:
+                lines.append(_("Unarchived") if record.active else _("Archived"))
+            if 'state' in old and old['state'] != record.state:
+                lines.append(_(
+                    "Status changed from %(old)s to %(new)s",
+                    old=state_labels.get(old['state'], old['state']),
+                    new=state_labels.get(record.state, record.state),
+                ))
+            if not lines:
+                continue
+            if parent_field:
+                target = record[parent_field]
+                if not target:
+                    continue
+            else:
+                target = record
+            by_target.setdefault(target, []).extend(lines)
+        for target, lines in by_target.items():
+            target.message_post(body=" ".join(f"{line}." for line in lines))
 
     def _log_attribution_deletion(self):
         if not self:

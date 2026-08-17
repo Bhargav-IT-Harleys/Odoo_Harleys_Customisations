@@ -1,5 +1,5 @@
 {
-    'name': "HR Shared Login Employee Binding",
+    'name': "Harleys Shared Login & Audit Trail",
 
     'summary': "Attribute actions on shared/functional logins to the employee actually performing them",
     "version": "19.0.1.0.0",
@@ -51,6 +51,6 @@
         ],
     },
     'installable': True,
-    'application': False,
+    'application': True,
     'license': 'LGPL-3',
 }
