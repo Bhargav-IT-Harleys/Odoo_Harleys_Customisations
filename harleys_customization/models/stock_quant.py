@@ -15,6 +15,10 @@ class StockQuant(models.Model):
         for quant in self:
             quant.adjustment_status = 'draft' if quant.inventory_quantity_set else False
 
+    def _location_gate_search_view_id(self):
+        search_view = self.sudo().env.ref('harleys_customization.quant_search_view_location_panel')
+        return (search_view.id, search_view.name)
+
     @api.model
     def action_view_inventory(self):
         action = super().action_view_inventory()
@@ -22,6 +26,27 @@ class StockQuant(models.Model):
         total_warehouses = self.env['stock.warehouse'].search_count([])
         if allowed_warehouses and total_warehouses and len(allowed_warehouses) > total_warehouses / 2:
             action['context'].pop('search_default_my_count', None)
-        search_view = self.sudo().env.ref('harleys_customization.quant_search_view_location_panel')
-        action['search_view_id'] = (search_view.id, search_view.name)
+        action['search_view_id'] = self._location_gate_search_view_id()
+        return action
+
+    @api.model
+    def action_view_quants(self):
+        action = super().action_view_quants()
+        if not self.env.context.get('search_default_internal_loc'):
+            return action
+        allowed_location_ids = self.env['stock.location']._get_user_allowed_location_ids().ids
+        action['domain'] = action['domain'] + [('location_id', 'in', allowed_location_ids)]
+        gated_view_by_base = {
+            self.sudo().env.ref('stock.view_stock_quant_tree').id:
+                self.sudo().env.ref('harleys_customization.view_stock_quant_tree_location_gate').id,
+            self.sudo().env.ref('stock.view_stock_quant_tree_editable').id:
+                self.sudo().env.ref('harleys_customization.view_stock_quant_tree_editable_location_gate').id,
+        }
+        gated_view_id = gated_view_by_base.get(action['view_id'], action['view_id'])
+        action['view_id'] = gated_view_id
+        action['views'] = [
+            (gated_view_id if view_type == 'list' else view_id, view_type)
+            for view_id, view_type in action['views']
+        ]
+        action['search_view_id'] = self._location_gate_search_view_id()
         return action

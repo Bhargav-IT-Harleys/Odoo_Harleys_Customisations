@@ -579,6 +579,7 @@ class IndentRequestLine(models.Model):
     indent_date = fields.Date(
         string='Date',
         related="request_id.indent_date",
+        store=True,
     )
 
     delivery_from = fields.Many2one(
@@ -598,6 +599,7 @@ class IndentRequestLine(models.Model):
     received_date = fields.Date(
         string='Receiving Date',
         related="request_id.received_date",
+        store=True,
     )
 
     requested_by = fields.Many2one(

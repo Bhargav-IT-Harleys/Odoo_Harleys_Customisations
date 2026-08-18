@@ -100,6 +100,13 @@
         <field name="inherit_id" ref="stock.view_picking_internal_search"/>
         <field name="mode">primary</field>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="location_id" string="Source Location"/>
+                <field name="location_dest_id" string="Destination Location"/>
+            </xpath>
+            <xpath expr="//filter[@name='picking_type']" position="after">
+                <filter string="Source Location" name="location_group" context="{'group_by': 'location_id'}"/>
+            </xpath>
             <xpath expr="//search" position="inside">
                 <searchpanel>
                     <field name="location_id" select="one" string="Location" icon="fa-map-marker" depth="10"/>

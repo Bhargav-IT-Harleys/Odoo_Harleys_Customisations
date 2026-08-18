@@ -8,6 +8,7 @@ import { listView } from "@web/views/list/list_view";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { ListController } from "@web/views/list/list_controller";
 import { StockReportListView } from "@stock/views/list/stock_report_list_view";
+import { InventoryReportListView } from "@stock/views/list/inventory_report_list_view";
 
 export const LOCATION_GATE_FIELD = "location_id";
 export const LOCATION_GATE_ALL_CLICKED_EVENT = "harleys_location_gate_all_clicked";
@@ -141,16 +142,6 @@ class PhysicalInventoryListController extends withCreateConfirmation(
     static template = LOCATION_GATE_TEMPLATE;
 }
 
-registry.category("views").add(
-    "inventory_report_list",
-    {
-        ...registry.category("views").get("inventory_report_list"),
-        Controller: PhysicalInventoryListController,
-        SearchPanel: LocationGateSearchPanel,
-    },
-    { force: true }
-);
-
 class SharedLocationGatedListController extends LocationGateListController(ListController) {
     static template = LOCATION_GATE_TEMPLATE;
 }
@@ -159,6 +150,19 @@ for (const jsClass of ["stock_picking_internal_list", "stock_move_line_history_l
     registry.category("views").add(jsClass, {
         ...listView,
         Controller: SharedLocationGatedListController,
+        SearchPanel: LocationGateSearchPanel,
+    });
+}
+
+const INVENTORY_REPORT_CONTROLLERS = {
+    physical_inventory_list: PhysicalInventoryListController,
+    stock_quant_locations_list: SharedLocationGatedListController,
+};
+
+for (const [jsClass, Controller] of Object.entries(INVENTORY_REPORT_CONTROLLERS)) {
+    registry.category("views").add(jsClass, {
+        ...InventoryReportListView,
+        Controller,
         SearchPanel: LocationGateSearchPanel,
     });
 }
