@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-inherit="stock.StockReportSearchPanel.Regular" t-inherit-mode="extension">
+        <xpath expr="//i[contains(@t-attf-class, 'fa-filter')]" position="attributes">
+            <attribute name="t-attf-class">fa fa-map-marker o_search_panel_section_icon text-warning me-2</attribute>
+        </xpath>
+    </t>
+
+</templates>

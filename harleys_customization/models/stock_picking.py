@@ -11,7 +11,15 @@ class StockPicking(models.Model):
     #         if not line.expiration_date:
     #             line._compute_expiration_date()
     #     super().button_validate()
-        
+
+    @api.model
+    def get_action_picking_tree_internal(self):
+        action = super().get_action_picking_tree_internal()
+        allowed_location_ids = self.env['stock.location']._get_user_allowed_location_ids().ids
+        domain = safe_eval(action.get('domain') or '[]')
+        action['domain'] = domain + [('location_id', 'in', allowed_location_ids)]
+        return action
+
     def _get_qty_mismatch_moves(self):
         self.ensure_one()
         if self.picking_type_code not in ('internal', 'incoming'):
@@ -293,36 +301,10 @@ class StockScrap(models.Model):
     scrap_reason_tag_ids = fields.Many2many(
         string="Inv Adj Reason", required=True
     )
-    allowed_location_ids = fields.Many2many(
-        'stock.location',
-        string='Allowed Locations',
-        compute='_compute_allowed_location_ids',
-    )
-
-    def _get_allowed_location_ids(self):
-        user = self.env.user
-        allowed_warehouses = getattr(user, 'allowed_warehouse_ids', self.env['stock.warehouse'])
-
-        if allowed_warehouses:
-            warehouse_view_loc_ids = allowed_warehouses.mapped('view_location_id').ids
-            return self.env['stock.location'].search([
-                ('location_id', 'child_of', warehouse_view_loc_ids),
-                ('usage', '=', 'internal'),
-                ('active', '=', True),
-            ])
-        else:
-            company_id = self.env.company.id
-            return self.env['stock.location'].search([
-                ('usage', '=', 'internal'),
-                ('active', '=', True),
-                '|',
-                ('company_id', '=', False),
-                ('company_id', '=', company_id),
-            ])
     location_id = fields.Many2one(
         'stock.location',
         string='Source Location',
-        domain=lambda self: [('id', 'in', self._get_allowed_location_ids().ids)],
+        domain=lambda self: [('id', 'in', self.env['stock.location']._get_user_allowed_location_ids().ids)],
         required=True,
         check_company=True,
         default=False
@@ -331,7 +313,7 @@ class StockScrap(models.Model):
     @api.model
     def action_view_inv_adjustments(self):
         action = self.env["ir.actions.act_window"]._for_xml_id("stock.action_stock_scrap")
-        allowed_location_ids = self._get_allowed_location_ids().ids
+        allowed_location_ids = self.env['stock.location']._get_user_allowed_location_ids().ids
 
         domain = safe_eval(action.get("domain") or "[]")
         context = safe_eval(action.get("context") or "{}")

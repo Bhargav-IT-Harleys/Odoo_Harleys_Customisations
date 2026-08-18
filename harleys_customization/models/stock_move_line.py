@@ -1,12 +1,20 @@
-import datetime
 from collections import defaultdict
 
-from odoo import api, fields, models, _
+from odoo import api, models, _
 from odoo.http import request
-from odoo.tools.sql import column_exists, create_column
+from odoo.tools.safe_eval import safe_eval
+
 
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
+
+    @api.model
+    def action_view_moves_history(self):
+        action = self.env["ir.actions.act_window"]._for_xml_id("stock.stock_move_line_action")
+        allowed_location_ids = self.env['stock.location']._get_user_allowed_location_ids().ids
+        domain = safe_eval(action.get("domain") or "[]")
+        action["domain"] = domain + [("location_id", "in", allowed_location_ids)]
+        return action
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -48,37 +56,3 @@ class StockMoveLine(models.Model):
                     "double check: %s", ', '.join(overbooked),
                 ),
             })
-
-    # expiration_date = fields.Datetime(
-    #     string='Expiration Date', store=True,
-    #     compute='_compute_expiration_date_custom',
-    #     help='This is the date on which the goods with this Serial Number may'
-    #     ' become dangerous and must not be consumed.')
-
-    # @api.depends('product_id', 'lot_id.expiration_date', 'picking_id.scheduled_date', 'quant_id')
-    # def _compute_expiration_date_custom(self):
-    #     for move_line in self:
-    #         if move_line.picking_type_use_existing_lots:                
-    #             if lot_id := move_line.quant_id.lot_id or move_line.lot_id:
-    #                 move_line.expiration_date = lot_id.expiration_date
-    #             elif move_line.picking_type_use_create_lots:
-    #                 if move_line.product_id.use_expiration_date:
-    #                     if not move_line.expiration_date:
-    #                         from_date = move_line.picking_id.scheduled_date or fields.Datetime.today()
-    #                         move_line.expiration_date = from_date + datetime.timedelta(days=move_line.product_id.expiration_time)
-    #                 else:
-    #                     move_line.expiration_date = False
-
-    # @api.depends('product_id', 'lot_id.expiration_date', 'picking_id.scheduled_date')
-    # def _compute_expiration_date(self):
-    #     for move_line in self:
-    #         # if move_line.picking_type_use_existing_lots:                
-    #         if move_line.lot_id.expiration_date:
-    #             move_line.expiration_date = move_line.lot_id.expiration_date
-    #         elif move_line.picking_type_use_create_lots:
-    #             if move_line.product_id.use_expiration_date:
-    #                 if not move_line.expiration_date:
-    #                     from_date = move_line.picking_id.scheduled_date or fields.Datetime.today()
-    #                     move_line.expiration_date = from_date + datetime.timedelta(days=move_line.product_id.expiration_time)
-    #             else:
-    #                 move_line.expiration_date = False

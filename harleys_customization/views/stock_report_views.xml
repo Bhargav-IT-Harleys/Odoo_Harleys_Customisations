@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="product_product_stock_tree_location_gate" model="ir.ui.view">
+        <field name="name">product.product.stock.list.location.gate</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="stock.product_product_stock_tree"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="js_class">stock_report_list_view_gated</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock.action_product_stock_view" model="ir.actions.act_window">
+        <field name="view_id" ref="product_product_stock_tree_location_gate"/>
+    </record>
+
+</odoo>

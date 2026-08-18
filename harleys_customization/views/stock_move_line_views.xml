@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_move_line_tree_history_location_gate" model="ir.ui.view">
+        <field name="name">stock.move.line.list.history.location.gate</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.view_move_line_tree"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="js_class">stock_move_line_history_list</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock_move_line_search_location_panel" model="ir.ui.view">
+        <field name="name">stock.move.line.search.location.panel</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.stock_move_line_view_search"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <searchpanel>
+                    <field name="location_id" select="one" string="Location" icon="fa-map-marker" depth="10"/>
+                </searchpanel>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock.stock_move_line_action" model="ir.actions.act_window">
+        <field name="view_id" ref="view_move_line_tree_history_location_gate"/>
+        <field name="search_view_id" ref="stock_move_line_search_location_panel"/>
+    </record>
+
+    <record id="action_view_moves_history" model="ir.actions.server">
+        <field name="name">Moves History</field>
+        <field name="model_id" ref="stock.model_stock_move_line"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_view_moves_history()</field>
+    </record>
+
+    <record id="stock.stock_move_line_menu" model="ir.ui.menu">
+        <field name="action" ref="action_view_moves_history"/>
+    </record>
+
+</odoo>

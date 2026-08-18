@@ -1,11 +1,17 @@
 import { useState } from "@odoo/owl";
+import { registry } from "@web/core/registry";
 import { _t } from "@web/core/l10n/translation";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { SearchPanel } from "@web/search/search_panel/search_panel";
+import { listView } from "@web/views/list/list_view";
+import { ListRenderer } from "@web/views/list/list_renderer";
+import { ListController } from "@web/views/list/list_controller";
+import { StockReportListView } from "@stock/views/list/stock_report_list_view";
 
 export const LOCATION_GATE_FIELD = "location_id";
 export const LOCATION_GATE_ALL_CLICKED_EVENT = "harleys_location_gate_all_clicked";
+const LOCATION_GATE_TEMPLATE = "harleys_customization.LocationGatedListView";
 
 export function getLocationCategory(searchModel) {
     const [category] = searchModel.getSections(
@@ -51,9 +57,7 @@ export const LocationGateListController = (Base) =>
             if (!location) {
                 this.locationGateDialog.add(ConfirmationDialog, {
                     title: _t("Select a Location"),
-                    body: _t(
-                        "Pick a location from the panel on the left before creating a new line."
-                    ),
+                    body: _t("Pick a location from the panel on the left before creating a new line."),
                     confirmLabel: _t("Ok"),
                 });
                 return;
@@ -81,3 +85,115 @@ export class LocationGateSearchPanel extends SearchPanel {
         return super.toggleCategory(category, value);
     }
 }
+
+const withCreateConfirmation = (title, body) => (Base) =>
+    class extends Base {
+        setup() {
+            super.setup();
+            this.createConfirmDialog = useService("dialog");
+        }
+
+        createRecord(...args) {
+            if (!this.selectedLocation) {
+                return super.createRecord(...args);
+            }
+            return new Promise((resolve) => {
+                this.createConfirmDialog.add(ConfirmationDialog, {
+                    title,
+                    body,
+                    confirm: () => resolve(super.createRecord(...args)),
+                    cancel: () => resolve(),
+                });
+            });
+        }
+    };
+
+class StockScrapListRenderer extends ListRenderer {
+    isInlineEditable(record) {
+        return super.isInlineEditable(record) && record.data.state !== "done";
+    }
+}
+
+class StockScrapListController extends withCreateConfirmation(
+    _t("New Inv Adjustment"),
+    _t(
+        "This creates a new inventory adjustment line. Make sure the location " +
+            "and product are correct before applying. Continue?"
+    )
+)(LocationGateListController(ListController)) {
+    static template = LOCATION_GATE_TEMPLATE;
+}
+
+registry.category("views").add("stock_scrap_list", {
+    ...listView,
+    Renderer: StockScrapListRenderer,
+    Controller: StockScrapListController,
+    SearchPanel: LocationGateSearchPanel,
+});
+
+class PhysicalInventoryListController extends withCreateConfirmation(
+    _t("New Physical Inventory Count"),
+    _t(
+        "This starts a new inventory count line. Make sure the location " +
+            "and product are correct before applying. Continue?"
+    )
+)(LocationGateListController(ListController)) {
+    static template = LOCATION_GATE_TEMPLATE;
+}
+
+registry.category("views").add(
+    "inventory_report_list",
+    {
+        ...registry.category("views").get("inventory_report_list"),
+        Controller: PhysicalInventoryListController,
+        SearchPanel: LocationGateSearchPanel,
+    },
+    { force: true }
+);
+
+class SharedLocationGatedListController extends LocationGateListController(ListController) {
+    static template = LOCATION_GATE_TEMPLATE;
+}
+
+for (const jsClass of ["stock_picking_internal_list", "stock_move_line_history_list"]) {
+    registry.category("views").add(jsClass, {
+        ...listView,
+        Controller: SharedLocationGatedListController,
+        SearchPanel: LocationGateSearchPanel,
+    });
+}
+
+class WarehouseGatedListController extends ListController {
+    static template = LOCATION_GATE_TEMPLATE;
+
+    setup() {
+        super.setup();
+        this.locationGateState = useState({ hasInteracted: false });
+        useBus(this.env.searchModel, "update", () => {
+            this.locationGateState.hasInteracted = true;
+        });
+    }
+
+    get selectedLocation() {
+        const warehouseId = this.env.searchModel.globalContext?.warehouse_id;
+        if (!warehouseId) {
+            return null;
+        }
+        const warehouse = (this.env.searchModel.getWarehouses?.() || []).find(
+            (w) => w.id === warehouseId
+        );
+        return warehouse ? { id: warehouse.id, display_name: warehouse.name } : null;
+    }
+
+    get locationGateMode() {
+        if (this.selectedLocation) {
+            return "specific";
+        }
+        return this.locationGateState.hasInteracted ? "all" : "none";
+    }
+}
+
+registry.category("views").add("stock_report_list_view_gated", {
+    ...StockReportListView,
+    Controller: WarehouseGatedListController,
+});

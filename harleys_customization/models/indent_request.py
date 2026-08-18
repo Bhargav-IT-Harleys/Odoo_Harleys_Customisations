@@ -123,12 +123,17 @@ class IndentRequest(models.Model):
         'production.section', string="Production Sections",
         compute='_compute_line_aggregates', store=True,
     )
+    product_ids = fields.Many2many(
+        'product.product', string="Products",
+        compute='_compute_line_aggregates', store=True,
+    )
 
-    @api.depends('line_ids.categ_id', 'line_ids.section_id')
+    @api.depends('line_ids.categ_id', 'line_ids.section_id', 'line_ids.product_id')
     def _compute_line_aggregates(self):
         for request in self:
             request.categ_ids = request.line_ids.categ_id
             request.section_ids = request.line_ids.section_id
+            request.product_ids = request.line_ids.product_id
 
     employee_id = fields.Many2one('hr.employee', string="Requested Employee", copy=False)
     password = fields.Char(string="Enter Password")
