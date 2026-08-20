@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_indent_partial_mo_confirm_form" model="ir.ui.view">
+        <field name="name">indent.partial.mo.confirm.form</field>
+        <field name="model">indent.partial.mo.confirm</field>
+        <field name="arch" type="xml">
+
+            <form string="Partial Indent Selection">
+
+                <sheet>
+
+                    <div class="alert alert-warning o_margin_bottom" role="alert">
+                        <p style="font-size: 1rem;">
+                            You have not selected all the items in an indent.
+                        </p>
+                        <strong style="font-size: 1.6rem; margin-top: 6px; margin-bottom: 0;">
+                            This creates a
+                            <span style="font-weight: 400; background-color: #ba1010; padding: 0 4px; border-radius: 3px;">PARTIAL MO</span>
+                            with
+                            <span style="font-weight: 400; background-color: #ba1010; padding: 0 4px; border-radius: 3px;">MULTIPLE INTERNAL TRANSFERS</span>
+                            for this indent. Proceed to continue or cancel.
+                        </strong>
+                    </div>
+
+                    <field name="line_ids" nolabel="1">
+                        <list create="false" edit="false" delete="false">
+                            <field name="indent_number" string="Indent"/>
+                            <field name="product_id" string="Product"/>
+                            <field name="product_qty" string="Demand"/>
+                            <field name="categ_id" string="Category"/>
+                        </list>
+                    </field>
+
+                </sheet>
+
+                <footer>
+
+                    <button
+                        name="action_confirm"
+                        type="object"
+                        string="Continue"
+                        class="btn-primary"
+                    />
+
+                    <button
+                        name="action_cancel"
+                        type="object"
+                        string="Cancel"
+                        class="btn-secondary"
+                    />
+
+                </footer>
+
+            </form>
+
+        </field>
+    </record>
+
+</odoo>

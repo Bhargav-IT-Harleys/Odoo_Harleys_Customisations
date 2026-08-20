@@ -17,7 +17,11 @@ class StockPicking(models.Model):
         action = super().get_action_picking_tree_internal()
         allowed_location_ids = self.env['stock.location']._get_user_allowed_location_ids().ids
         domain = safe_eval(action.get('domain') or '[]')
-        action['domain'] = domain + [('location_id', 'in', allowed_location_ids)]
+        action['domain'] = domain + [
+            '|',
+            ('location_id', 'in', allowed_location_ids),
+            ('location_dest_id', 'in', allowed_location_ids),
+        ]
         return action
 
     def _get_qty_mismatch_moves(self):

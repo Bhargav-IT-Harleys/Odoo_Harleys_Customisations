@@ -696,6 +696,21 @@ class IndentRequestLine(models.Model):
         if len(delivery_from_values) > 1:
             raise UserError(_('Selected lines "Delivery From" location is not same'))
 
+        if not self.env.context.get('skip_partial_mo_confirm'):
+            eligible_lines = self.env['indent.request.line'].search([
+                ('request_id', 'in', selected_lines.request_id.ids),
+                ('state', 'not in', ('draft', 'locked')),
+            ])
+            if eligible_lines - selected_lines:
+                return {
+                    'type': 'ir.actions.act_window',
+                    'name': 'Confirm Partial Selection',
+                    'res_model': 'indent.partial.mo.confirm',
+                    'view_mode': 'form',
+                    'target': 'new',
+                    'context': {'default_line_ids': [(6, 0, selected_lines.ids)]},
+                }
+
         return {
             'type': 'ir.actions.act_window',
             'name': 'Create Draft MO',

@@ -13,7 +13,11 @@ class StockMoveLine(models.Model):
         action = self.env["ir.actions.act_window"]._for_xml_id("stock.stock_move_line_action")
         allowed_location_ids = self.env['stock.location']._get_user_allowed_location_ids().ids
         domain = safe_eval(action.get("domain") or "[]")
-        action["domain"] = domain + [("location_id", "in", allowed_location_ids)]
+        action["domain"] = domain + [
+            '|',
+            ("location_id", "in", allowed_location_ids),
+            ("location_dest_id", "in", allowed_location_ids),
+        ]
         return action
 
     @api.model_create_multi

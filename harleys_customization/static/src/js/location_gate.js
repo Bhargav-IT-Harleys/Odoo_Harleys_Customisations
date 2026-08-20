@@ -4,6 +4,7 @@ import { _t } from "@web/core/l10n/translation";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { SearchPanel } from "@web/search/search_panel/search_panel";
+import { SearchModel } from "@web/search/search_model";
 import { listView } from "@web/views/list/list_view";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { ListController } from "@web/views/list/list_controller";
@@ -146,13 +147,43 @@ class SharedLocationGatedListController extends LocationGateListController(ListC
     static template = LOCATION_GATE_TEMPLATE;
 }
 
-for (const jsClass of ["stock_picking_internal_list", "stock_move_line_history_list"]) {
-    registry.category("views").add(jsClass, {
-        ...listView,
-        Controller: SharedLocationGatedListController,
-        SearchPanel: LocationGateSearchPanel,
-    });
+const SHARED_LOCATION_GATED_LIST_VIEW = {
+    ...listView,
+    Controller: SharedLocationGatedListController,
+    SearchPanel: LocationGateSearchPanel,
+};
+
+registry.category("views").add("stock_picking_internal_list", SHARED_LOCATION_GATED_LIST_VIEW);
+
+// Moves History has no single "my location" - a move either leaves from or arrives at a
+// location, so picking a location in the sidebar should match either side, not just the source.
+class MovesHistorySearchModel extends SearchModel {
+    _getCategoryDomain(excludedCategoryId) {
+        const domain = [];
+        for (const category of this.categories) {
+            if (category.id === excludedCategoryId || !category.activeValueId) {
+                continue;
+            }
+            if (category.fieldName === LOCATION_GATE_FIELD) {
+                domain.push(
+                    "|",
+                    [LOCATION_GATE_FIELD, "child_of", category.activeValueId],
+                    ["location_dest_id", "child_of", category.activeValueId]
+                );
+                continue;
+            }
+            const field = this.searchViewFields[category.fieldName];
+            const operator = field.type === "many2one" && category.parentField ? "child_of" : "=";
+            domain.push([category.fieldName, operator, category.activeValueId]);
+        }
+        return domain;
+    }
 }
+
+registry.category("views").add("stock_move_line_history_list", {
+    ...SHARED_LOCATION_GATED_LIST_VIEW,
+    SearchModel: MovesHistorySearchModel,
+});
 
 const INVENTORY_REPORT_CONTROLLERS = {
     physical_inventory_list: PhysicalInventoryListController,

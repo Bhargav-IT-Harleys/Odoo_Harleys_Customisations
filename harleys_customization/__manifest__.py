@@ -47,7 +47,8 @@
         'wizard/indent_close_confirm_views.xml',
         'wizard/stock_picking_close_confirm_views.xml',
         'wizard/stock_picking_qty_mismatch_confirm_views.xml',
-        
+        'wizard/indent_partial_mo_confirm_views.xml',
+
     ],
     'assets': {
         'web.assets_backend': [
