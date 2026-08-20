@@ -145,16 +145,6 @@ class IndentRequest(models.Model):
         compute="_compute_internal_transfer_count"
     )
 
-    is_inventory_manager = fields.Boolean(
-        string='Is Inventory Manager',
-        compute='_compute_is_inventory_manager',
-        store=False
-    )
-
-    def _compute_is_inventory_manager(self):
-        is_manager = self.env.user.has_group('stock.group_stock_manager')
-        for record in self:
-            record.is_inventory_manager = is_manager
 
     def _can_be_deleted(self):
         self.ensure_one()
