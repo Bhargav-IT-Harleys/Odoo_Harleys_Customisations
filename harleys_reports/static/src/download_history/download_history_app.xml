@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="harleys_reports.DownloadHistoryApp">
+        <div class="o_dh_app d-flex flex-column h-100">
+            <header class="o_dh_header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="o_dh_brand_badge">H</div>
+                    <div>
+                        <div class="o_dh_brand_title">Download History</div>
+                        <div class="small o_dh_muted">
+                            Preview — <t t-esc="user.name"/>'s past report downloads, redownloadable within their retention window
+                        </div>
+                    </div>
+                </div>
+                <input type="search" class="form-control form-control-sm o_dh_search" placeholder="Search report or filters..."
+                       t-model="state.search"/>
+            </header>
+
+            <div class="o_dh_notice small">
+                <i class="fa fa-info-circle me-1"/>
+                Preview build with sample data — nothing here is fetched from the database yet.
+            </div>
+
+            <div class="o_dh_body flex-grow-1 overflow-auto">
+                <table class="table table-sm o_dh_table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Report</th>
+                            <th>Format</th>
+                            <th>Filters</th>
+                            <th>Requested</th>
+                            <th>Rows</th>
+                            <th>Size</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="entries" t-as="entry" t-key="entry.id">
+                            <td class="fw-semibold" t-esc="entry.report"/>
+                            <td>
+                                <i class="fa me-1" t-att-class="formatMeta(entry.format).icon"/>
+                                <t t-esc="formatMeta(entry.format).label"/>
+                            </td>
+                            <td class="o_dh_muted" t-esc="entry.filters"/>
+                            <td t-esc="entry.requested_at"/>
+                            <td t-esc="entry.rows"/>
+                            <td t-esc="entry.size"/>
+                            <td>
+                                <span class="badge" t-att-class="statusBadge(entry.status)">
+                                    <t t-esc="entry.status === 'ready' ? 'Ready' : 'Expired'"/>
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-light" type="button" t-on-click="() => this.redownload(entry)"
+                                        t-att-disabled="entry.status === 'expired'" t-att-title="entry.status === 'expired' ? 'This copy has expired' : 'Redownload'">
+                                    <i class="fa fa-download me-1"/> Redownload
+                                </button>
+                            </td>
+                        </tr>
+                        <tr t-if="!entries.length">
+                            <td colspan="8" class="text-center o_dh_muted py-4">No history matches your search.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </t>
+</templates>

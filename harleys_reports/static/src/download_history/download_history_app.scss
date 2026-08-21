@@ -1,0 +1,71 @@
+.o_dh_app {
+    --dh-bg: #101418;
+    --dh-panel: #1b232d;
+    --dh-border: rgba(255, 255, 255, 0.08);
+    --dh-muted: #a6b0bf;
+    --dh-text: #ebf0f6;
+
+    background: linear-gradient(180deg, #2f2a2d 0%, #201d21 100%);
+    color: var(--dh-text);
+    min-height: 100%;
+
+    .o_dh_header {
+        background: rgba(15, 19, 25, 0.95);
+        border-bottom: 1px solid var(--dh-border);
+        padding: 0.8rem 1.2rem;
+    }
+
+    .o_dh_brand_badge {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 0.45rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f39c7e, #c27852);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .o_dh_brand_title {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .o_dh_muted {
+        color: var(--dh-muted);
+    }
+
+    .o_dh_search {
+        max-width: 18rem;
+    }
+
+    .o_dh_notice {
+        background: rgba(158, 196, 255, 0.08);
+        border-bottom: 1px solid var(--dh-border);
+        color: var(--dh-muted);
+        padding: 0.5rem 1.2rem;
+    }
+
+    .o_dh_body {
+        background: rgba(17, 22, 27, 0.9);
+        padding: 0 1.2rem;
+    }
+
+    .o_dh_table {
+        color: var(--dh-text);
+
+        thead th {
+            color: var(--dh-muted);
+            border-bottom: 1px solid var(--dh-border);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        td {
+            border-color: var(--dh-border);
+            vertical-align: middle;
+        }
+    }
+}

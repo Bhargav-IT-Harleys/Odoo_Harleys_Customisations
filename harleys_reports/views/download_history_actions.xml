@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_harleys_download_history" model="ir.actions.client">
+        <field name="name">Download History</field>
+        <field name="tag">harleys_reports.download_history_app</field>
+        <field name="path">harleys-download-history</field>
+    </record>
+</odoo>

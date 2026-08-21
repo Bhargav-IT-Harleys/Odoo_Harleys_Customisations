@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_harleys_reports_root"
+              name="Harleys Reports"
+              groups="harleys_reports.group_harleys_reports"
+              web_icon="harleys_reports,static/description/icon.svg"
+              sequence="35"/>
+
+    <menuitem id="menu_harleys_reports_extraction"
+              name="Report Extraction"
+              parent="menu_harleys_reports_root"
+              action="action_harleys_reports"
+              sequence="10"/>
+
+    <menuitem id="menu_harleys_reports_cost_comparison"
+              name="Cost Comparison"
+              parent="menu_harleys_reports_root"
+              action="action_harleys_cost_comparison"
+              sequence="20"/>
+
+    <menuitem id="menu_harleys_download_history"
+              name="Download History"
+              parent="menu_harleys_reports_root"
+              action="action_harleys_download_history"
+              sequence="30"/>
+</odoo>

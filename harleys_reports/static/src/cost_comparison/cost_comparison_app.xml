@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="harleys_reports.CostComparisonApp">
+        <div class="o_cc_app d-flex flex-column h-100">
+            <header class="o_cc_header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="o_cc_brand_badge">H</div>
+                    <div class="o_cc_brand_title">Cost Comparison</div>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-light btn-sm" type="button" t-on-click="newComparison">
+                        <i class="fa fa-plus me-1"/> New Comparison
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" type="button" t-on-click="goHistory"
+                            t-att-disabled="!state.history.length">
+                        <i class="fa fa-history me-1"/> Recent Comparisons
+                    </button>
+                </div>
+            </header>
+
+            <main class="o_cc_content flex-grow-1 overflow-auto p-3 p-lg-4">
+                <div class="o_cc_state text-center py-5" t-if="state.loading">
+                    <i class="fa fa-circle-o-notch fa-spin fa-2x mb-3"/>
+                    <div>Loading warehouses...</div>
+                </div>
+                <div class="alert alert-danger" t-if="state.error" t-esc="state.error"/>
+
+                <t t-if="!state.loading">
+                    <t t-if="state.screen === 'setup'" t-call="harleys_reports.CostComparisonSetup"/>
+                    <t t-if="state.screen === 'results'" t-call="harleys_reports.CostComparisonResults"/>
+                    <t t-if="state.screen === 'history'" t-call="harleys_reports.CostComparisonHistory"/>
+                </t>
+            </main>
+        </div>
+    </t>
+
+    <t t-name="harleys_reports.CostComparisonSetup">
+        <div class="d-flex flex-column flex-lg-row gap-3 h-100">
+            <aside class="o_cc_panel o_cc_wh_sidebar">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="o_cc_section_title">Warehouses</div>
+                    <button class="btn btn-link btn-sm text-decoration-none p-0" type="button" t-on-click="toggleAllWarehouses">
+                        <t t-esc="filteredWarehouses.length &amp;&amp; filteredWarehouses.every((wh) => state.setup.selectedWarehouses.includes(wh.code)) ? 'Clear visible' : 'Select visible'"/>
+                    </button>
+                </div>
+                <input type="search" class="form-control form-control-sm mb-2" placeholder="Search warehouse or region"
+                       t-att-value="state.setup.warehouseSearch" t-on-input="setWarehouseSearch"/>
+                <div class="small text-muted mb-2"><t t-esc="state.setup.selectedWarehouses.length"/> of <t t-esc="state.warehouses.length"/> selected</div>
+                <div class="o_cc_wh_list">
+                    <div class="o_cc_wh_group" t-foreach="groupedWarehouses" t-as="group" t-key="group.region">
+                        <div class="o_cc_wh_group_header" t-on-click="() => toggleRegion(group.region)">
+                            <span t-esc="group.region"/>
+                            <span class="text-muted">(<t t-esc="group.warehouses.length"/>)</span>
+                        </div>
+                        <label class="o_cc_wh_item" t-foreach="group.warehouses" t-as="wh" t-key="wh.code" t-att-title="wh.name">
+                            <input type="checkbox" t-att-checked="state.setup.selectedWarehouses.includes(wh.code)"
+                                   t-on-change="() => toggleWarehouse(wh.code)"/>
+                            <span t-esc="wh.name"/>
+                        </label>
+                    </div>
+                    <div class="small text-muted p-2" t-if="!groupedWarehouses.length">No warehouses match your search.</div>
+                </div>
+            </aside>
+
+            <div class="o_cc_panel flex-grow-1">
+                <h1 class="h4 mb-1">Run a Cost Comparison</h1>
+                <p class="text-muted mb-4">Upload one price per product — the current system cost for each warehouse is fetched live from Odoo, no need to prepare it yourself.</p>
+
+                <div class="o_cc_section mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="o_cc_section_title">Price Sheet (CSV)</div>
+                        <button class="btn btn-link btn-sm text-decoration-none p-0" type="button" t-on-click="downloadTemplate" t-att-disabled="state.downloadingTemplate">
+                            <i t-att-class="state.downloadingTemplate ? 'fa fa-circle-o-notch fa-spin me-1' : 'fa fa-download me-1'"/>
+                            <t t-esc="state.downloadingTemplate ? 'Preparing...' : 'Download template'"/>
+                        </button>
+                    </div>
+                    <input type="file" class="form-control" accept=".csv" t-on-change="onFileChange"/>
+                    <div class="small text-muted mt-2" t-if="state.setup.file">
+                        <i class="fa fa-file-o me-1"/><t t-esc="state.setup.file.name"/> selected
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Required columns: Internal Reference, Price. The template is pre-filled with every product in the catalog and its category — just fill in the Price column.
+                    </div>
+                </div>
+
+                <button class="btn btn-primary px-4" type="button" t-att-disabled="!canRun || state.computing" t-on-click="runComparison">
+                    <i t-att-class="state.computing ? 'fa fa-circle-o-notch fa-spin me-1' : 'fa fa-bolt me-1'"/>
+                    <t t-esc="state.computing ? 'Comparing...' : 'Run Comparison'"/>
+                </button>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="harleys_reports.CostComparisonResults">
+        <div t-if="state.activeComparison">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-4">
+                <div>
+                    <h1 class="h4 mb-1" t-esc="state.activeComparison.name"/>
+                    <div class="small text-muted">
+                        <t t-esc="state.activeComparison.warehouse_codes.length"/> warehouse(s)
+                        · <t t-esc="state.activeComparison.total_rows"/> row(s) in file
+                        · vs. current system cost
+                    </div>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" type="button" t-on-click="exportGridCsv">
+                    <i class="fa fa-download me-1"/> Export CSV
+                </button>
+            </div>
+
+            <div class="alert alert-warning o_cc_unmatched_alert" t-if="state.activeComparison.unmatched_products.length">
+                <i class="fa fa-exclamation-triangle me-2"/>
+                <t t-esc="state.activeComparison.unmatched_products.length"/> product(s) from the file could not be matched to a product in the system (by Internal Reference or Barcode):
+                <div class="o_cc_unmatched_list mt-2">
+                    <span class="badge text-bg-secondary me-1 mb-1" t-foreach="state.activeComparison.unmatched_products" t-as="item" t-key="item.sku">
+                        <t t-esc="item.sku"/> — <t t-esc="item.product_name"/>
+                    </span>
+                </div>
+            </div>
+
+            <div class="o_cc_stat_grid mb-4">
+                <div class="o_cc_stat_tile">
+                    <div class="o_cc_stat_value" t-esc="state.activeComparison.stats.total_compared"/>
+                    <div class="o_cc_stat_label">Total Compared</div>
+                </div>
+                <div class="o_cc_stat_tile o_cc_stat_increased">
+                    <div class="o_cc_stat_value"><i class="fa fa-arrow-up me-1"/><t t-esc="state.activeComparison.stats.increased"/></div>
+                    <div class="o_cc_stat_label">Increased</div>
+                </div>
+                <div class="o_cc_stat_tile o_cc_stat_decreased">
+                    <div class="o_cc_stat_value"><i class="fa fa-arrow-down me-1"/><t t-esc="state.activeComparison.stats.decreased"/></div>
+                    <div class="o_cc_stat_label">Decreased</div>
+                </div>
+                <div class="o_cc_stat_tile o_cc_stat_unchanged">
+                    <div class="o_cc_stat_value" t-esc="state.activeComparison.stats.unchanged"/>
+                    <div class="o_cc_stat_label">Unchanged</div>
+                </div>
+                <div class="o_cc_stat_tile o_cc_stat_no_baseline">
+                    <div class="o_cc_stat_value" t-esc="state.activeComparison.stats.no_baseline"/>
+                    <div class="o_cc_stat_label">No Prior Cost</div>
+                </div>
+                <div class="o_cc_stat_tile">
+                    <div class="o_cc_stat_value"><t t-esc="state.activeComparison.stats.avg_variance_pct"/>%</div>
+                    <div class="o_cc_stat_label">Avg Variance</div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-lg-7">
+                    <div class="o_cc_panel h-100">
+                        <div class="o_cc_section_title mb-3">Per-Warehouse Breakdown</div>
+                        <div class="small text-muted mb-2 d-flex flex-wrap gap-3">
+                            <span><i class="o_cc_legend_dot cc-seg-increased"/> Increased</span>
+                            <span><i class="o_cc_legend_dot cc-seg-decreased"/> Decreased</span>
+                            <span><i class="o_cc_legend_dot cc-seg-unchanged"/> Unchanged</span>
+                            <span><i class="o_cc_legend_dot cc-seg-no-baseline"/> No Prior Cost</span>
+                        </div>
+                        <div class="o_cc_wh_row" t-foreach="state.activeComparison.per_warehouse" t-as="wh" t-key="wh.warehouse_code">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span t-esc="wh.warehouse_name"/>
+                                <span class="text-muted"><t t-esc="wh.total"/> items · <t t-esc="wh.avg_variance_pct"/>% avg</span>
+                            </div>
+                            <div class="o_cc_bar">
+                                <span t-foreach="warehouseBarSegments(wh)" t-as="segment" t-key="segment.cls"
+                                      t-att-class="'o_cc_bar_segment ' + segment.cls" t-attf-style="width: {{segment.pct}}%"/>
+                            </div>
+                        </div>
+                        <div class="small text-muted" t-if="!state.activeComparison.per_warehouse.length">No priced rows for the selected warehouses.</div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="o_cc_panel h-100">
+                        <div class="o_cc_section_title mb-3">Top Movers</div>
+                        <div class="mb-3">
+                            <div class="small text-uppercase text-muted mb-1">Biggest Increases</div>
+                            <div class="o_cc_mover_row" t-foreach="state.activeComparison.top_movers.increases" t-as="mover" t-key="mover.sku + mover.warehouse_name">
+                                <span t-esc="mover.product_name"/>
+                                <span class="text-muted small" t-esc="mover.warehouse_name"/>
+                                <span class="badge cc-badge-increased">+<t t-esc="mover.variance_pct"/>%</span>
+                            </div>
+                            <div class="small text-muted" t-if="!state.activeComparison.top_movers.increases.length">None</div>
+                        </div>
+                        <div>
+                            <div class="small text-uppercase text-muted mb-1">Biggest Decreases</div>
+                            <div class="o_cc_mover_row" t-foreach="state.activeComparison.top_movers.decreases" t-as="mover" t-key="mover.sku + mover.warehouse_name">
+                                <span t-esc="mover.product_name"/>
+                                <span class="text-muted small" t-esc="mover.warehouse_name"/>
+                                <span class="badge cc-badge-decreased"><t t-esc="mover.variance_pct"/>%</span>
+                            </div>
+                            <div class="small text-muted" t-if="!state.activeComparison.top_movers.decreases.length">None</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="o_cc_panel">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <input type="search" class="form-control form-control-sm o_cc_grid_search" placeholder="Search product or SKU"
+                           t-att-value="state.grid.search" t-on-input="setGridSearch"/>
+                    <select class="form-select form-select-sm o_cc_grid_filter" t-on-change="setGridStatus">
+                        <option value="">All statuses</option>
+                        <option value="increased" t-att-selected="state.grid.status === 'increased'">Increased</option>
+                        <option value="decreased" t-att-selected="state.grid.status === 'decreased'">Decreased</option>
+                        <option value="unchanged" t-att-selected="state.grid.status === 'unchanged'">Unchanged</option>
+                        <option value="no_baseline" t-att-selected="state.grid.status === 'no_baseline'">No Prior Cost</option>
+                    </select>
+                    <select class="form-select form-select-sm o_cc_grid_filter" t-on-change="setGridWarehouse"
+                            t-if="state.activeComparison.warehouse_codes.length > 1">
+                        <option value="">All warehouses</option>
+                        <option t-foreach="state.activeComparison.per_warehouse" t-as="wh" t-key="wh.warehouse_code"
+                                t-att-value="wh.warehouse_code" t-att-selected="state.grid.warehouseCode === wh.warehouse_code"
+                                t-esc="wh.warehouse_name"/>
+                    </select>
+                    <span class="small text-muted ms-auto"><t t-esc="gridTotal"/> line(s)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle o_cc_table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="o_hr_sortable" t-on-click="() => sortGridBy('product_name')">Product</th>
+                                <th class="o_hr_sortable" t-on-click="() => sortGridBy('warehouse_name')">Warehouse</th>
+                                <th class="text-end o_hr_sortable" t-on-click="() => sortGridBy('system_cost')">System Cost</th>
+                                <th class="text-end o_hr_sortable" t-on-click="() => sortGridBy('uploaded_price')">Uploaded Price</th>
+                                <th class="text-end o_hr_sortable" t-on-click="() => sortGridBy('variance_abs')">Variance</th>
+                                <th class="text-end o_hr_sortable" t-on-click="() => sortGridBy('variance_pct')">Variance %</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="gridPageRows" t-as="line" t-key="line.sku + line.warehouse_code">
+                                <td>
+                                    <t t-esc="line.product_name"/>
+                                    <div class="small text-muted" t-esc="line.sku"/>
+                                </td>
+                                <td t-esc="line.warehouse_name"/>
+                                <td class="text-end font-monospace" t-esc="line.system_cost"/>
+                                <td class="text-end font-monospace" t-esc="line.uploaded_price"/>
+                                <td class="text-end font-monospace" t-esc="line.variance_abs != null ? line.variance_abs : '—'"/>
+                                <td class="text-end font-monospace" t-esc="line.variance_pct != null ? line.variance_pct + '%' : '—'"/>
+                                <td>
+                                    <span t-att-class="'badge ' + statusMeta(line.status).cls">
+                                        <i t-att-class="'fa ' + statusMeta(line.status).icon + ' me-1'"/><t t-esc="statusMeta(line.status).label"/>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="o_cc_state text-center py-4" t-if="!gridTotal">No lines match the current filters.</div>
+                <div class="d-flex justify-content-between align-items-center mt-3 small" t-if="gridTotal">
+                    <span>Page <t t-esc="gridPageNumber"/> of <t t-esc="gridPageCount"/></span>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" type="button" t-on-click="previousGridPage" t-att-disabled="state.grid.offset === 0">
+                            <i class="fa fa-chevron-left"/> Prev
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" t-on-click="nextGridPage" t-att-disabled="state.grid.offset + gridPageSize >= gridTotal">
+                            Next <i class="fa fa-chevron-right"/>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="harleys_reports.CostComparisonHistory">
+        <div>
+            <h1 class="h4 mb-1">Recent Comparisons</h1>
+            <p class="text-muted mb-3">Kept for this browser session only — nothing here is saved to the database.</p>
+            <div class="o_cc_panel mb-3" t-foreach="state.history" t-as="cmp" t-key="cmp.id">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="fw-bold" t-esc="cmp.name"/>
+                        <div class="small text-muted">
+                            <t t-esc="cmp.warehouse_codes.length"/> warehouse(s) · <t t-esc="cmp.total_rows"/> row(s) in file
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="small text-center">
+                            <div class="cc-text-increased fw-bold" t-esc="cmp.stats.increased"/>
+                            <div class="text-muted">Increased</div>
+                        </div>
+                        <div class="small text-center">
+                            <div class="cc-text-decreased fw-bold" t-esc="cmp.stats.decreased"/>
+                            <div class="text-muted">Decreased</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" type="button" t-on-click="() => openHistoryComparison(cmp.id)">Open</button>
+                    </div>
+                </div>
+            </div>
+            <div class="o_cc_state text-center py-5" t-if="!state.history.length">No comparisons run yet this session.</div>
+        </div>
+    </t>
+</templates>
