@@ -147,16 +147,12 @@ class SharedLocationGatedListController extends LocationGateListController(ListC
     static template = LOCATION_GATE_TEMPLATE;
 }
 
-const SHARED_LOCATION_GATED_LIST_VIEW = {
-    ...listView,
-    Controller: SharedLocationGatedListController,
-    SearchPanel: LocationGateSearchPanel,
-};
-
-registry.category("views").add("stock_picking_internal_list", SHARED_LOCATION_GATED_LIST_VIEW);
-
-// Moves History has no single "my location" - a move either leaves from or arrives at a
-// location, so picking a location in the sidebar should match either side, not just the source.
+// Moves History and Internal Transfers only get a plain sidebar filter, not the location gate's
+// blocking/placeholder UI or any server-side access restriction - a move or transfer always
+// touches a location on either end, so narrowing to "my" locations would hide valid records
+// (e.g. every incoming receipt, whose source is a vendor location, not an internal one).
+// Moves History still gets its own SearchModel below: a move either leaves from or arrives at a
+// location, so picking one in the sidebar should match either side, not just the source.
 class MovesHistorySearchModel extends SearchModel {
     _getCategoryDomain(excludedCategoryId) {
         const domain = [];
@@ -181,7 +177,7 @@ class MovesHistorySearchModel extends SearchModel {
 }
 
 registry.category("views").add("stock_move_line_history_list", {
-    ...SHARED_LOCATION_GATED_LIST_VIEW,
+    ...listView,
     SearchModel: MovesHistorySearchModel,
 });
 

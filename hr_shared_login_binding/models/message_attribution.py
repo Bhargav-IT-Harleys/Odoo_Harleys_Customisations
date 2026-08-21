@@ -93,7 +93,8 @@ class MailThread(models.AbstractModel):
             if f in self._fields and f in vals and not getattr(self._fields[f], 'tracking', False)
         ]
         other_fields = any(
-            self._fields[f].type not in ('one2many', 'many2many')
+            self._fields[f].type != 'one2many'
+            and not getattr(self._fields[f], 'tracking', False)
             for f in vals
             if f in self._fields and f not in ('active', 'state')
         )

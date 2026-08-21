@@ -31,5 +31,9 @@
             <field name="employee_attribution_log_changes">True</field>
             <field name="employee_attribution_log_deletions">True</field>
         </record>
+        <record id="base.model_res_users" model="ir.model">
+            <field name="employee_attribution_log_changes">True</field>
+            <field name="employee_attribution_log_deletions">True</field>
+        </record>
     </data>
 </odoo>

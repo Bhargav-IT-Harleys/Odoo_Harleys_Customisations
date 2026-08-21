@@ -28,7 +28,9 @@ class StockMoveLine(models.Model):
     def _compute_done_by_display(self):
         for line in self:
             if line.employee_id:
-                line.done_by_display = f"{line.create_uid.name} ({line.employee_id.name})"
+                # sudo(): this field only ever displays a name for attribution - it must not
+                # require the viewer to have HR access to an employee in another company.
+                line.done_by_display = f"{line.create_uid.name} ({line.employee_id.sudo().name})"
             else:
                 line.done_by_display = line.create_uid.name or ''
 

@@ -4,17 +4,17 @@
 
 
 {
-    "name": "Stock Disallow Negative",
+    "name": "Harleys Stock Disallow Negative",
     "version": "19.0.1.0.0",
     "category": "Inventory, Logistic, Storage",
     "license": "AGPL-3",
     "summary": "Disallow negative stock levels by default",
-    "author": "Akretion, Odoo Community Association (OCA)",
-    "website": "https://github.com/OCA/stock-logistics-workflow",
+    "author": "Harleys",
     "depends": ["stock"],
     "data": [
         "views/product_product_views.xml",
         "views/stock_location_views.xml",
     ],
     "installable": True,
+    "application": True,
 }
