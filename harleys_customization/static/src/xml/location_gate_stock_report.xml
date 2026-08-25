@@ -2,8 +2,16 @@
 <templates id="template" xml:space="preserve">
 
     <t t-inherit="stock.StockReportSearchPanel.Regular" t-inherit-mode="extension">
-        <xpath expr="//i[contains(@t-attf-class, 'fa-filter')]" position="attributes">
-            <attribute name="t-attf-class">fa fa-map-marker o_search_panel_section_icon text-warning me-2</attribute>
+        <xpath expr="//section[contains(@class,'o_search_panel_warehouse')]/header" position="after">
+            <input type="text"
+                   class="form-control form-control-sm mb-2 o_harleys_location_search"
+                   placeholder="Search warehouses..."
+                   t-att-value="warehouseSearchText"
+                   t-on-input="onWarehouseSearchInput"
+            />
+        </xpath>
+        <xpath expr="//li[@t-foreach='warehouses']" position="attributes">
+            <attribute name="t-foreach">filteredWarehouses</attribute>
         </xpath>
     </t>
 

@@ -34,8 +34,6 @@ class StockQuant(models.Model):
         action = super().action_view_quants()
         if not self.env.context.get('search_default_internal_loc'):
             return action
-        allowed_location_ids = self.env['stock.location']._get_user_allowed_location_ids().ids
-        action['domain'] = action['domain'] + [('location_id', 'in', allowed_location_ids)]
         gated_view_by_base = {
             self.sudo().env.ref('stock.view_stock_quant_tree').id:
                 self.sudo().env.ref('harleys_customization.view_stock_quant_tree_location_gate').id,

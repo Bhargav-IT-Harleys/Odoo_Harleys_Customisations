@@ -1,12 +1,12 @@
 from odoo.exceptions import ValidationError
 
-from .base import ReportProvider
+from .base import OrmSearchReportMixin, ReportProvider
 from .date_utils import date_boundary
 from .registry import register_report
 
 
 @register_report
-class MoveHistoryReport(ReportProvider):
+class MoveHistoryReport(OrmSearchReportMixin, ReportProvider):
     key = "move_history"
     title = "Move History"
     description = "Trace stock movements without opening operational records."
@@ -19,7 +19,7 @@ class MoveHistoryReport(ReportProvider):
         {"key": "location_id", "label": "Source Location", "type": "many2one", "group": "primary"},
         {"key": "location_dest_id", "label": "Destination Location", "type": "many2one", "group": "primary"},
         {"key": "reference", "label": "Reference", "type": "text", "group": "primary"},
-        {"key": "category_id", "label": "Product Category", "type": "many2one", "group": "advanced"},
+        {"key": "category_id", "label": "Product Category", "type": "text", "group": "advanced"},
         {"key": "lot_id", "label": "Lot / Serial", "type": "many2one", "group": "advanced"},
         {"key": "company_id", "label": "Company", "type": "many2one", "group": "advanced"},
         {
@@ -86,7 +86,6 @@ class MoveHistoryReport(ReportProvider):
     }
     relation_filters = {
         "product_id": ("product.product", []),
-        "category_id": ("product.category", []),
         "location_id": ("stock.location", [("usage", "!=", "view")]),
         "location_dest_id": ("stock.location", [("usage", "!=", "view")]),
         "lot_id": ("stock.lot", []),
@@ -94,6 +93,7 @@ class MoveHistoryReport(ReportProvider):
     }
     allowed_states = {"draft", "waiting", "confirmed", "partially_available", "assigned", "done", "cancel"}
     allowed_operation_types = {"incoming", "outgoing", "internal", "mrp_operation"}
+    default_sort = {"key": "date", "direction": "desc"}
 
     def metadata(self):
         company_ids = set(self.env.companies.ids)
@@ -106,7 +106,7 @@ class MoveHistoryReport(ReportProvider):
             "filters": filters,
             "columns": [dict(column) for column in self.columns],
             "default_filters": {"state": "done"},
-            "default_sort": {"key": "date", "direction": "desc"},
+            "default_sort": self.default_sort,
             "page_sizes": list(self.page_sizes),
             "default_page_size": self.default_page_size,
             "maximum_page_size": self.maximum_page_size,
@@ -127,9 +127,9 @@ class MoveHistoryReport(ReportProvider):
                 normalized[key] = self._validate_integer(value, key)
             elif key in ("date_from", "date_to"):
                 normalized[key] = value
-            elif key == "reference":
+            elif key in ("reference", "category_id"):
                 if not isinstance(value, str) or len(value) > 200:
-                    raise ValidationError("Invalid reference filter.")
+                    raise ValidationError(f"Invalid {key} filter.")
                 normalized[key] = value.strip()
             elif key == "state":
                 if value not in self.allowed_states:
@@ -151,7 +151,9 @@ class MoveHistoryReport(ReportProvider):
         if values.get("product_id"):
             domain.append(("product_id", "=", values["product_id"]))
         if values.get("category_id"):
-            domain.append(("product_id.categ_id", "child_of", values["category_id"]))
+            # Matches native's own move-line search panel: a flat ilike match on the category's
+            # name, not a hierarchical child_of match against category ids.
+            domain.append(("product_id.categ_id.display_name", "ilike", values["category_id"]))
         for key in ("location_id", "location_dest_id", "lot_id"):
             if values.get(key):
                 domain.append((key, "=", values[key]))
@@ -166,15 +168,6 @@ class MoveHistoryReport(ReportProvider):
         if values.get("operation_type"):
             domain.append(("picking_id.picking_type_id.code", "=", values["operation_type"]))
         return domain
-
-    def _order(self, sort):
-        if not isinstance(sort, dict):
-            raise ValidationError("Invalid report sort.")
-        key = sort.get("key", "date")
-        direction = sort.get("direction", "desc")
-        if key not in self.sort_fields or direction not in ("asc", "desc"):
-            raise ValidationError("Unsupported report sort.")
-        return f"{self.sort_fields[key]} {direction}, id {direction}"
 
     def _serialize(self, record):
         return {
@@ -198,65 +191,3 @@ class MoveHistoryReport(ReportProvider):
             "source_document": record.get("origin") or "",
         }
 
-    def get_page(self, filters, offset, limit, sort):
-        self.check_source_access()
-        offset, limit = self._validate_page(offset, limit)
-        domain = self._domain(filters)
-        order = self._order(sort)
-        records = self.model.search_read(domain, self.field_names, offset=offset, limit=limit, order=order)
-        total = self.model.search_count(domain)
-        return {
-            "rows": [self._serialize(record) for record in records],
-            "offset": offset,
-            "limit": limit,
-            "total": total,
-            "has_more": offset + len(records) < total,
-        }
-
-    def search_filter_options(self, filter_key, term, limit):
-        self.check_source_access()
-        if filter_key not in self.relation_filters:
-            raise ValidationError("Unsupported relational filter.")
-        if not isinstance(term, str) or len(term) > 100:
-            raise ValidationError("Invalid filter search.")
-        if isinstance(limit, bool) or not isinstance(limit, int):
-            raise ValidationError("Invalid filter option limit.")
-        limit = max(1, min(limit, 40))
-        model_name, domain = self.relation_filters[filter_key]
-        model = self.env[model_name]
-        if not model.has_access("read"):
-            return []
-        if filter_key == "company_id":
-            domain = [("id", "in", self.env.companies.ids)]
-        elif filter_key in ("location_id", "location_dest_id"):
-            allowed_ids = self.env["stock.location"]._get_user_allowed_location_ids().ids
-            domain = domain + [("id", "in", allowed_ids)]
-        options = model.name_search(name=term, domain=domain, operator="ilike", limit=limit)
-        return [{"id": record_id, "label": label} for record_id, label in options]
-
-    def export_rows(self, filters, sort, row_ids=None):
-        self.check_source_access()
-        if row_ids:
-            rows = []
-            batch_size = 1000
-            restriction = self._location_restriction_domain()
-            for offset in range(0, len(row_ids), batch_size):
-                batch_ids = row_ids[offset:offset + batch_size]
-                records = self.model.search([("id", "in", batch_ids)] + restriction)
-                rows.extend(self._serialize(record) for record in records)
-            return rows
-        domain = self._domain(filters)
-        order = self._order(sort)
-        total = self.model.search_count(domain, limit=self.maximum_export_rows + 1)
-        if total > self.maximum_export_rows:
-            raise ValidationError(
-                f"This export exceeds the {self.maximum_export_rows:,} row limit. Apply more filters and try again."
-            )
-        rows = []
-        batch_size = 1000
-        for offset in range(0, total, batch_size):
-            batch = self.model.search_read(
-                domain, self.field_names, offset=offset, limit=batch_size, order=order
-            )
-            rows.extend(self._serialize(record) for record in batch)
-        return rows

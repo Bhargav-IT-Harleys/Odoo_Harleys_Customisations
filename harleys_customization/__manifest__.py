@@ -60,6 +60,7 @@
             'harleys_customization/static/src/js/stock_move_line_batch_quickcreate.js',
             'harleys_customization/static/src/xml/searchable_x2many.xml',
             'harleys_customization/static/src/xml/location_gate_list_view.xml',
+            'harleys_customization/static/src/xml/location_gate_search_panel.xml',
             'harleys_customization/static/src/xml/location_gate_stock_report.xml',
             'harleys_customization/static/src/xml/stock_move_line_row_field.xml',
             'harleys_customization/static/src/xml/stock_move_line_batch_field.xml',

@@ -10,24 +10,3 @@
     font-weight: normal !important;
 }
 
-.o_search_panel_warehouse {
-    .list-group-item {
-        cursor: pointer;
-    }
-    span.fw-bolder,
-    div.fw-bolder {
-        display: block;
-        padding: 0.25rem 0.5rem;
-        border-radius: var(--bs-border-radius);
-    }
-    div.bg-info-subtle {
-        background-color: var(--bs-list-group-active-bg) !important;
-        color: var(--bs-list-group-active-color) !important;
-    }
-}
-
-.o_harleys_location_gate_none .o_search_panel_warehouse .fw-bolder {
-    font-weight: normal !important;
-    background-color: transparent !important;
-    color: inherit !important;
-}

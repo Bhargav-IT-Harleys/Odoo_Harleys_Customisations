@@ -7,6 +7,7 @@ import { Pager } from "@web/core/pager/pager";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { CheckBox } from "@web/core/checkbox/checkbox";
+import { useDropdownState } from "@web/core/dropdown/dropdown_hooks";
 
 const MODEL_KEY_PREFIX = "model:";
 const DYNAMIC_PAGE_SIZES = [40, 80, 200];
@@ -32,8 +33,10 @@ export class HarleysReportsApp extends Component {
             appliedFilters: {},
             optionLabels: {},
             filterOptions: {},
-            sidebarOpen: true,
             rows: [],
+            groups: [],
+            expandedLocations: {},
+            expandedDates: {},
             total: 0,
             offset: 0,
             limit: 80,
@@ -41,37 +44,47 @@ export class HarleysReportsApp extends Component {
             loading: true,
             exporting: false,
             selectedRows: [],
-            allRowsSelected: false,
             selectAllMatching: false,
             error: "",
             mode: "fixed",
             dynamicModelKey: "",
             dynamicFields: [],
             selectedColumns: [],
-            fieldsPickerOpen: false,
             multiRelationOptions: {},
             multiRelationSearch: {},
             openMultiRelation: null,
-            downloadMenuOpen: false,
+            sidebarCollapsed: false,
+            globalSearchTerm: "",
+            globalSearchResults: {},
+            globalSearchExpanded: null,
+            globalSearchLoading: false,
             favorites: [],
             savingFavorite: false,
             newFavoriteName: "",
             userInfo: null,
             generatedAt: null,
             visibleOptionalColumns: [],
+            hasSearched: false,
         });
         this.requestSequence = 0;
         this.lookupTimers = {};
+        this.globalSearchDropdown = useDropdownState();
+        this.globalSearchTimer = null;
+        this.globalSearchSequence = 0;
         for (const name of [
-            "onReportChange", "onFilterInput", "onLookupFocus", "onLookupInput", "onLookupBlur",
-            "selectLookupOption", "clearLookup", "applyFilters", "resetFilters", "toggleSidebar",
+            "onFilterInput", "onLookupFocus", "onLookupInput", "onLookupBlur",
+            "selectLookupOption", "clearLookup", "applyFilters", "resetFilters",
             "sortBy", "exportReport", "onPagerUpdate",
             "toggleRowSelection", "toggleAllRows", "clearSelection", "toggleDynamicColumn",
-            "toggleFieldsPicker", "toggleMultiRelationPicker", "toggleMultiRelationValue",
+            "toggleMultiRelationValue",
             "toggleAllMultiRelation", "setMultiRelationSearch", "selectAllMatchingRecords",
-            "toggleDownloadMenu", "onDownloadFormat", "applyFavorite", "removeFavorite",
+            "toggleMultiRelationPicker",
+            "onDownloadFormat", "applyFavorite", "removeFavorite",
             "startSaveFavorite", "onNewFavoriteNameInput", "onNewFavoriteKeydown", "confirmSaveFavorite", "cancelSaveFavorite",
-            "toggleOptionalColumn",
+            "toggleOptionalColumn", "toggleSidebar", "toggleLocationGroup", "toggleDateGroup",
+            "onGlobalSearchInput", "onGlobalSearchFocus", "onGlobalSearchBlur",
+            "toggleGlobalSearchGroup", "selectGlobalSearchOption",
+            "applyGlobalSearchText", "selectGlobalSearchSelectionOption", "applyGlobalSearchDate",
         ]) {
             this[name] = this[name].bind(this);
         }
@@ -98,7 +111,13 @@ export class HarleysReportsApp extends Component {
                 this.state.error = "No reports are available for your access rights.";
                 return;
             }
-            const defaultReport = this.state.reports.find((report) => report.key === DEFAULT_REPORT_KEY) || this.state.reports[0];
+            // Each menu entry (Stock Report, Move History, ...) is its own ir.actions.client
+            // pointed at this same component, differing only by this param - falls back to the
+            // generic "Report Extraction" action's default when launched without one.
+            const requestedKey = this.props.action?.params?.report_key;
+            const defaultReport = this.state.reports.find((report) => report.key === requestedKey)
+                || this.state.reports.find((report) => report.key === DEFAULT_REPORT_KEY)
+                || this.state.reports[0];
             await this.selectReport(defaultReport.key);
         } catch (error) {
             this.showError(error, "Harleys Reports could not be loaded.");
@@ -130,14 +149,20 @@ export class HarleysReportsApp extends Component {
             this.state.multiRelationOptions = {};
             this.state.multiRelationSearch = {};
             this.state.openMultiRelation = null;
+            this.resetGlobalSearch();
             this.state.offset = 0;
             this.state.limit = metadata.default_page_size;
             this.state.sort = { ...metadata.default_sort };
+            this.state.expandedLocations = {};
+            this.state.expandedDates = {};
             this.clearSelection();
             this.loadFavorites();
             this.loadOptionalColumns();
             await this.ensureMultiRelationDefaults();
-            await this.fetchPage();
+            // Doesn't auto-fetch - reports gated on a required_for_search filter (Warehouses)
+            // start on the blank "select a warehouse" prompt instead of loading everything, see
+            // canSearch/_commitAppliedFilters.
+            await this._commitAppliedFilters();
         } catch (error) {
             this.showError(error, "The selected report could not be loaded.");
         } finally {
@@ -159,7 +184,7 @@ export class HarleysReportsApp extends Component {
             this.state.filterOptions = {};
             this.state.offset = 0;
             this.state.limit = DYNAMIC_DEFAULT_PAGE_SIZE;
-            this.state.fieldsPickerOpen = false;
+            this.resetGlobalSearch();
             const sortField = modelMeta.fields.find((field) => field.store) || modelMeta.fields[0];
             this.state.sort = { key: sortField.name, direction: "asc" };
             this.rebuildDynamicMetadata(modelMeta.fields, modelMeta.title, modelMeta.description);
@@ -213,10 +238,6 @@ export class HarleysReportsApp extends Component {
         return { ...base, type: field.type };
     }
 
-    toggleFieldsPicker() {
-        this.state.fieldsPickerOpen = !this.state.fieldsPickerOpen;
-    }
-
     async toggleDynamicColumn(fieldName) {
         const isSelected = this.state.selectedColumns.includes(fieldName);
         if (isSelected && this.state.selectedColumns.length === 1) {
@@ -236,7 +257,52 @@ export class HarleysReportsApp extends Component {
         await this.fetchPage();
     }
 
+    // Location -> Date collapsible groups (Physical Inventory) need the full matching set at
+    // once to compute accurate counts/totals per group, not a row-count-based page - see
+    // get_grouped_rows on the backend. state.rows keeps the flattened full set (still needed by
+    // export/selectAllMatching, which operate on "every matching record" regardless of what's
+    // expanded); the header checkbox and "select all" instead work off visibleRows, which is
+    // just the currently-expanded subset - see toggleAllRows.
+    async fetchGroupedRows() {
+        const sequence = ++this.requestSequence;
+        this.state.loading = true;
+        this.state.error = "";
+        try {
+            const result = await this.orm.call("harleys.reports.service", "get_report_grouped_rows", [
+                this.state.reportKey,
+                { ...this.state.appliedFilters },
+                { ...this.state.sort },
+            ]);
+            if (sequence !== this.requestSequence) {
+                return;
+            }
+            const rows = result.groups.flatMap((location) => location.groups.flatMap((dateGroup) => dateGroup.rows));
+            this.state.groups = result.groups;
+            this.state.rows = rows;
+            this.state.total = result.total;
+            this.state.offset = 0;
+            this.state.limit = result.total || this.state.limit;
+            this.state.selectedRows = this.state.selectedRows.filter((rowId) => rows.some((row) => row.id === rowId));
+            this.state.generatedAt = Date.now();
+        } catch (error) {
+            if (sequence === this.requestSequence) {
+                this.state.groups = [];
+                this.state.rows = [];
+                this.state.total = 0;
+                this.showError(error, "Report data could not be loaded.");
+            }
+        } finally {
+            if (sequence === this.requestSequence) {
+                this.state.loading = false;
+            }
+        }
+    }
+
     async fetchPage() {
+        if (this.state.mode === "fixed" && this.state.metadata?.grouped) {
+            await this.fetchGroupedRows();
+            return;
+        }
         const sequence = ++this.requestSequence;
         this.state.loading = true;
         this.state.error = "";
@@ -264,7 +330,6 @@ export class HarleysReportsApp extends Component {
             this.state.total = page.total;
             this.state.offset = page.offset;
             this.state.selectedRows = this.state.selectedRows.filter((rowId) => page.rows.some((row) => row.id === rowId));
-            this.state.allRowsSelected = this.state.rows.length > 0 && this.state.rows.every((row) => this.state.selectedRows.includes(row.id));
             this.state.generatedAt = Date.now();
         } catch (error) {
             if (sequence === this.requestSequence) {
@@ -279,12 +344,12 @@ export class HarleysReportsApp extends Component {
         }
     }
 
-    onReportChange(event) {
-        this.selectReport(event.target.value);
-    }
-
-    onFilterInput(filterKey, event) {
+    // The only filter types still routed here (date, selection) fire once per complete value,
+    // not per keystroke, so auto-applying is safe - there's no separate global Apply button
+    // anymore, every filter mechanism now commits itself.
+    async onFilterInput(filterKey, event) {
         this.state.draftFilters[filterKey] = event.target.value;
+        await this.applyFilters();
     }
 
     async fetchLookupOptions(filterKey, term) {
@@ -322,10 +387,16 @@ export class HarleysReportsApp extends Component {
         }, 150);
     }
 
-    selectLookupOption(filterKey, option) {
-        this.state.draftFilters[filterKey] = option.id;
+    // A "text + lookup" filter (e.g. Product/SKU search) stores the picked label itself as the
+    // filter value, so the backend's existing ilike-substring match still applies - it's the
+    // same filter mechanism as before, just committed on selection instead of on every
+    // keystroke. A real many2one filter stores the record id instead.
+    async selectLookupOption(filterKey, option) {
+        const filter = this.state.metadata?.filters?.find((item) => item.key === filterKey);
+        this.state.draftFilters[filterKey] = filter?.type === "text" ? option.label : option.id;
         this.state.optionLabels[filterKey] = option.label;
         this.state.filterOptions[filterKey] = [];
+        await this.applyFilters();
     }
 
     clearLookup(filterKey) {
@@ -334,11 +405,48 @@ export class HarleysReportsApp extends Component {
         this.state.filterOptions[filterKey] = [];
     }
 
-    async applyFilters() {
+    // Filters flagged required_for_search (Warehouses, on every current report) must have a
+    // real selection in draftFilters before anything is fetched - this is the single gate
+    // shared by the "Apply Filters" button's disabled state and every path that commits
+    // filters (see _commitAppliedFilters). Vacuously true for reports with no such filter
+    // (dynamic model browsers), so it never blocks them.
+    get gateFilters() {
+        return (this.state.metadata?.filters || []).filter((filter) => filter.required_for_search);
+    }
+
+    get gateFiltersLabel() {
+        return this.gateFilters.map((filter) => filter.label).join(" / ");
+    }
+
+    get canSearch() {
+        return this.gateFilters.every((filter) => {
+            const value = this.state.draftFilters[filter.key];
+            return Array.isArray(value) ? value.length > 0 : !!value;
+        });
+    }
+
+    // Single commit point for every "apply the staged filters" action - the shared Apply
+    // Filters button, Reset Filters, and the initial report load all route through this so the
+    // canSearch gate (and the resulting blank-state prompt) behaves identically everywhere.
+    async _commitAppliedFilters() {
         this.state.appliedFilters = { ...this.state.draftFilters };
         this.state.offset = 0;
+        this.state.expandedLocations = {};
+        this.state.expandedDates = {};
         this.clearSelection();
+        if (!this.canSearch) {
+            this.state.hasSearched = false;
+            this.state.groups = [];
+            this.state.rows = [];
+            this.state.total = 0;
+            return;
+        }
+        this.state.hasSearched = true;
         await this.fetchPage();
+    }
+
+    async applyFilters() {
+        await this._commitAppliedFilters();
     }
 
     async resetFilters() {
@@ -346,11 +454,9 @@ export class HarleysReportsApp extends Component {
         this.state.appliedFilters = { ...this.state.metadata.default_filters };
         this.state.optionLabels = {};
         this.state.filterOptions = {};
-        this.state.offset = 0;
-        this.clearSelection();
         this.state.sort = { ...this.state.metadata.default_sort };
         await this.ensureMultiRelationDefaults();
-        await this.fetchPage();
+        await this._commitAppliedFilters();
     }
 
     async ensureMultiRelationDefaults() {
@@ -360,9 +466,18 @@ export class HarleysReportsApp extends Component {
                 await this.loadMultiRelationOptions(filter.key);
             }
             if (!(filter.key in this.state.draftFilters)) {
-                const allIds = this.state.multiRelationOptions[filter.key].map((option) => option.id);
-                this.state.draftFilters[filter.key] = allIds;
-                this.state.appliedFilters[filter.key] = allIds;
+                const options = this.state.multiRelationOptions[filter.key];
+                // Filters gated for search (Warehouses) start empty - the user must
+                // deliberately pick at least one before anything loads (see canSearch).
+                // Non-gated multi-relation filters still default to "select everything", unless
+                // they opt out via default_select:"first".
+                const defaultIds = filter.required_for_search
+                    ? []
+                    : filter.default_select === "first"
+                        ? options.slice(0, 1).map((option) => option.id)
+                        : options.map((option) => option.id);
+                this.state.draftFilters[filter.key] = defaultIds;
+                this.state.appliedFilters[filter.key] = defaultIds;
             }
         }
     }
@@ -378,16 +493,13 @@ export class HarleysReportsApp extends Component {
         }
     }
 
-    toggleMultiRelationPicker(filterKey) {
-        this.state.openMultiRelation = this.state.openMultiRelation === filterKey ? null : filterKey;
-    }
-
-    async toggleMultiRelationValue(filterKey, optionId) {
+    // Stages the change only - checking several boxes in a row shouldn't fire a fetch per
+    // click. The shared "Apply Filters" button (see applyFilters) is what commits it.
+    toggleMultiRelationValue(filterKey, optionId) {
         const current = this.state.draftFilters[filterKey] || [];
         this.state.draftFilters[filterKey] = current.includes(optionId)
             ? current.filter((id) => id !== optionId)
             : [...current, optionId];
-        await this.applyFilters();
     }
 
     setMultiRelationSearch(filterKey, event) {
@@ -409,14 +521,19 @@ export class HarleysReportsApp extends Component {
         return visibleIds.length > 0 && visibleIds.every((id) => current.includes(id));
     }
 
-    async toggleAllMultiRelation(filterKey) {
+    toggleAllMultiRelation(filterKey) {
         const visibleIds = this.filteredMultiRelationOptions(filterKey).map((option) => option.id);
         const current = this.state.draftFilters[filterKey] || [];
         const allVisibleSelected = this.allMultiRelationVisibleSelected(filterKey);
         this.state.draftFilters[filterKey] = allVisibleSelected
             ? current.filter((id) => !visibleIds.includes(id))
             : Array.from(new Set([...current, ...visibleIds]));
-        await this.applyFilters();
+    }
+
+    // Dropdown is collapsed by default and toggled with a plain click (no focus/blur tricks -
+    // those caused real bugs before). Only one open at a time keeps it simple.
+    toggleMultiRelationPicker(filterKey) {
+        this.state.openMultiRelation = this.state.openMultiRelation === filterKey ? null : filterKey;
     }
 
     multiRelationSummary(filterKey) {
@@ -429,8 +546,159 @@ export class HarleysReportsApp extends Component {
         return selected === total ? `All ${total} ${label} selected` : `${selected} of ${total} ${label} selected`;
     }
 
-    toggleSidebar() {
-        this.state.sidebarOpen = !this.state.sidebarOpen;
+    // Multi-relation filters (Warehouses, Categories, Product Type) get their own always-visible
+    // checklist section in the sidebar, same idea as the Location panel in Odoo's own Physical
+    // Inventory screen - never hidden behind a popover that has to be found and opened.
+    get multiRelationFilters() {
+        return (this.state.metadata?.filters || []).filter((filter) => filter.type === "multi_relation" && !filter.hidden);
+    }
+
+    // Every non-hidden filter on the current report gets a Quick Search group - not just
+    // relational ones. Each group's expanded content branches by filter.type in the template:
+    // multi_relation/many2one/lookup-text show fetched suggestions (see
+    // globalSearchLookupFilters below), selection filters match against their own static
+    // options client-side, date filters get an inline date input, and plain text filters let
+    // you apply the typed term directly - see applyGlobalSearchText/
+    // selectGlobalSearchSelectionOption/applyGlobalSearchDate.
+    get eligibleGlobalSearchFilters() {
+        return (this.state.metadata?.filters || []).filter((filter) => !filter.hidden);
+    }
+
+    // Subset that actually needs a fetched/cached suggestion list - the other filter types
+    // (selection, date, plain text) render their own content directly from
+    // state.globalSearchTerm or the filter's own static options, no fetch involved.
+    get globalSearchLookupFilters() {
+        return this.eligibleGlobalSearchFilters.filter((filter) =>
+            filter.type === "multi_relation" || filter.type === "many2one" || filter.lookup === true
+        );
+    }
+
+    // Client-side match against a selection filter's own embedded options (same options array
+    // already used by the sidebar's plain <select>) - excludes the blank "All" option, which
+    // isn't a meaningful quick-search result.
+    filteredSelectionOptions(filter) {
+        const term = (this.state.globalSearchTerm || "").trim().toLowerCase();
+        const options = (filter.options || []).filter((option) => option.value !== "");
+        if (!term) {
+            return options;
+        }
+        return options.filter((option) => option.label.toLowerCase().includes(term));
+    }
+
+    onGlobalSearchInput(event) {
+        const term = event.target.value;
+        this.state.globalSearchTerm = term;
+        this.state.globalSearchExpanded = null;
+        clearTimeout(this.globalSearchTimer);
+        if (!term.trim()) {
+            this.state.globalSearchResults = {};
+            this.globalSearchDropdown.close();
+            return;
+        }
+        this.globalSearchDropdown.open();
+        this.globalSearchTimer = setTimeout(() => this.fetchGlobalSearchResults(term), 250);
+    }
+
+    onGlobalSearchFocus() {
+        if (this.state.globalSearchTerm.trim()) {
+            this.globalSearchDropdown.open();
+        }
+    }
+
+    onGlobalSearchBlur() {
+        clearTimeout(this.globalSearchTimer);
+        setTimeout(() => this.globalSearchDropdown.close(), 150);
+    }
+
+    // multi_relation options are filtered client-side out of the cache every multi-select
+    // filter already loads once per report (loadMultiRelationOptions) - only lookup/many2one
+    // filters need a live server round trip.
+    async fetchGlobalSearchResults(term) {
+        const sequence = ++this.globalSearchSequence;
+        this.state.globalSearchLoading = true;
+        try {
+            const entries = await Promise.all(this.globalSearchLookupFilters.map(async (filter) => {
+                if (filter.type === "multi_relation") {
+                    const termLower = term.toLowerCase();
+                    const options = (this.state.multiRelationOptions[filter.key] || [])
+                        .filter((option) => option.label.toLowerCase().includes(termLower))
+                        .slice(0, 5);
+                    return [filter.key, options];
+                }
+                const options = this.state.mode === "dynamic"
+                    ? await this.orm.call("harleys.reports.service", "search_dynamic_filter_options",
+                          [this.state.dynamicModelKey, filter.key, term, 5])
+                    : await this.orm.call("harleys.reports.service", "search_filter_options",
+                          [this.state.reportKey, filter.key, term, 5]);
+                return [filter.key, options];
+            }));
+            if (sequence !== this.globalSearchSequence) {
+                return;
+            }
+            this.state.globalSearchResults = Object.fromEntries(entries);
+        } catch (error) {
+            if (sequence === this.globalSearchSequence) {
+                this.showError(error, "Search suggestions could not be loaded.");
+            }
+        } finally {
+            if (sequence === this.globalSearchSequence) {
+                this.state.globalSearchLoading = false;
+            }
+        }
+    }
+
+    toggleGlobalSearchGroup(filterKey) {
+        this.state.globalSearchExpanded = this.state.globalSearchExpanded === filterKey ? null : filterKey;
+    }
+
+    // Shared cleanup after any Quick Search pick, regardless of filter type - resets the search
+    // box and closes the dropdown so the next open starts fresh.
+    resetGlobalSearch() {
+        this.state.globalSearchTerm = "";
+        this.state.globalSearchResults = {};
+        this.state.globalSearchExpanded = null;
+        this.globalSearchDropdown.close();
+    }
+
+    // Same commit semantics as selectLookupOption/toggleMultiRelationValue - writing straight
+    // into draftFilters means the sidebar's own controls (summary label, checkboxes) stay in
+    // sync for free, no separate state to maintain.
+    async selectGlobalSearchOption(filter, option) {
+        if (filter.type === "multi_relation") {
+            const current = this.state.draftFilters[filter.key] || [];
+            if (!current.includes(option.id)) {
+                this.state.draftFilters[filter.key] = [...current, option.id];
+            }
+        } else {
+            this.state.draftFilters[filter.key] = filter.type === "text" ? option.label : option.id;
+            this.state.optionLabels[filter.key] = option.label;
+        }
+        this.resetGlobalSearch();
+        await this.applyFilters();
+    }
+
+    // Plain text filters (no lookup, e.g. a free-text Reference field) have no suggestion model
+    // to query - Quick Search just applies whatever's typed directly, same ilike semantics
+    // onFilterInput already uses for that filter in the sidebar.
+    async applyGlobalSearchText(filter) {
+        this.state.draftFilters[filter.key] = this.state.globalSearchTerm;
+        this.resetGlobalSearch();
+        await this.applyFilters();
+    }
+
+    // Selection options come from the filter's own static list (option.value/option.label),
+    // not a fetched {id,label} pair like relational results - a distinct shape from
+    // selectGlobalSearchOption above.
+    async selectGlobalSearchSelectionOption(filter, option) {
+        this.state.draftFilters[filter.key] = option.value;
+        this.resetGlobalSearch();
+        await this.applyFilters();
+    }
+
+    async applyGlobalSearchDate(filter, event) {
+        this.state.draftFilters[filter.key] = event.target.value;
+        this.resetGlobalSearch();
+        await this.applyFilters();
     }
 
     async sortBy(column) {
@@ -481,12 +749,7 @@ export class HarleysReportsApp extends Component {
         }
     }
 
-    toggleDownloadMenu() {
-        this.state.downloadMenuOpen = !this.state.downloadMenuOpen;
-    }
-
     async onDownloadFormat(format) {
-        this.state.downloadMenuOpen = false;
         await this.exportReport(format);
     }
 
@@ -598,9 +861,66 @@ export class HarleysReportsApp extends Component {
         );
     }
 
+    // Location and Date are already shown on their own group headers when grouped - repeating
+    // them on every row underneath would just be visual noise.
+    get groupedDisplayColumns() {
+        return this.displayColumns.filter((column) => column.key !== "location" && column.key !== "date");
+    }
+
+    get visibleTableColumns() {
+        return this.state.metadata?.grouped ? this.groupedDisplayColumns : this.displayColumns;
+    }
+
+    // Same idea as Odoo's own grouped list views: the header "select all" checkbox only ever
+    // reaches rows that are actually expanded/rendered right now, not every matching record
+    // (that's what the separate "Select all N matching records" prompt is for). In flat/paginated
+    // reports every row on the page is already "expanded", so this is just state.rows there.
+    get visibleRows() {
+        if (!(this.state.mode === "fixed" && this.state.metadata?.grouped)) {
+            return this.state.rows;
+        }
+        const rows = [];
+        for (const location of this.state.groups) {
+            if (!this.isLocationExpanded(location.key)) {
+                continue;
+            }
+            for (const dateGroup of location.groups) {
+                if (this.isDateGroupExpanded(location.key, dateGroup.key)) {
+                    rows.push(...dateGroup.rows);
+                }
+            }
+        }
+        return rows;
+    }
+
+    get allRowsSelected() {
+        return this.visibleRows.length > 0 && this.visibleRows.every((row) => this.state.selectedRows.includes(row.id));
+    }
+
+    toggleLocationGroup(key) {
+        this.state.expandedLocations = { ...this.state.expandedLocations, [key]: !this.state.expandedLocations[key] };
+    }
+
+    toggleDateGroup(locationKey, dateKey) {
+        const key = `${locationKey}||${dateKey}`;
+        this.state.expandedDates = { ...this.state.expandedDates, [key]: !this.state.expandedDates[key] };
+    }
+
+    isLocationExpanded(key) {
+        return !!this.state.expandedLocations[key];
+    }
+
+    isDateGroupExpanded(locationKey, dateKey) {
+        return !!this.state.expandedDates[`${locationKey}||${dateKey}`];
+    }
+
     async applyFavorite(favorite) {
-        this.state.draftFilters = { ...favorite.filters };
-        this.state.appliedFilters = { ...favorite.filters };
+        // Merge on top of the report's current defaults, not a wholesale replace - a favorite
+        // saved before a filter existed (e.g. ADU Visibility) has no key for it at all, and a
+        // plain replace would leave that filter blank/undefined instead of at its real default.
+        const base = this.state.metadata?.default_filters || {};
+        this.state.draftFilters = { ...base, ...favorite.filters };
+        this.state.appliedFilters = { ...base, ...favorite.filters };
         this.state.offset = 0;
         await this.fetchPage();
     }
@@ -613,35 +933,31 @@ export class HarleysReportsApp extends Component {
 
     toggleRowSelection(rowId) {
         if (this.state.selectAllMatching) {
-            // Narrowing from "every matching record" to "every row on this page except this
-            // one" is the only sensible degradation without knowing the full matching id set.
+            // Narrowing from "every matching record" to "every currently visible row except
+            // this one" is the only sensible degradation without knowing the full matching id set.
             this.state.selectAllMatching = false;
-            this.state.selectedRows = this.state.rows.map((row) => row.id).filter((id) => id !== rowId);
-            this.state.allRowsSelected = this.state.rows.length > 1;
+            this.state.selectedRows = this.visibleRows.map((row) => row.id).filter((id) => id !== rowId);
             return;
         }
         const exists = this.state.selectedRows.includes(rowId);
         this.state.selectedRows = exists
             ? this.state.selectedRows.filter((id) => id !== rowId)
             : [...this.state.selectedRows, rowId];
-        this.state.allRowsSelected = this.state.rows.length > 0 && this.state.rows.every((row) => this.state.selectedRows.includes(row.id));
     }
 
     toggleAllRows() {
         this.state.selectAllMatching = false;
-        if (!this.state.rows.length) {
+        const visibleRows = this.visibleRows;
+        if (!visibleRows.length) {
             this.state.selectedRows = [];
-            this.state.allRowsSelected = false;
             return;
         }
-        if (this.state.allRowsSelected) {
-            this.state.selectedRows = this.state.selectedRows.filter((rowId) => !this.state.rows.some((row) => row.id === rowId));
-            this.state.allRowsSelected = false;
+        if (this.allRowsSelected) {
+            this.state.selectedRows = this.state.selectedRows.filter((rowId) => !visibleRows.some((row) => row.id === rowId));
             return;
         }
-        const rowIds = this.state.rows.map((row) => row.id);
+        const rowIds = visibleRows.map((row) => row.id);
         this.state.selectedRows = Array.from(new Set([...this.state.selectedRows, ...rowIds]));
-        this.state.allRowsSelected = true;
     }
 
     selectAllMatchingRecords() {
@@ -650,7 +966,6 @@ export class HarleysReportsApp extends Component {
 
     clearSelection() {
         this.state.selectedRows = [];
-        this.state.allRowsSelected = false;
         this.state.selectAllMatching = false;
     }
 
@@ -679,7 +994,7 @@ export class HarleysReportsApp extends Component {
     }
 
     get showSelectAllMatchingPrompt() {
-        return this.state.allRowsSelected && !this.state.selectAllMatching && this.state.total > this.state.rows.length;
+        return this.allRowsSelected && !this.state.selectAllMatching && this.state.total > this.visibleRows.length;
     }
 
     showError(error, fallback) {
@@ -688,12 +1003,8 @@ export class HarleysReportsApp extends Component {
         this.notification.add(message, { title: "Harleys Reports", type: "danger" });
     }
 
-    get standardReports() {
-        return this.state.reports.filter((report) => report.group === "standard");
-    }
-
-    get modelReports() {
-        return this.state.reports.filter((report) => report.group === "models");
+    toggleSidebar() {
+        this.state.sidebarCollapsed = !this.state.sidebarCollapsed;
     }
 
     get primaryFilters() {
@@ -705,7 +1016,14 @@ export class HarleysReportsApp extends Component {
     }
 
     get visibleFilters() {
-        return this.primaryFilters.concat(this.advancedFilters);
+        // multi_relation filters get their own dedicated checklist section instead (see
+        // multiRelationFilters), and quick_search_only filters are only reachable through the
+        // unified Quick Search bar (so a report doesn't end up with two separate search boxes
+        // for the same filter) - everything else (date, text, selection, many2one) renders
+        // through the plain FilterFields inputs below.
+        return this.primaryFilters.concat(this.advancedFilters).filter(
+            (filter) => filter.type !== "multi_relation" && !filter.quick_search_only
+        );
     }
 
     optionLabel(columnKey, value) {
@@ -729,6 +1047,23 @@ export class HarleysReportsApp extends Component {
             partially_available: "text-bg-warning", partial: "text-bg-warning",
             pending: "text-bg-warning",
         }[value] || "text-bg-secondary";
+    }
+
+    // A fixed decimal count (e.g. 2) can crush a genuinely nonzero-but-tiny value (a daily
+    // usage rate like 0.0004) down to a misleading "0.00" - values under 1 get enough
+    // significant digits to always stay visibly nonzero, larger ones stay compact.
+    formatFloat(value) {
+        if (value === null || value === undefined || value === "") {
+            return "";
+        }
+        const num = Number(value);
+        if (!Number.isFinite(num) || num === 0) {
+            return "0";
+        }
+        if (Math.abs(num) < 1) {
+            return num.toPrecision(4).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+        }
+        return num.toFixed(2);
     }
 }
 

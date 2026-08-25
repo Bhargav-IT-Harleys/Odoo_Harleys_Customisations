@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="harleys_customization.LocationSearchPanelContent" t-inherit="web.SearchPanelContent">
+        <xpath expr="//header[contains(@class,'o_search_panel_section_header')]" position="after">
+            <input t-if="section.fieldName === 'location_id'"
+                   type="text"
+                   class="form-control form-control-sm mb-2 o_harleys_location_search"
+                   placeholder="Search locations..."
+                   t-att-value="locationSearchText"
+                   t-on-input="onLocationSearchInput"
+            />
+        </xpath>
+        <xpath expr="//t[@t-call='web.SearchPanel.Section']" position="replace">
+            <t t-if="section.fieldName === 'location_id' and locationSearchText.trim()">
+                <ul class="list-group d-block o_search_panel_field px-2 px-md-0">
+                    <t t-set="matches" t-value="filteredLocationValues(section)"/>
+                    <li t-foreach="matches" t-as="value" t-key="value.id"
+                        class="o_search_panel_category_value list-group-item py-1 cursor-pointer border-0 pe-0 ps-0">
+                        <header class="list-group-item list-group-item-action d-flex align-items-center px-0 py-lg-0 border-0"
+                                t-att-class="{'active text-black fw-bold': state.active[section.id] === value.id}"
+                                t-on-click="() => this.toggleCategory(section, value)">
+                            <div class="o_search_panel_label d-flex align-items-center overflow-hidden w-100 cursor-pointer mb-0"
+                                 t-att-data-tooltip="value.display_name">
+                                <span class="o_search_panel_label_title text-truncate" t-esc="value.display_name"/>
+                            </div>
+                        </header>
+                    </li>
+                    <li t-if="!matches.length" class="list-group-item border-0 text-muted px-0">No matching locations</li>
+                </ul>
+            </t>
+            <t t-else="">
+                <t t-call="web.SearchPanel.Section"/>
+            </t>
+        </xpath>
+    </t>
+
+    <t t-name="harleys_customization.LocationSearchPanel" t-inherit="web.SearchPanel">
+        <xpath expr="//t[@t-call='web.SearchPanel.Regular']" position="attributes">
+            <attribute name="t-call">harleys_customization.LocationSearchPanelContent</attribute>
+        </xpath>
+    </t>
+
+</templates>

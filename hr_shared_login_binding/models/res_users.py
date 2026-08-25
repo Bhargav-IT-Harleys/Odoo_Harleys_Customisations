@@ -1,4 +1,7 @@
-from odoo import fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
+from odoo.fields import Domain
+from odoo.tools.sql import escape_psql
 
 
 class ResUsers(models.Model):
@@ -21,6 +24,38 @@ class ResUsers(models.Model):
         tracking=True,
         help="Employees authorized to use this shared login."
              "At least one employee must be selected to allow access to this account.")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('login'):
+                vals['login'] = vals['login'].strip().lower()
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if vals.get('login'):
+            vals['login'] = vals['login'].strip().lower()
+        return super().write(vals)
+
+    @api.model
+    def _get_login_domain(self, login):
+        return Domain('login', '=ilike', escape_psql((login or '').strip()))
+
+    @api.constrains('login')
+    def _check_login_case_insensitive_unique(self):
+        for user in self:
+            if not user.login:
+                continue
+            duplicate = self.search([
+                ('id', '!=', user.id),
+                ('login', '=ilike', escape_psql(user.login)),
+            ], limit=1)
+            if duplicate:
+                raise ValidationError(_(
+                    "Another user (%(other)s) already uses this login, just "
+                    "with different capitalization. Logins are case-insensitive.",
+                    other=duplicate.display_name,
+                ))
 
     def _mfa_type(self):
         existing = super()._mfa_type()

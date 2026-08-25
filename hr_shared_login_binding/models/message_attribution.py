@@ -122,6 +122,8 @@ class MailThread(models.AbstractModel):
         return result
 
     def _register_attribution_update(self):
+        if not self:
+            return
         key = f'hr_shared_login_binding.attribution_update.{self._name}'
         pending = self.env.cr.precommit.data.get(key)
         if pending is None:
@@ -133,8 +135,18 @@ class MailThread(models.AbstractModel):
     def _flush_attribution_updates(self):
         key = f'hr_shared_login_binding.attribution_update.{self._name}'
         records = self.env.cr.precommit.data.pop(key, None)
-        if records:
+        if not records:
+            return
+        records = records.exists()
+        if not records:
+            return
+        try:
             records._log_attribution_change(records, _("Updated"))
+        except Exception:
+            _logger.exception(
+                "Employee attribution (deferred write) failed on %s%s; "
+                "continuing without it.", self._name, records.ids,
+            )
 
     def unlink(self):
         try:

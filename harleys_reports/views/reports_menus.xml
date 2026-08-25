@@ -6,21 +6,102 @@
               web_icon="harleys_reports,static/description/icon.svg"
               sequence="35"/>
 
+    <!-- Pure dropdown parent, no action of its own - clicking it just opens the list of
+         report types below, same as how Odoo's own apps group report entries. -->
     <menuitem id="menu_harleys_reports_extraction"
               name="Report Extraction"
               parent="menu_harleys_reports_root"
-              action="action_harleys_reports"
               sequence="10"/>
+
+    <menuitem id="menu_harleys_report_stock"
+              name="Stock Report"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_stock"
+              sequence="10"/>
+
+    <menuitem id="menu_harleys_report_physical_inventory"
+              name="Physical Inventory"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_physical_inventory"
+              sequence="20"/>
+
+    <menuitem id="menu_harleys_report_expiry"
+              name="Expiry Report"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_expiry"
+              sequence="30"/>
+
+    <!-- Not yet rebuilt to the current reporting standard - hidden rather than deleted, so
+         re-enabling later is just flipping active back on, no data/config loss. -->
+    <menuitem id="menu_harleys_report_move_history"
+              name="Move History"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_move_history"
+              active="False"
+              sequence="90"/>
+
+    <menuitem id="menu_harleys_report_internal_transfers"
+              name="Internal Transfers"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_internal_transfers"
+              active="False"
+              sequence="91"/>
+
+    <!-- Pure dropdown parent grouping the 5 ad-hoc data-model browsers - a generic field-
+         introspection browser, not a purpose-built report like the three above, and not yet
+         vetted to the same standard. Hidden (parent + each child explicitly, not relying on
+         cascade) rather than deleted, same reversible pattern as Move History/Internal
+         Transfers above. -->
+    <menuitem id="menu_harleys_reports_data_models"
+              name="Data Models"
+              parent="menu_harleys_reports_extraction"
+              active="False"
+              sequence="40"/>
+
+    <menuitem id="menu_harleys_report_model_sale_order"
+              name="Sales Orders"
+              parent="menu_harleys_reports_data_models"
+              action="action_harleys_report_model_sale_order"
+              active="False"
+              sequence="10"/>
+
+    <menuitem id="menu_harleys_report_model_purchase_order"
+              name="Purchase Orders"
+              parent="menu_harleys_reports_data_models"
+              action="action_harleys_report_model_purchase_order"
+              active="False"
+              sequence="20"/>
+
+    <menuitem id="menu_harleys_report_model_product"
+              name="Products"
+              parent="menu_harleys_reports_data_models"
+              action="action_harleys_report_model_product"
+              active="False"
+              sequence="30"/>
+
+    <menuitem id="menu_harleys_report_model_stock_move"
+              name="Stock Moves"
+              parent="menu_harleys_reports_data_models"
+              action="action_harleys_report_model_stock_move"
+              active="False"
+              sequence="40"/>
+
+    <menuitem id="menu_harleys_report_model_account_move"
+              name="Invoices"
+              parent="menu_harleys_reports_data_models"
+              action="action_harleys_report_model_account_move"
+              active="False"
+              sequence="50"/>
+
+    <menuitem id="menu_harleys_download_history"
+              name="Download History"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_download_history"
+              sequence="50"/>
 
     <menuitem id="menu_harleys_reports_cost_comparison"
               name="Cost Comparison"
               parent="menu_harleys_reports_root"
               action="action_harleys_cost_comparison"
               sequence="20"/>
-
-    <menuitem id="menu_harleys_download_history"
-              name="Download History"
-              parent="menu_harleys_reports_root"
-              action="action_harleys_download_history"
-              sequence="30"/>
 </odoo>

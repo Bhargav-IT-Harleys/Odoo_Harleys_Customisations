@@ -59,6 +59,12 @@ class HarleysReportsService(models.AbstractModel):
 
     @api.model
     @api.readonly
+    def get_report_grouped_rows(self, report_key, filters=None, sort=None):
+        provider = self._get_provider(report_key)
+        return provider.get_grouped_rows(filters or {}, sort or {})
+
+    @api.model
+    @api.readonly
     def search_filter_options(self, report_key, filter_key, term="", limit=20):
         provider = self._get_provider(report_key)
         return provider.search_filter_options(filter_key, term, limit)

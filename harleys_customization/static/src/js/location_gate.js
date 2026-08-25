@@ -8,8 +8,9 @@ import { SearchModel } from "@web/search/search_model";
 import { listView } from "@web/views/list/list_view";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { ListController } from "@web/views/list/list_controller";
-import { StockReportListView } from "@stock/views/list/stock_report_list_view";
 import { InventoryReportListView } from "@stock/views/list/inventory_report_list_view";
+import { StockReportListView } from "@stock/views/list/stock_report_list_view";
+import { StockReportSearchPanel } from "@stock/views/search/stock_report_search_panel";
 
 export const LOCATION_GATE_FIELD = "location_id";
 export const LOCATION_GATE_ALL_CLICKED_EVENT = "harleys_location_gate_all_clicked";
@@ -76,6 +77,28 @@ export const LocationGateListController = (Base) =>
     };
 
 export class LocationGateSearchPanel extends SearchPanel {
+    static template = "harleys_customization.LocationSearchPanel";
+
+    setup() {
+        super.setup();
+        this.locationSearchState = useState({ text: "" });
+    }
+
+    get locationSearchText() {
+        return this.locationSearchState.text;
+    }
+
+    onLocationSearchInput(ev) {
+        this.locationSearchState.text = ev.target.value;
+    }
+
+    filteredLocationValues(section) {
+        const query = this.locationSearchState.text.trim().toLowerCase();
+        return [...section.values.values()].filter(
+            (value) => value.id !== false && value.display_name.toLowerCase().includes(query)
+        );
+    }
+
     async toggleCategory(category, value) {
         if (
             category.type === "category" &&
@@ -84,6 +107,7 @@ export class LocationGateSearchPanel extends SearchPanel {
         ) {
             this.env.searchModel.trigger(LOCATION_GATE_ALL_CLICKED_EVENT);
         }
+        this.locationSearchState.text = "";
         return super.toggleCategory(category, value);
     }
 }
@@ -179,6 +203,12 @@ class MovesHistorySearchModel extends SearchModel {
 registry.category("views").add("stock_move_line_history_list", {
     ...listView,
     SearchModel: MovesHistorySearchModel,
+    SearchPanel: LocationGateSearchPanel,
+});
+
+registry.category("views").add("stock_picking_internal_list", {
+    ...listView,
+    SearchPanel: LocationGateSearchPanel,
 });
 
 const INVENTORY_REPORT_CONTROLLERS = {
@@ -194,6 +224,9 @@ for (const [jsClass, Controller] of Object.entries(INVENTORY_REPORT_CONTROLLERS)
     });
 }
 
+// Stock report has no "my location" domain restriction at all (core's own warehouse-context
+// mechanism never filters records, only recomputes quantity columns - see SESSIONS.md) - this is
+// blocking-placeholder UI only, same as the other screens' "pick a location first" nudge.
 class WarehouseGatedListController extends ListController {
     static template = LOCATION_GATE_TEMPLATE;
 
@@ -224,7 +257,37 @@ class WarehouseGatedListController extends ListController {
     }
 }
 
+class WarehouseSearchPanel extends StockReportSearchPanel {
+    setup() {
+        super.setup();
+        this.warehouseSearchState = useState({ text: "" });
+    }
+
+    get warehouseSearchText() {
+        return this.warehouseSearchState.text;
+    }
+
+    onWarehouseSearchInput(ev) {
+        this.warehouseSearchState.text = ev.target.value;
+    }
+
+    get filteredWarehouses() {
+        const query = this.warehouseSearchState.text.trim().toLowerCase();
+        if (!query) {
+            return this.warehouses;
+        }
+        return this.warehouses.filter((warehouse) => warehouse.name.toLowerCase().includes(query));
+    }
+
+    applyWarehouseContext(warehouseId) {
+        super.applyWarehouseContext(warehouseId);
+        this.warehouseSearchState.text = "";
+    }
+}
+
 registry.category("views").add("stock_report_list_view_gated", {
     ...StockReportListView,
     Controller: WarehouseGatedListController,
+    SearchPanel: WarehouseSearchPanel,
 });
+

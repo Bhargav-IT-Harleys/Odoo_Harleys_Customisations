@@ -3,90 +3,100 @@ from datetime import timedelta
 from odoo import fields
 from odoo.exceptions import ValidationError
 
-from .base import ReportProvider
+from .base import PRODUCT_RELATION_FILTERS, PRODUCT_SEARCH_FILTER, ReportProvider, SqlRowsReportMixin
 from .date_utils import date_boundary
 from .registry import register_report
 
-_TRAILING_DAYS = 30
+_DEFAULT_TRAILING_DAYS = 60
+_ALLOWED_TRAILING_DAYS = ("30", "60", "90")
+_DEFAULT_ADU_VISIBILITY = "positive"
+_ALLOWED_ADU_VISIBILITY = ("positive", "all")
 _WAREHOUSE_ID_MULTIPLIER = 1_000_000
 
 
 @register_report
-class StockReportProvider(ReportProvider):
+class StockReportProvider(SqlRowsReportMixin, ReportProvider):
     key = "stock_report"
     title = "Stock Report"
     description = ""
     model_name = "stock.move.line"
 
     filters = (
-        {"key": "as_of_date", "label": "As Of Date", "type": "date", "group": "primary"},
-        {"key": "search", "label": "Search Product / SKU", "type": "text", "group": "primary"},
-        {"key": "warehouse_ids", "label": "Warehouses", "type": "multi_relation", "group": "primary"},
+        PRODUCT_SEARCH_FILTER,
+        {"key": "warehouse_ids", "label": "Warehouses", "type": "multi_relation", "group": "primary",
+         "required_for_search": True},
         {"key": "category_ids", "label": "Product Categories", "type": "multi_relation", "group": "advanced"},
+        # "required" tells the frontend not to offer a blank "All" choice for this one - unlike
+        # a genuine optional filter (e.g. a Status filter elsewhere), there's no "no value" state
+        # here: ADU is always computed over *some* window, and is always either visible or not.
+        {"key": "adu_window", "label": "ADU Window", "type": "selection", "group": "advanced", "required": True,
+         "options": [
+             {"value": "30", "label": "30 Days"},
+             {"value": "60", "label": "60 Days"},
+             {"value": "90", "label": "90 Days"},
+         ]},
+        {"key": "adu_visibility", "label": "ADU Visibility", "type": "selection", "group": "advanced", "required": True,
+         "options": [
+             {"value": "positive", "label": "Exclude Zero/Negative ADU"},
+             {"value": "all", "label": "Show All"},
+         ]},
     )
     columns = (
-        {"key": "date", "label": "Date", "type": "text", "sortable": True,
-         "help": "The As Of Date selected for this run - QOH itself is always Odoo's current live balance; this date only sets the trailing window used for ADU/DOS."},
-        {"key": "warehouse", "label": "Location", "type": "text", "sortable": True,
+        {"key": "warehouse", "label": "Warehouse", "type": "text", "sortable": True, "filter_key": "warehouse_ids",
          "help": "The outlet/warehouse this stock belongs to."},
-        {"key": "product", "label": "Product", "type": "text", "sortable": True,
-         "help": "Product name."},
-        {"key": "category", "label": "Product Category", "type": "text", "sortable": True,
-         "help": "The product's category (leaf level)."},
-        {"key": "qoh", "label": "QOH", "type": "float", "sortable": True, "align": "end",
-         "help": "Current Quantity On Hand as maintained by Odoo (stock.quant) - the same figure shown in Inventory > Reporting > Stock, summed across lots/packages."},
-        {"key": "unit_cost", "label": "Unit Cost", "type": "float", "sortable": True, "align": "end",
-         "help": "The product's current standard cost in this outlet's company."},
-        {"key": "total_value", "label": "Total Value", "type": "float", "sortable": True, "align": "end",
-         "help": "QOH x Unit Cost."},
-        {"key": "avg_daily_usage", "label": "ADU (draft)", "type": "float", "sortable": True, "align": "end",
-         "help": "Draft: average daily usage, trailing 30 days, excluding inventory adjustments and vendor returns."},
-        {"key": "days_of_supply", "label": "DOS (draft)", "type": "float", "sortable": True, "align": "end",
-         "help": "Draft: Days of Supply = QOH / Average Daily Usage. Blank when there is no recent usage to project from."},
-        # Hidden by default - the underlying product/move models carry many more fields than
-        # fit a default view. Exposed as optional columns, toggled from the Columns picker,
-        # same idea as Odoo's own list-view "optional fields" toggle.
-        {"key": "sku", "label": "SKU", "type": "text", "sortable": True, "optional": True,
+        {"key": "sku", "label": "Product Code", "type": "text", "sortable": True,
          "help": "Product internal reference."},
-        {"key": "barcode", "label": "Barcode", "type": "text", "sortable": True, "optional": True,
-         "help": "Product barcode."},
-        {"key": "uom", "label": "UoM", "type": "text", "sortable": True, "optional": True,
+        {"key": "product", "label": "Product", "type": "text", "sortable": True, "filter_key": "search",
+         "help": "Product name."},
+        {"key": "category", "label": "Product Category", "type": "text", "sortable": True, "filter_key": "category_ids",
+         "help": "The product's category (leaf level)."},
+        {"key": "uom", "label": "UoM", "type": "text", "sortable": True,
          "help": "Unit of measure."},
-        {"key": "product_type", "label": "Product Type", "type": "badge", "sortable": True, "optional": True,
-         "help": "Goods, Service, or Combo.",
-         "options": [
-             {"value": "consu", "label": "Goods"},
-             {"value": "service", "label": "Service"},
-             {"value": "combo", "label": "Combo"},
-         ]},
-        {"key": "sales_price", "label": "Sales Price", "type": "float", "sortable": True, "align": "end", "optional": True,
-         "help": "Current sales price in this outlet's company."},
-        {"key": "weight", "label": "Weight (kg)", "type": "float", "sortable": True, "align": "end", "optional": True,
-         "help": "Product weight."},
+        {"key": "qoh", "label": "Quantity", "type": "float", "sortable": True, "align": "end",
+         "help": "Current quantity on hand at this stock location, as maintained by Odoo (stock.quant). Locations with zero quantity are not shown."},
+        {"key": "unit_cost", "label": "Unit Cost", "type": "float", "sortable": True, "align": "end",
+         "help": "The product's cost in this outlet's company (standard_price)."},
+        {"key": "total_value", "label": "Stock Value", "type": "float", "sortable": True, "align": "end",
+         "help": "Quantity x AVCO Unit Cost."},
+        {"key": "avg_daily_usage", "label": "ADU", "type": "float", "sortable": True, "align": "end",
+         "help": "Average daily usage over the selected ADU Window, excluding inventory adjustments and vendor returns."},
+        {"key": "days_of_supply", "label": "DOS", "type": "float", "sortable": True, "align": "end",
+         "help": "Days of Supply = Quantity / Average Daily Usage (recalculates with the ADU Window filter). Blank when there is no recent usage to project from."},
+        # Hidden by default - available via the Columns picker, same idea as Odoo's own
+        # list-view "optional fields" toggle.
+        {"key": "stock_location", "label": "Stock Location", "type": "text", "sortable": True, "optional": True,
+         "help": "The specific internal location within the warehouse - hidden by default since Warehouse already identifies the outlet."},
     )
-    relation_filters = {
-        "category_ids": ("product.category", []),
-        "warehouse_ids": ("stock.warehouse", []),
-    }
+    relation_filters = PRODUCT_RELATION_FILTERS
+    default_category_names = ("RAWMATERIAL", "PACKAGING MATERIALS")
+    default_sort = {"key": "days_of_supply", "direction": "asc"}
     sort_fields = {
-        "date": "date", "warehouse": "warehouse", "product": "product", "category": "category",
+        "warehouse": "warehouse", "stock_location": "stock_location", "sku": "sku",
+        "product": "product", "category": "category", "uom": "uom",
         "qoh": "qoh", "unit_cost": "unit_cost", "total_value": "total_value",
         "avg_daily_usage": "avg_daily_usage", "days_of_supply": "days_of_supply",
-        "sku": "sku", "barcode": "barcode", "uom": "uom", "product_type": "product_type",
-        "sales_price": "sales_price", "weight": "weight",
     }
 
     def metadata(self):
+        default_filters = {
+            "adu_window": str(_DEFAULT_TRAILING_DAYS),
+            "adu_visibility": _DEFAULT_ADU_VISIBILITY,
+            **self._default_category_filter(),
+        }
         return {
             **self.summary(),
             "filters": [dict(item) for item in self.filters],
             "columns": [dict(column) for column in self.columns],
-            "default_filters": {"as_of_date": fields.Date.to_string(fields.Date.context_today(self.model))},
-            "default_sort": {"key": "warehouse", "direction": "asc"},
+            "default_filters": default_filters,
+            "default_sort": self.default_sort,
             "page_sizes": list(self.page_sizes),
             "default_page_size": self.default_page_size,
             "maximum_page_size": self.maximum_page_size,
             "export_formats": ["csv", "xlsx"],
+            "sidebar_note": (
+                "Zero and negative ADU items are excluded by default. "
+                "Switch \"ADU Visibility\" to \"Show All\" to include them."
+            ),
         }
 
     def _normalize_filters(self, values):
@@ -95,9 +105,7 @@ class StockReportProvider(ReportProvider):
         allowed = {item["key"] for item in self.filters}
         if set(values) - allowed:
             raise ValidationError("Unsupported report filter.")
-        if not values.get("as_of_date"):
-            raise ValidationError("Select a date.")
-        normalized = {"as_of_date": values["as_of_date"]}
+        normalized = {}
         for key, label in (("warehouse_ids", "warehouse"), ("category_ids", "category")):
             value = values.get(key)
             if value:
@@ -107,65 +115,77 @@ class StockReportProvider(ReportProvider):
             if not isinstance(search_term, str) or len(search_term) > 100:
                 raise ValidationError("Invalid search term.")
             normalized["search"] = search_term.strip()
+        adu_window = values.get("adu_window")
+        normalized["adu_window"] = adu_window if adu_window in _ALLOWED_TRAILING_DAYS else str(_DEFAULT_TRAILING_DAYS)
+        adu_visibility = values.get("adu_visibility")
+        normalized["adu_visibility"] = (
+            adu_visibility if adu_visibility in _ALLOWED_ADU_VISIBILITY else _DEFAULT_ADU_VISIBILITY
+        )
         return normalized
-
-    @staticmethod
-    def _validate_id_list(value, label):
-        if not isinstance(value, list):
-            raise ValidationError(f"Invalid {label} selection.")
-        ids = []
-        for item in value:
-            if isinstance(item, bool) or not isinstance(item, int) or item <= 0:
-                raise ValidationError(f"Invalid {label} id.")
-            ids.append(item)
-        return ids
 
     def _build_rows(self, filters):
         values = self._normalize_filters(filters)
         warehouses = self._resolve_warehouses(values.get("warehouse_ids"))
         if not warehouses:
             return []
-        cutoff = date_boundary(self.env, values["as_of_date"], end=True)
-        trailing_start = cutoff - timedelta(days=_TRAILING_DAYS)
         category_ids = values.get("category_ids")
         search_term = values.get("search")
+        trailing_days = int(values["adu_window"])
+        adu_visibility = values["adu_visibility"]
+        cutoff = date_boundary(self.env, fields.Date.context_today(self.model), end=True)
+        trailing_start = cutoff - timedelta(days=trailing_days)
 
-        rows = []
+        location_to_warehouse = {}
+        all_location_ids = []
+        for warehouse in warehouses:
+            for location_id in self._warehouse_location_ids(warehouse):
+                location_to_warehouse[location_id] = warehouse
+                all_location_ids.append(location_id)
+        if not all_location_ids:
+            return []
+
+        # Presence-first, matching Raj's spec: only locations that actually hold stock right now,
+        # not the full product catalog padded with zeros. One flat query across every selected
+        # warehouse's locations at once - fast even with everything selected (no per-warehouse
+        # catalog listing to multiply out).
+        self.env.cr.execute("""
+            SELECT location_id, product_id, SUM(quantity) AS qty
+            FROM stock_quant
+            WHERE location_id = ANY(%(locs)s)
+            GROUP BY location_id, product_id
+            HAVING SUM(quantity) <> 0
+        """, {"locs": all_location_ids})
+        quant_rows = self.env.cr.fetchall()
+        if not quant_rows:
+            return []
+
+        product_ids = list({product_id for _location_id, product_id, _qty in quant_rows})
+        if category_ids:
+            product_ids = self.env["product.product"].search([
+                ("id", "in", product_ids), ("categ_id", "child_of", category_ids),
+            ]).ids
+        if search_term:
+            product_ids = self.env["product.product"].search([
+                ("id", "in", product_ids),
+                "|", ("display_name", "ilike", search_term), ("default_code", "ilike", search_term),
+            ]).ids
+        allowed_product_ids = set(product_ids)
+        if not allowed_product_ids:
+            return []
+
+        location_names = {
+            location.id: location.complete_name
+            for location in self.env["stock.location"].browse({location_id for location_id, _p, _q in quant_rows})
+        }
+
+        # ADU/DOS outflow stays scoped to each warehouse's OWN locations, not the combined set
+        # above - it must still count a transfer from warehouse A to warehouse B as outflow for A
+        # even when both are selected, which a merged location set would wrongly stop detecting.
+        outflow_by_warehouse_product = {}
         for warehouse in warehouses:
             loc_ids = self._warehouse_location_ids(warehouse)
             if not loc_ids:
                 continue
-
-            # QOH is Odoo's own maintained on-hand balance (stock.quant), not an independent
-            # reconstruction from move history - same figure as Inventory > Reporting > Stock.
-            # Summed across lots/packages/owners so a lot-tracked product still yields one row
-            # per product, matching that standard report.
-            self.env.cr.execute("""
-                SELECT product_id, COALESCE(SUM(quantity), 0) AS qty
-                FROM stock_quant
-                WHERE location_id = ANY(%(locs)s)
-                GROUP BY product_id
-            """, {"locs": loc_ids})
-            qty_by_product = dict(self.env.cr.fetchall())
-            if not qty_by_product:
-                continue
-            product_ids = list(qty_by_product.keys())
-
-            if category_ids:
-                product_ids = self.env["product.product"].search([
-                    ("id", "in", product_ids), ("categ_id", "child_of", category_ids),
-                ]).ids
-                if not product_ids:
-                    continue
-
-            if search_term:
-                product_ids = self.env["product.product"].search([
-                    ("id", "in", product_ids),
-                    "|", ("display_name", "ilike", search_term), ("default_code", "ilike", search_term),
-                ]).ids
-                if not product_ids:
-                    continue
-
             self.env.cr.execute("""
                 SELECT sml.product_id, COALESCE(SUM(sml.quantity), 0) AS outflow
                 FROM stock_move_line sml
@@ -177,99 +197,51 @@ class StockReportProvider(ReportProvider):
                   AND sm.is_inventory IS NOT TRUE
                   AND dest_loc.usage IS DISTINCT FROM 'supplier'
                 GROUP BY sml.product_id
-            """, {"locs": loc_ids, "cutoff": cutoff, "start": trailing_start, "products": product_ids})
-            outflow_by_product = dict(self.env.cr.fetchall())
+            """, {"locs": loc_ids, "cutoff": cutoff, "start": trailing_start, "products": list(allowed_product_ids)})
+            for product_id, outflow in self.env.cr.fetchall():
+                outflow_by_warehouse_product[(warehouse.id, product_id)] = outflow
 
-            product_data = self.env["product.product"].with_company(warehouse.company_id.id).search_read(
-                [("id", "in", product_ids)],
-                ["display_name", "categ_id", "standard_price", "default_code", "barcode",
-                 "uom_id", "type", "list_price", "weight"],
-            )
-            for product in product_data:
-                product_id = product["id"]
-                qty = qty_by_product[product_id]
-                cost = product["standard_price"] or 0.0
-                outflow = outflow_by_product.get(product_id, 0.0)
-                avg_daily_usage = outflow / _TRAILING_DAYS
-                days_of_supply = round(qty / avg_daily_usage, 1) if avg_daily_usage > 0 else None
-                rows.append({
-                    "id": warehouse.id * _WAREHOUSE_ID_MULTIPLIER + product_id,
-                    "date": values["as_of_date"],
-                    "warehouse": warehouse.name,
-                    "product": product["display_name"],
-                    "category": self._display(product.get("categ_id")).rsplit(" / ", 1)[-1],
-                    "qoh": round(qty, 2),
-                    "unit_cost": round(cost, 2),
-                    "total_value": round(qty * cost, 2),
-                    "avg_daily_usage": round(avg_daily_usage, 2),
-                    "days_of_supply": days_of_supply,
-                    "sku": product.get("default_code") or "",
-                    "barcode": product.get("barcode") or "",
-                    "uom": self._display(product.get("uom_id")),
-                    "product_type": product.get("type"),
-                    "sales_price": round(product.get("list_price") or 0.0, 2),
-                    "weight": product.get("weight") or 0.0,
-                })
-        return rows
-
-    def _sort_rows(self, rows, sort):
-        if not isinstance(sort, dict):
-            raise ValidationError("Invalid report sort.")
-        key = sort.get("key", "warehouse")
-        direction = sort.get("direction", "asc")
-        if key not in self.sort_fields or direction not in ("asc", "desc"):
-            raise ValidationError("Unsupported report sort.")
-        field = self.sort_fields[key]
-        return sorted(rows, key=lambda row: (row[field] is None, row[field]), reverse=direction == "desc")
-
-    def get_page(self, filters, offset, limit, sort):
-        self.check_source_access()
-        offset, limit = self._validate_page(offset, limit)
-        rows = self._sort_rows(self._build_rows(filters), sort)
-        total = len(rows)
-        page = rows[offset:offset + limit]
-        return {
-            "rows": page,
-            "offset": offset,
-            "limit": limit,
-            "total": total,
-            "has_more": offset + len(page) < total,
-        }
-
-    def search_filter_options(self, filter_key, term, limit):
-        self.check_source_access()
-        if filter_key not in self.relation_filters:
-            raise ValidationError("Unsupported relational filter.")
-        if not isinstance(term, str) or len(term) > 100:
-            raise ValidationError("Invalid filter search.")
-        if isinstance(limit, bool) or not isinstance(limit, int):
-            raise ValidationError("Invalid filter option limit.")
-        limit = max(1, min(limit, 200))
-        if filter_key == "warehouse_ids":
-            warehouses = self._allowed_warehouses()
-            if term:
-                term_lower = term.lower()
-                warehouses = warehouses.filtered(lambda warehouse: term_lower in warehouse.name.lower())
-            warehouses = warehouses.sorted("name")[:limit]
-            return [{"id": warehouse.id, "label": warehouse.name} for warehouse in warehouses]
-        model_name, domain = self.relation_filters[filter_key]
-        model = self.env[model_name]
-        if not model.has_access("read"):
-            return []
-        options = model.name_search(name=term, domain=domain, operator="ilike", limit=limit)
-        return [{"id": record_id, "label": label} for record_id, label in options]
-
-    def export_rows(self, filters, sort, row_ids=None):
-        self.check_source_access()
-        rows = self._build_rows(filters)
-        if row_ids:
-            row_id_set = set(row_ids)
-            rows = [row for row in rows if row["id"] in row_id_set]
-        else:
-            rows = self._sort_rows(rows, sort)
-        if len(rows) > self.maximum_export_rows:
-            raise ValidationError(
-                f"This export exceeds the {self.maximum_export_rows:,} row limit. "
-                "Narrow the warehouse selection or date and try again."
-            )
+        # Cost is company-dependent (Harleys has 5 regional companies with genuinely different
+        # costs for the same product) - read per warehouse's own company via with_company, one
+        # search_read per warehouse rather than a raw SQL read of the underlying jsonb column.
+        product_data_by_company = {}
+        rows = []
+        for location_id, product_id, qty in quant_rows:
+            if product_id not in allowed_product_ids:
+                continue
+            warehouse = location_to_warehouse.get(location_id)
+            if not warehouse:
+                continue
+            company_id = warehouse.company_id.id
+            if company_id not in product_data_by_company:
+                product_data_by_company[company_id] = {
+                    product["id"]: product
+                    for product in self.env["product.product"].with_company(company_id).search_read(
+                        [("id", "in", list(allowed_product_ids))],
+                        ["product_tmpl_id", "categ_id", "uom_id", "default_code", "standard_price"],
+                    )
+                }
+            product = product_data_by_company[company_id].get(product_id)
+            if not product:
+                continue
+            cost = product.get("standard_price") or 0.0
+            outflow = outflow_by_warehouse_product.get((warehouse.id, product_id), 0.0)
+            avg_daily_usage = outflow / trailing_days
+            if adu_visibility == "positive" and avg_daily_usage <= 0:
+                continue
+            days_of_supply = round(qty / avg_daily_usage, 1) if avg_daily_usage > 0 else None
+            rows.append({
+                "id": location_id * _WAREHOUSE_ID_MULTIPLIER + product_id,
+                "warehouse": warehouse.name,
+                "stock_location": location_names.get(location_id, ""),
+                "sku": product.get("default_code") or "",
+                "product": self._display(product.get("product_tmpl_id")),
+                "category": self._display(product.get("categ_id")).rsplit(" / ", 1)[-1],
+                "uom": self._display(product.get("uom_id")),
+                "qoh": round(qty, 2),
+                "unit_cost": round(cost, 2),
+                "total_value": round(qty * cost, 2),
+                "avg_daily_usage": avg_daily_usage,
+                "days_of_supply": days_of_supply,
+            })
         return rows

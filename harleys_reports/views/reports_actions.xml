@@ -1,8 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_harleys_reports" model="ir.actions.client">
-        <field name="name">Harleys Reports</field>
+        <field name="name">Report Extraction</field>
         <field name="tag">harleys_reports.app</field>
         <field name="path">harleys-reports</field>
+    </record>
+
+    <!-- One action per report, all pointed at the same client action component - the
+         report_key param tells it which report to open directly to, so each shows up as its
+         own entry in the Report Extraction menu instead of requiring the in-app selector. -->
+    <record id="action_harleys_report_stock" model="ir.actions.client">
+        <field name="name">Stock Report</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-stock</field>
+        <field name="params" eval="{'report_key': 'stock_report'}"/>
+    </record>
+
+    <record id="action_harleys_report_move_history" model="ir.actions.client">
+        <field name="name">Move History</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-move-history</field>
+        <field name="params" eval="{'report_key': 'move_history'}"/>
+    </record>
+
+    <record id="action_harleys_report_internal_transfers" model="ir.actions.client">
+        <field name="name">Internal Transfers</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-internal-transfers</field>
+        <field name="params" eval="{'report_key': 'internal_transfers'}"/>
+    </record>
+
+    <record id="action_harleys_report_physical_inventory" model="ir.actions.client">
+        <field name="name">Physical Inventory</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-physical-inventory</field>
+        <field name="params" eval="{'report_key': 'physical_inventory'}"/>
+    </record>
+
+    <record id="action_harleys_report_expiry" model="ir.actions.client">
+        <field name="name">Expiry Report</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-expiry</field>
+        <field name="params" eval="{'report_key': 'expiry_report'}"/>
+    </record>
+
+    <!-- One action per ad-hoc data model, same "model:<name>" report_key format the frontend
+         already resolves via MODEL_KEY_PREFIX - no frontend changes needed to route these. -->
+    <record id="action_harleys_report_model_sale_order" model="ir.actions.client">
+        <field name="name">Sales Orders</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-model-sale-order</field>
+        <field name="params" eval="{'report_key': 'model:sale.order'}"/>
+    </record>
+
+    <record id="action_harleys_report_model_purchase_order" model="ir.actions.client">
+        <field name="name">Purchase Orders</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-model-purchase-order</field>
+        <field name="params" eval="{'report_key': 'model:purchase.order'}"/>
+    </record>
+
+    <record id="action_harleys_report_model_product" model="ir.actions.client">
+        <field name="name">Products</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-model-product</field>
+        <field name="params" eval="{'report_key': 'model:product.product'}"/>
+    </record>
+
+    <record id="action_harleys_report_model_stock_move" model="ir.actions.client">
+        <field name="name">Stock Moves</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-model-stock-move</field>
+        <field name="params" eval="{'report_key': 'model:stock.move'}"/>
+    </record>
+
+    <record id="action_harleys_report_model_account_move" model="ir.actions.client">
+        <field name="name">Invoices</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-model-account-move</field>
+        <field name="params" eval="{'report_key': 'model:account.move'}"/>
     </record>
 </odoo>

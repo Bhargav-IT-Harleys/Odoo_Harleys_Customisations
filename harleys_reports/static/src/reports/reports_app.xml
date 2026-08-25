@@ -2,203 +2,314 @@
 <templates xml:space="preserve">
     <t t-name="harleys_reports.ReportsApp">
         <div class="o_harleys_reports d-flex flex-column h-100">
-            <main class="o_hr_content flex-grow-1 overflow-hidden p-2 p-lg-3">
-                <div class="o_hr_layout d-flex h-100 gap-3">
-                    <aside t-if="state.metadata"
-                           t-att-class="state.sidebarOpen ? 'o_hr_sidebar d-flex flex-column p-3' : 'o_hr_sidebar o_hr_sidebar_closed d-flex flex-column p-3'">
-                        <div class="d-flex align-items-center justify-content-between mb-3 flex-shrink-0">
-                            <span class="o_hr_sidebar_title" t-if="state.sidebarOpen">Reports</span>
-                            <button class="btn btn-sm o_hr_sidebar_toggle" type="button" t-on-click="toggleSidebar"
-                                    t-att-title="state.sidebarOpen ? 'Hide filters' : 'Show filters'">
-                                <i t-att-class="state.sidebarOpen ? 'fa fa-chevron-left' : 'fa fa-chevron-right'"/>
-                            </button>
+            <main class="o_hr_content flex-grow-1 overflow-hidden p-2">
+                <div class="o_hr_layout d-flex h-100 gap-2">
+                    <aside class="o_hr_sidebar p-2 overflow-auto" t-if="state.metadata &amp;&amp; !state.sidebarCollapsed">
+                        <!-- Quick-add companion to the filters below, not a replacement: type once,
+                             pick a suggestion, and it's written into the same draftFilters those
+                             controls already read/write, so they stay in sync automatically. -->
+                        <div class="mb-3" t-if="eligibleGlobalSearchFilters.length">
+                            <label class="form-label small fw-bold d-block">Quick Search</label>
+                            <Dropdown state="globalSearchDropdown" manual="true" noClasses="true" menuClass="'o_hr_global_search_menu'">
+                                <div class="input-group input-group-sm w-100">
+                                    <span class="input-group-text"><i class="fa fa-search"/></span>
+                                    <input type="search" class="form-control" autocomplete="off"
+                                           placeholder="Products, warehouses, categories..."
+                                           t-att-value="state.globalSearchTerm"
+                                           t-on-input="onGlobalSearchInput"
+                                           t-on-focus="onGlobalSearchFocus"
+                                           t-on-blur="onGlobalSearchBlur"/>
+                                </div>
+                                <t t-set-slot="content">
+                                    <div class="o_hr_popover_body">
+                                        <div class="small text-muted p-2" t-if="state.globalSearchLoading">Searching...</div>
+                                        <t t-else="">
+                                            <t t-foreach="eligibleGlobalSearchFilters" t-as="filter" t-key="filter.key">
+                                                <DropdownItem closingMode="'none'" onSelected="() => toggleGlobalSearchGroup(filter.key)">
+                                                    <span class="fw-bold" t-if="filter.type === 'date'">Set <t t-esc="filter.label"/></span>
+                                                    <span class="fw-bold" t-else="">Search <t t-esc="filter.label"/> for: "<t t-esc="state.globalSearchTerm"/>"</span>
+                                                    <i t-att-class="state.globalSearchExpanded === filter.key ? 'fa fa-caret-up float-end' : 'fa fa-caret-down float-end'"/>
+                                                </DropdownItem>
+                                                <t t-if="state.globalSearchExpanded === filter.key">
+                                                    <!-- Relational / lookup-text: fetched suggestions -->
+                                                    <t t-if="filter.type === 'multi_relation' || filter.type === 'many2one' || filter.lookup">
+                                                        <DropdownItem class="'ps-4'" t-foreach="state.globalSearchResults[filter.key] || []" t-as="option" t-key="option.id"
+                                                                      onSelected="() => selectGlobalSearchOption(filter, option)">
+                                                            <t t-esc="option.label"/>
+                                                        </DropdownItem>
+                                                        <div class="small text-muted ps-4 py-1" t-if="!(state.globalSearchResults[filter.key] || []).length">No matches.</div>
+                                                    </t>
+                                                    <!-- Selection: match against the filter's own static options, no server call -->
+                                                    <t t-elif="filter.type === 'selection'">
+                                                        <DropdownItem class="'ps-4'" t-foreach="filteredSelectionOptions(filter)" t-as="option" t-key="option.value"
+                                                                      onSelected="() => selectGlobalSearchSelectionOption(filter, option)">
+                                                            <t t-esc="option.label"/>
+                                                        </DropdownItem>
+                                                        <div class="small text-muted ps-4 py-1" t-if="!filteredSelectionOptions(filter).length">No matches.</div>
+                                                    </t>
+                                                    <!-- Date: no term-matching - pick a date directly -->
+                                                    <t t-elif="filter.type === 'date'">
+                                                        <div class="px-4 py-1">
+                                                            <input type="date" class="form-control form-control-sm"
+                                                                   t-att-value="state.draftFilters[filter.key] || ''"
+                                                                   t-on-change="(event) => applyGlobalSearchDate(filter, event)"/>
+                                                        </div>
+                                                    </t>
+                                                    <!-- Plain text (no lookup): apply the typed term directly, no suggestion model to query -->
+                                                    <t t-else="">
+                                                        <DropdownItem class="'ps-4'" t-if="state.globalSearchTerm" onSelected="() => applyGlobalSearchText(filter)">
+                                                            Set to "<t t-esc="state.globalSearchTerm"/>"
+                                                        </DropdownItem>
+                                                        <div class="small text-muted ps-4 py-1" t-if="!state.globalSearchTerm">Type a value above.</div>
+                                                    </t>
+                                                </t>
+                                            </t>
+                                        </t>
+                                    </div>
+                                </t>
+                            </Dropdown>
                         </div>
 
-                        <t t-if="state.sidebarOpen">
-                            <div class="o_hr_sidebar_section mb-3 flex-shrink-0">
-                                <label class="form-label small text-uppercase o_hr_label mb-2" for="hr_report_selector">Report</label>
-                                <select id="hr_report_selector" class="form-select o_hr_select" t-on-change="onReportChange" t-att-disabled="state.loading">
-                                    <optgroup label="Standard Reports">
-                                        <option t-foreach="standardReports" t-as="report" t-key="report.key"
-                                                t-att-value="report.key" t-att-selected="report.key === state.reportKey"
-                                                t-esc="report.title"/>
-                                    </optgroup>
-                                    <optgroup label="All Data Models">
-                                        <option t-foreach="modelReports" t-as="report" t-key="report.key"
-                                                t-att-value="report.key" t-att-selected="report.key === state.reportKey"
-                                                t-esc="report.title"/>
-                                    </optgroup>
-                                </select>
-                            </div>
-
-                            <div class="o_hr_fields_picker o_hr_sidebar_section mb-3 flex-shrink-0 position-relative"
-                                 t-if="state.mode === 'dynamic' &amp;&amp; state.dynamicFields.length">
-                                <button class="btn btn-outline-secondary btn-sm w-100 text-start d-flex justify-content-between align-items-center" type="button" t-on-click="toggleFieldsPicker">
+                        <div class="mb-3" t-if="state.mode === 'dynamic' &amp;&amp; state.dynamicFields.length">
+                            <Dropdown position="'bottom-start'" menuClass="'w-100'">
+                                <button class="btn btn-outline-secondary btn-sm w-100 text-start d-flex justify-content-between align-items-center" type="button">
                                     <span><i class="fa fa-table me-1"/> Fields</span>
                                     <i class="fa fa-caret-down ms-1"/>
                                 </button>
-                                <div class="o_hr_fields_menu shadow position-absolute" t-if="state.fieldsPickerOpen">
-                                    <div class="o_hr_fields_menu_inner">
-                                        <label class="o_hr_fields_menu_item" t-foreach="state.dynamicFields" t-as="field" t-key="field.name">
-                                            <input type="checkbox" t-att-checked="state.selectedColumns.includes(field.name)"
-                                                   t-on-change="() => toggleDynamicColumn(field.name)"/>
-                                            <span t-esc="field.label"/>
-                                        </label>
+                                <t t-set-slot="content">
+                                    <div class="o_hr_popover_body">
+                                        <DropdownItem t-foreach="state.dynamicFields" t-as="field" t-key="field.name"
+                                                      closingMode="'none'" onSelected="() => toggleDynamicColumn(field.name)">
+                                            <CheckBox value="state.selectedColumns.includes(field.name)"
+                                                      onChange="() => toggleDynamicColumn(field.name)">
+                                                <t t-esc="field.label"/>
+                                            </CheckBox>
+                                        </DropdownItem>
                                     </div>
-                                    <div class="o_hr_fields_menu_footer">
-                                        <button class="btn btn-primary btn-sm w-100" type="button" t-on-click="toggleFieldsPicker">Done</button>
+                                    <div class="o_hr_popover_footer">
+                                        <DropdownItem class="'btn btn-primary btn-sm w-100 text-center'">Done</DropdownItem>
                                     </div>
-                                </div>
-                            </div>
+                                </t>
+                            </Dropdown>
+                        </div>
 
-                            <div class="o_hr_sidebar_section mb-3 flex-shrink-0">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <label class="form-label small text-uppercase o_hr_label mb-0">Favorites</label>
-                                    <button class="btn btn-link btn-sm p-0 text-decoration-none o_hr_more_btn" type="button"
-                                            t-if="!state.savingFavorite" t-on-click="startSaveFavorite"
-                                            t-att-disabled="state.favorites.length >= 3"
-                                            t-att-title="state.favorites.length >= 3 ? 'Remove a favorite to save a new one (max 3)' : ''">
-                                        <i class="fa fa-star-o me-1"/> Save current
-                                    </button>
-                                </div>
-                                <div class="input-group input-group-sm mb-2" t-if="state.savingFavorite">
-                                    <input type="text" class="form-control" placeholder="Favorite name"
-                                           t-att-value="state.newFavoriteName"
-                                           t-on-input="onNewFavoriteNameInput" t-on-keydown="onNewFavoriteKeydown"/>
-                                    <button class="btn btn-outline-secondary" type="button" t-on-click="confirmSaveFavorite" title="Save">
-                                        <i class="fa fa-check"/>
-                                    </button>
-                                    <button class="btn btn-outline-secondary" type="button" t-on-click="cancelSaveFavorite" title="Cancel">
-                                        <i class="fa fa-times"/>
-                                    </button>
-                                </div>
-                                <div class="o_hr_favorites_list" t-if="state.favorites.length">
-                                    <div class="o_hr_favorite_item d-flex align-items-center justify-content-between"
-                                         t-foreach="state.favorites" t-as="favorite" t-key="favorite.name">
-                                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-truncate" type="button"
-                                                t-on-click="() => applyFavorite(favorite)" t-esc="favorite.name"/>
-                                        <button class="btn btn-link btn-sm p-0 text-decoration-none o_hr_favorite_remove" type="button"
-                                                t-on-click="(event) => removeFavorite(favorite_index, event)" title="Remove">
-                                            <i class="fa fa-times"/>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="small text-muted" t-else="">No saved filters yet.</div>
-                            </div>
-
-                            <div class="o_hr_sidebar_filters flex-grow-1 overflow-auto">
-                                <h2 class="h6 mb-3 o_hr_section_title">Filters</h2>
-                                <div class="row g-3">
-                                    <t t-call="harleys_reports.FilterFields">
-                                        <t t-set="filters" t-value="visibleFilters"/>
-                                    </t>
-                                </div>
-                            </div>
-
-                            <div class="o_hr_sidebar_footer flex-shrink-0 pt-3 mt-3 border-top border-secondary-subtle">
-                                <div class="o_hr_selection_block mb-2" t-if="state.selectedRows.length || state.selectAllMatching">
-                                    <div class="small o_hr_selection_count d-flex align-items-center justify-content-between">
-                                        <span><t t-esc="selectionCount"/> selected</span>
-                                        <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" t-on-click="clearSelection">Clear</button>
-                                    </div>
-                                    <div class="small o_hr_select_all_prompt mt-1" t-if="showSelectAllMatchingPrompt">
-                                        All <t t-esc="state.rows.length"/> on this page are selected.
-                                        <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" t-on-click="selectAllMatchingRecords">
-                                            Select all <t t-esc="state.total"/> matching records
-                                        </button>
-                                    </div>
-                                    <div class="small o_hr_select_all_prompt mt-1" t-if="state.selectAllMatching">
-                                        All <t t-esc="state.total"/> matching records are selected.
-                                    </div>
-                                </div>
-                                <div class="o_hr_download position-relative mb-2">
-                                    <button class="btn btn-outline-secondary btn-sm w-100 d-flex justify-content-center align-items-center" type="button"
-                                            t-on-click="toggleDownloadMenu" t-att-disabled="state.loading || state.exporting || !hasSelection"
-                                            t-att-title="hasSelection ? '' : 'Select at least one record to download'">
-                                        <i class="fa fa-download me-1"/> Download
-                                        <i class="fa fa-caret-down ms-1"/>
-                                    </button>
-                                    <div class="o_hr_download_menu shadow position-absolute w-100" t-if="state.downloadMenuOpen">
-                                        <button class="o_hr_download_item" type="button" t-on-click="() => onDownloadFormat('csv')">
-                                            <i class="fa fa-file-text-o me-2"/> CSV
-                                        </button>
-                                        <button class="o_hr_download_item" type="button" t-on-click="() => onDownloadFormat('xlsx')">
-                                            <i class="fa fa-file-excel-o me-2"/> XLSX
-                                        </button>
-                                        <button class="o_hr_download_item" type="button" t-on-click="() => onDownloadFormat('pdf')">
-                                            <i class="fa fa-file-pdf-o me-2"/> PDF
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-secondary btn-sm o_hr_action_btn flex-grow-1" type="button" t-on-click="resetFilters" t-att-disabled="state.loading">Reset</button>
-                                    <button class="btn btn-primary btn-sm o_hr_action_btn o_hr_apply_btn flex-grow-1" type="button" t-on-click="applyFilters" t-att-disabled="state.loading">
-                                        <i class="fa fa-search me-1"/> Apply
-                                    </button>
-                                </div>
+                        <t t-foreach="visibleFilters" t-as="filter" t-key="filter.key">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold" t-att-for="'hr_filter_' + filter.key" t-esc="filter.label"/>
+                                <t t-call="harleys_reports.FilterFields">
+                                    <t t-set="filters" t-value="[filter]"/>
+                                </t>
                             </div>
                         </t>
+
+                        <!-- One collapsed dropdown per multi-select filter (Warehouses, Product
+                             Categories, Product Type, ...) - collapsed by default so the sidebar
+                             doesn't dump every option on screen at once. Checking boxes only
+                             stages the change; nothing is fetched until the shared "Apply
+                             Filters" button below is clicked, so picking values across several
+                             of these dropdowns only fires one request, not one per dropdown. -->
+                        <div class="mb-3 position-relative" t-foreach="multiRelationFilters" t-as="filter" t-key="filter.key">
+                            <label class="form-label small fw-bold d-block" t-esc="filter.label"/>
+                            <button class="btn btn-outline-secondary btn-sm w-100 text-start d-flex justify-content-between align-items-center" type="button"
+                                    t-on-click="() => toggleMultiRelationPicker(filter.key)">
+                                <span class="text-truncate" t-esc="multiRelationSummary(filter.key)"/>
+                                <i class="fa fa-caret-down ms-1"/>
+                            </button>
+                            <div class="dropdown-menu show w-100" t-if="state.openMultiRelation === filter.key">
+                                <div class="p-2 border-bottom">
+                                    <input type="search" class="form-control form-control-sm" t-att-placeholder="'Search ' + filter.label"
+                                           t-att-value="state.multiRelationSearch[filter.key] || ''"
+                                           t-on-input="(event) => setMultiRelationSearch(filter.key, event)"/>
+                                </div>
+                                <div class="o_hr_popover_body">
+                                    <div class="form-check" t-if="filteredMultiRelationOptions(filter.key).length">
+                                        <input type="checkbox" class="form-check-input" t-att-id="'hr_select_all_' + filter.key"
+                                               t-att-checked="allMultiRelationVisibleSelected(filter.key)"
+                                               t-on-change="() => toggleAllMultiRelation(filter.key)"/>
+                                        <label class="form-check-label fw-bold" t-att-for="'hr_select_all_' + filter.key">Select All</label>
+                                    </div>
+                                    <div class="o_hr_checklist">
+                                        <div class="form-check" t-foreach="filteredMultiRelationOptions(filter.key)" t-as="option" t-key="option.id">
+                                            <input type="checkbox" class="form-check-input" t-att-id="'hr_opt_' + filter.key + '_' + option.id"
+                                                   t-att-checked="(state.draftFilters[filter.key] || []).includes(option.id)"
+                                                   t-on-change="() => toggleMultiRelationValue(filter.key, option.id)"/>
+                                            <label class="form-check-label" t-att-for="'hr_opt_' + filter.key + '_' + option.id" t-esc="option.label"/>
+                                        </div>
+                                        <div class="small text-muted" t-if="!filteredMultiRelationOptions(filter.key).length">No matches.</div>
+                                    </div>
+                                </div>
+                                <div class="o_hr_popover_footer d-flex justify-content-end">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" t-on-click="() => toggleMultiRelationPicker(filter.key)">Done</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Single shared commit point for every staged filter change (multi-relation
+                             checkboxes above included) - also what triggers the very first load on a
+                             report gated by a required_for_search filter (see canSearch/blank state
+                             below), so nothing loads until the user has picked at least one. -->
+                        <button class="btn btn-primary btn-sm w-100 mb-2" type="button" t-on-click="applyFilters"
+                                t-att-disabled="state.loading || !canSearch"
+                                t-att-title="canSearch ? '' : ('Select ' + gateFiltersLabel + ' first')">Apply Filters</button>
+                        <button class="btn btn-secondary btn-sm w-100" type="button" t-on-click="resetFilters" t-att-disabled="state.loading">Reset Filters</button>
+
+                        <div class="small text-muted mt-3" t-if="state.metadata &amp;&amp; state.metadata.sidebar_note">
+                            <strong>Note:</strong> <t t-esc="state.metadata.sidebar_note"/>
+                        </div>
                     </aside>
 
-                    <section class="o_hr_results_panel flex-grow-1 overflow-hidden">
-                        <div class="o_hr_results_header d-flex flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="d-flex align-items-center gap-2 min-w-0">
-                                <button class="btn btn-sm o_hr_results_collapse" type="button" t-on-click="toggleSidebar">
-                                    <i class="fa fa-chevron-left"/>
+                    <section class="o_hr_results_panel flex-grow-1 d-flex flex-column overflow-hidden">
+                        <div class="o_hr_results_header d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 border-bottom">
+                            <div class="d-flex align-items-start gap-2 min-w-0">
+                                <button class="btn btn-outline-secondary btn-sm flex-shrink-0" type="button" t-on-click="toggleSidebar"
+                                        t-att-title="state.sidebarCollapsed ? 'Show filters' : 'Hide filters'">
+                                    <i t-att-class="state.sidebarCollapsed ? 'fa fa-bars' : 'fa fa-chevron-left'"/>
                                 </button>
                                 <div class="min-w-0">
-                                    <div class="o_hr_report_brand small text-uppercase">Harleys Reports</div>
-                                    <h1 class="h4 mb-1 o_hr_title" t-esc="state.metadata?.title || 'Reports'"/>
-                                    <div class="o_hr_title_desc" t-if="state.metadata?.description" t-esc="state.metadata.description"/>
-                                    <div class="o_hr_report_meta small" t-if="state.userInfo">
+                                    <div class="small text-uppercase text-muted">Harleys Reports</div>
+                                    <h1 class="h5 mb-0" t-esc="state.metadata?.title || 'Reports'"/>
+                                    <div class="small text-muted" t-if="state.metadata?.description" t-esc="state.metadata.description"/>
+                                    <div class="small text-muted" t-if="state.userInfo">
                                         <t t-esc="state.userInfo.name"/>
                                         <t t-if="state.userInfo.employee_code"> · Emp ID <t t-esc="state.userInfo.employee_code"/></t>
                                         <t t-if="generatedAtLabel"> · <t t-esc="generatedAtLabel"/></t>
                                     </div>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-3" t-if="!state.loading &amp;&amp; state.total">
-                                <span class="small o_hr_page_label" t-esc="pageLabel"/>
-                                <div class="o_hr_pager">
+
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="small" t-if="state.selectedRows.length || state.selectAllMatching">
+                                    <strong t-esc="selectionCount"/> selected
+                                    <span class="text-muted mx-1">·</span>
+                                    <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" t-on-click="clearSelection">Clear</button>
+                                    <span t-if="showSelectAllMatchingPrompt">
+                                        <span class="text-muted mx-1">·</span>
+                                        <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" t-on-click="selectAllMatchingRecords">
+                                            Select all <t t-esc="state.total"/> matching records
+                                        </button>
+                                    </span>
+                                    <span t-if="state.selectAllMatching">
+                                        <span class="text-muted mx-1">·</span>
+                                        All <t t-esc="state.total"/> matching records are selected.
+                                    </span>
+                                </div>
+
+                                <Dropdown position="'bottom-end'">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button"
+                                            t-att-disabled="state.loading || state.exporting || !hasSelection"
+                                            t-att-title="hasSelection ? '' : 'Select at least one record to export'">
+                                        <i class="fa fa-cog me-1"/> Actions <i class="fa fa-caret-down ms-1"/>
+                                    </button>
+                                    <t t-set-slot="content">
+                                        <DropdownItem onSelected="() => onDownloadFormat('csv')">
+                                            <i class="fa fa-file-text-o me-2"/> Export CSV
+                                        </DropdownItem>
+                                        <DropdownItem onSelected="() => onDownloadFormat('xlsx')">
+                                            <i class="fa fa-file-excel-o me-2"/> Export XLSX
+                                        </DropdownItem>
+                                        <DropdownItem onSelected="() => onDownloadFormat('pdf')">
+                                            <i class="fa fa-file-pdf-o me-2"/> Export PDF
+                                        </DropdownItem>
+                                    </t>
+                                </Dropdown>
+
+                                <!-- Hidden for now - being rebuilt as a real shared/persisted model
+                                     alongside Download History instead of localStorage. Markup and
+                                     every JS method behind it (loadFavorites/applyFavorite/etc.)
+                                     are left fully intact, just not rendered, so re-enabling later
+                                     is cheap. See PLAN_download_history_and_access.md. -->
+                                <Dropdown t-if="false" position="'bottom-end'">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button">
+                                        <i class="fa fa-star-o me-1"/> Favorites
+                                        <span class="badge text-bg-secondary ms-1" t-if="state.favorites.length" t-esc="state.favorites.length"/>
+                                    </button>
+                                    <t t-set-slot="content">
+                                        <div class="o_hr_popover_body">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <span class="small fw-bold">Favorites</span>
+                                                <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button"
+                                                        t-if="!state.savingFavorite" t-on-click="startSaveFavorite"
+                                                        t-att-disabled="state.favorites.length >= 3"
+                                                        t-att-title="state.favorites.length >= 3 ? 'Remove a favorite to save a new one (max 3)' : ''">
+                                                    <i class="fa fa-plus me-1"/> Save current
+                                                </button>
+                                            </div>
+                                            <div class="input-group input-group-sm mb-2" t-if="state.savingFavorite">
+                                                <input type="text" class="form-control" placeholder="Favorite name"
+                                                       t-att-value="state.newFavoriteName"
+                                                       t-on-input="onNewFavoriteNameInput" t-on-keydown="onNewFavoriteKeydown"/>
+                                                <button class="btn btn-outline-secondary" type="button" t-on-click="confirmSaveFavorite" title="Save">
+                                                    <i class="fa fa-check"/>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" type="button" t-on-click="cancelSaveFavorite" title="Cancel">
+                                                    <i class="fa fa-times"/>
+                                                </button>
+                                            </div>
+                                            <div t-if="state.favorites.length">
+                                                <div class="d-flex align-items-center justify-content-between"
+                                                     t-foreach="state.favorites" t-as="favorite" t-key="favorite.name">
+                                                    <DropdownItem class="'flex-grow-1 text-truncate p-0'" onSelected="() => applyFavorite(favorite)">
+                                                        <t t-esc="favorite.name"/>
+                                                    </DropdownItem>
+                                                    <button class="btn btn-link btn-sm p-0 text-decoration-none text-danger" type="button"
+                                                            t-on-click="(event) => removeFavorite(favorite_index, event)" title="Remove">
+                                                        <i class="fa fa-times"/>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="small text-muted" t-else="">No saved filters yet.</div>
+                                        </div>
+                                    </t>
+                                </Dropdown>
+
+                                <div class="d-flex align-items-center gap-2" t-if="!state.loading &amp;&amp; state.total &amp;&amp; !(state.metadata &amp;&amp; state.metadata.grouped)">
+                                    <span class="small" t-esc="pageLabel"/>
                                     <Pager offset="state.offset" limit="state.limit" total="state.total" onUpdate.bind="onPagerUpdate"/>
+                                </div>
+                                <div class="small text-muted" t-if="!state.loading &amp;&amp; state.total &amp;&amp; state.metadata &amp;&amp; state.metadata.grouped">
+                                    <t t-esc="state.total"/> records
                                 </div>
                             </div>
                         </div>
 
-                        <div class="o_hr_results_body d-flex flex-column h-100">
-                            <div class="alert alert-danger rounded-0 border-start-0 border-end-0 mb-0" t-if="state.error">
+                        <div class="flex-grow-1 overflow-auto">
+                            <div class="alert alert-danger rounded-0 mb-0" t-if="state.error">
                                 <i class="fa fa-exclamation-circle me-2"/><t t-esc="state.error"/>
                             </div>
-                            <div class="o_hr_state text-center py-5" t-if="state.loading">
-                                <i class="fa fa-circle-o-notch fa-spin fa-2x text-primary mb-3"/>
-                                <div class="text-muted">Loading report data...</div>
+                            <div class="text-center text-muted py-5" t-if="state.loading">
+                                <i class="fa fa-circle-o-notch fa-spin fa-2x mb-3"/>
+                                <div>Loading report data...</div>
                             </div>
-                            <div class="o_hr_state text-center py-5" t-elif="!state.rows.length &amp;&amp; !state.error">
-                                <i class="fa fa-inbox fa-3x text-muted opacity-50 mb-3"/>
+                            <div class="text-center text-muted py-5" t-elif="state.mode === 'fixed' &amp;&amp; !state.hasSearched &amp;&amp; !state.error">
+                                <i class="fa fa-map-marker fa-3x opacity-50 mb-3"/>
+                                <h3 class="h6">Select <t t-esc="gateFiltersLabel"/> to get started</h3>
+                                <div>Choose at least one option from the sidebar, then click <strong>Apply Filters</strong> to load this report.</div>
+                            </div>
+                            <div class="text-center text-muted py-5" t-elif="!state.rows.length &amp;&amp; !state.error">
+                                <i class="fa fa-inbox fa-3x opacity-50 mb-3"/>
                                 <h3 class="h6">No records found</h3>
-                                <div class="text-muted">Try changing or resetting the selected filters.</div>
+                                <div>Try changing or resetting the selected filters.</div>
                             </div>
-                            <div class="table-responsive flex-grow-1" t-else="">
-                                <table class="table table-hover table-sm align-middle mb-0 o_hr_table">
+                            <div class="table-responsive" t-else="">
+                                <table class="table table-hover table-sm align-middle mb-0">
                                     <thead class="sticky-top">
                                         <tr>
-                                            <th class="o_hr_select_col">
-                                                <input type="checkbox" class="form-check-input o_hr_row_checkbox" t-on-click="toggleAllRows" t-att-checked="state.selectAllMatching || state.allRowsSelected"/>
+                                            <th style="width: 2.5rem;">
+                                                <input type="checkbox" class="form-check-input" t-on-click="toggleAllRows" t-att-checked="state.selectAllMatching || allRowsSelected"/>
                                             </th>
-                                            <th t-foreach="displayColumns" t-as="column" t-key="column.key"
-                                                t-att-class="'col-' + column.key + (column.align === 'end' ? ' text-end' : '')"
+                                            <th t-foreach="visibleTableColumns" t-as="column" t-key="column.key"
+                                                t-att-class="column.align === 'end' ? 'text-end' : ''"
                                                 t-att-title="column.help || ''"
+                                                t-att-style="column.sortable ? 'cursor: pointer; white-space: nowrap;' : 'white-space: nowrap;'"
                                                 t-on-click="() => sortBy(column)">
-                                                <span t-att-class="column.sortable ? 'o_hr_sortable' : ''">
-                                                    <t t-esc="column.label"/>
-                                                    <i t-if="column.help" class="fa fa-info-circle ms-1 o_hr_col_help" t-att-title="column.help"/>
-                                                    <i t-if="state.sort.key === column.key"
-                                                       t-att-class="state.sort.direction === 'asc' ? 'fa fa-sort-asc ms-1' : 'fa fa-sort-desc ms-1'"/>
-                                                </span>
+                                                <t t-esc="column.label"/>
+                                                <i t-if="column.help" class="fa fa-info-circle ms-1 text-muted" t-att-title="column.help"/>
+                                                <i t-if="state.sort.key === column.key"
+                                                   t-att-class="state.sort.direction === 'asc' ? 'fa fa-sort-asc ms-1' : 'fa fa-sort-desc ms-1'"/>
                                             </th>
-                                            <th class="o_hr_optional_columns_toggle text-center" t-if="optionalColumns.length">
-                                                <Dropdown position="'bottom-end'" menuClass="'o_hr_columns_menu_portal'">
-                                                    <button class="btn p-0 o_hr_columns_btn" tabindex="-1" title="Add columns">
+                                            <th class="text-center" t-if="optionalColumns.length">
+                                                <Dropdown position="'bottom-end'">
+                                                    <button class="btn btn-sm p-0" tabindex="-1" title="Add columns">
                                                         <i class="fa fa-sliders"/>
                                                     </button>
                                                     <t t-set-slot="content">
@@ -214,20 +325,65 @@
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody t-if="state.metadata &amp;&amp; state.metadata.grouped">
+                                        <t t-foreach="state.groups" t-as="locationGroup" t-key="locationGroup.key">
+                                            <tr class="table-secondary" style="cursor: pointer;" t-on-click="() => toggleLocationGroup(locationGroup.key)">
+                                                <td/>
+                                                <td t-att-colspan="visibleTableColumns.length + (optionalColumns.length ? 1 : 0)">
+                                                    <i t-att-class="isLocationExpanded(locationGroup.key) ? 'fa fa-caret-down me-2' : 'fa fa-caret-right me-2'"/>
+                                                    <strong t-esc="locationGroup.key || 'Unknown Location'"/>
+                                                    <span class="text-muted ms-2">(<t t-esc="locationGroup.count"/>)</span>
+                                                    <span class="text-muted ms-3">Adj Qty: <t t-esc="formatFloat(locationGroup.adjustment_total)"/></span>
+                                                    <span class="text-muted ms-3">Value: <t t-esc="formatFloat(locationGroup.total_cost)"/></span>
+                                                </td>
+                                            </tr>
+                                            <t t-if="isLocationExpanded(locationGroup.key)">
+                                                <t t-foreach="locationGroup.groups" t-as="dateGroup" t-key="dateGroup.key">
+                                                    <tr class="table-light" style="cursor: pointer;" t-on-click="() => toggleDateGroup(locationGroup.key, dateGroup.key)">
+                                                        <td/>
+                                                        <td class="ps-4" t-att-colspan="visibleTableColumns.length + (optionalColumns.length ? 1 : 0)">
+                                                            <i t-att-class="isDateGroupExpanded(locationGroup.key, dateGroup.key) ? 'fa fa-caret-down me-2' : 'fa fa-caret-right me-2'"/>
+                                                            <strong t-esc="dateGroup.key"/>
+                                                            <span class="text-muted ms-2">(<t t-esc="dateGroup.count"/>)</span>
+                                                            <span class="text-muted ms-3">Adj Qty: <t t-esc="formatFloat(dateGroup.adjustment_total)"/></span>
+                                                            <span class="text-muted ms-3">Value: <t t-esc="formatFloat(dateGroup.total_cost)"/></span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr t-if="isDateGroupExpanded(locationGroup.key, dateGroup.key)"
+                                                        t-foreach="dateGroup.rows" t-as="row" t-key="row.id">
+                                                        <td>
+                                                            <input type="checkbox" class="form-check-input"
+                                                                   t-att-checked="state.selectAllMatching || state.selectedRows.includes(row.id)"
+                                                                   t-on-click="() => toggleRowSelection(row.id)"/>
+                                                        </td>
+                                                        <td t-foreach="visibleTableColumns" t-as="column" t-key="column.key"
+                                                            t-att-class="column.align === 'end' ? 'text-end font-monospace' : ''">
+                                                            <span t-if="column.type === 'badge'" t-att-class="'badge ' + badgeClass(row[column.key])"
+                                                                  t-esc="optionLabel(column.key, row[column.key])"/>
+                                                            <span t-elif="column.type === 'float'" t-att-title="row[column.key]" t-esc="formatFloat(row[column.key])"/>
+                                                            <span t-else="" t-att-title="row[column.key]" t-esc="row[column.key]"/>
+                                                        </td>
+                                                        <td t-if="optionalColumns.length"/>
+                                                    </tr>
+                                                </t>
+                                            </t>
+                                        </t>
+                                    </tbody>
+                                    <tbody t-else="">
                                         <tr t-foreach="state.rows" t-as="row" t-key="row.id">
-                                            <td class="o_hr_select_col">
-                                                <input type="checkbox" class="form-check-input o_hr_row_checkbox"
+                                            <td>
+                                                <input type="checkbox" class="form-check-input"
                                                        t-att-checked="state.selectAllMatching || state.selectedRows.includes(row.id)"
                                                        t-on-click="() => toggleRowSelection(row.id)"/>
                                             </td>
-                                            <td t-foreach="displayColumns" t-as="column" t-key="column.key"
-                                                t-att-class="'col-' + column.key + (column.align === 'end' ? ' text-end font-monospace' : '')">
+                                            <td t-foreach="visibleTableColumns" t-as="column" t-key="column.key"
+                                                t-att-class="column.align === 'end' ? 'text-end font-monospace' : ''">
                                                 <span t-if="column.type === 'badge'" t-att-class="'badge ' + badgeClass(row[column.key])"
                                                       t-esc="optionLabel(column.key, row[column.key])"/>
+                                                <span t-elif="column.type === 'float'" t-att-title="row[column.key]" t-esc="formatFloat(row[column.key])"/>
                                                 <span t-else="" t-att-title="row[column.key]" t-esc="row[column.key]"/>
                                             </td>
-                                            <td class="o_hr_optional_columns_toggle" t-if="optionalColumns.length"/>
+                                            <td t-if="optionalColumns.length"/>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -240,63 +396,31 @@
     </t>
 
     <t t-name="harleys_reports.FilterFields">
-        <div class="col-12" t-foreach="filters" t-as="filter" t-key="filter.key">
-            <input t-if="filter.type === 'date'" type="date" class="form-control"
+        <div t-foreach="filters" t-as="filter" t-key="filter.key">
+            <input t-if="filter.type === 'date'" type="date" class="form-control form-control-sm"
+                   t-att-id="'hr_filter_' + filter.key" t-att-value="state.draftFilters[filter.key] || ''"
+                   t-on-input="(event) => onFilterInput(filter.key, event)"/>
+            <input t-elif="filter.type === 'text' &amp;&amp; !filter.lookup" type="search" class="form-control form-control-sm"
                    t-att-id="'hr_filter_' + filter.key" t-att-value="state.draftFilters[filter.key] || ''"
                    t-att-placeholder="filter.label" t-on-input="(event) => onFilterInput(filter.key, event)"/>
-            <input t-elif="filter.type === 'text'" type="search" class="form-control"
-                   t-att-id="'hr_filter_' + filter.key" t-att-value="state.draftFilters[filter.key] || ''"
-                   t-att-placeholder="filter.label" t-on-input="(event) => onFilterInput(filter.key, event)"/>
-            <div t-elif="filter.type === 'numeric_range'" class="o_hr_numeric_range">
-                <div class="small text-muted mb-1" t-esc="filter.label"/>
-                <div class="d-flex gap-2">
-                    <input type="number" class="form-control form-control-sm" placeholder="Min"
-                           t-att-value="state.draftFilters[filter.keyMin] || ''"
-                           t-on-input="(event) => onFilterInput(filter.keyMin, event)"/>
-                    <input type="number" class="form-control form-control-sm" placeholder="Max"
-                           t-att-value="state.draftFilters[filter.keyMax] || ''"
-                           t-on-input="(event) => onFilterInput(filter.keyMax, event)"/>
-                </div>
+            <div t-elif="filter.type === 'numeric_range'" class="d-flex gap-2">
+                <input type="number" class="form-control form-control-sm" placeholder="Min"
+                       t-att-value="state.draftFilters[filter.keyMin] || ''"
+                       t-on-input="(event) => onFilterInput(filter.keyMin, event)"/>
+                <input type="number" class="form-control form-control-sm" placeholder="Max"
+                       t-att-value="state.draftFilters[filter.keyMax] || ''"
+                       t-on-input="(event) => onFilterInput(filter.keyMax, event)"/>
             </div>
-            <select t-elif="filter.type === 'selection'" class="form-select"
-                    t-att-id="'hr_filter_' + filter.key" t-att-data-placeholder="filter.label" t-on-change="(event) => onFilterInput(filter.key, event)">
-                <option value=""> <t t-esc="filter.label"/> </option>
+            <select t-elif="filter.type === 'selection'" class="form-select form-select-sm"
+                    t-att-id="'hr_filter_' + filter.key" t-att-value="state.draftFilters[filter.key] || ''"
+                    t-on-change="(event) => onFilterInput(filter.key, event)">
+                <option t-if="!filter.required" value=""> All </option>
                 <option t-foreach="filter.options" t-as="option" t-key="option.value"
                         t-att-value="option.value" t-att-selected="state.draftFilters[filter.key] === option.value"
                         t-esc="option.label"/>
             </select>
-            <div t-elif="filter.type === 'multi_relation'" class="o_hr_multi_relation position-relative">
-                <button class="btn btn-outline-secondary btn-sm w-100 text-start d-flex justify-content-between align-items-center" type="button"
-                        t-on-click="() => toggleMultiRelationPicker(filter.key)">
-                    <span t-esc="multiRelationSummary(filter.key)"/>
-                    <i class="fa fa-caret-down ms-1"/>
-                </button>
-                <div class="o_hr_multi_relation_menu shadow position-absolute w-100" t-if="state.openMultiRelation === filter.key">
-                    <div class="p-2 border-bottom">
-                        <input type="search" class="form-control form-control-sm" t-att-placeholder="'Search ' + filter.label"
-                               t-att-value="state.multiRelationSearch[filter.key] || ''"
-                               t-on-input="(event) => setMultiRelationSearch(filter.key, event)"/>
-                    </div>
-                    <label class="o_hr_multi_relation_item o_hr_multi_relation_select_all" t-if="filteredMultiRelationOptions(filter.key).length">
-                        <input type="checkbox" t-att-checked="allMultiRelationVisibleSelected(filter.key)"
-                               t-on-change="() => toggleAllMultiRelation(filter.key)"/>
-                        <span>Select All</span>
-                    </label>
-                    <div class="o_hr_multi_relation_list">
-                        <label class="o_hr_multi_relation_item" t-foreach="filteredMultiRelationOptions(filter.key)" t-as="option" t-key="option.id">
-                            <input type="checkbox" t-att-checked="(state.draftFilters[filter.key] || []).includes(option.id)"
-                                   t-on-change="() => toggleMultiRelationValue(filter.key, option.id)"/>
-                            <span t-esc="option.label"/>
-                        </label>
-                        <div class="small text-muted p-2" t-if="!filteredMultiRelationOptions(filter.key).length">No matches.</div>
-                    </div>
-                    <div class="p-2 border-top d-flex justify-content-end">
-                        <button class="btn btn-primary btn-sm" type="button" t-on-click="() => toggleMultiRelationPicker(filter.key)">Done</button>
-                    </div>
-                </div>
-            </div>
-            <div t-else="" class="o_hr_lookup position-relative">
-                <div class="input-group">
+            <div t-else="" class="position-relative">
+                <div class="input-group input-group-sm">
                     <input type="search" class="form-control" autocomplete="off"
                            t-att-id="'hr_filter_' + filter.key" t-att-value="state.optionLabels[filter.key] || ''"
                            t-att-placeholder="filter.label" t-on-input="(event) => onLookupInput(filter.key, event)"
@@ -306,7 +430,7 @@
                         <i class="fa fa-times"/>
                     </button>
                 </div>
-                <div class="o_hr_lookup_menu list-group position-absolute w-100 shadow" t-if="state.filterOptions[filter.key]?.length">
+                <div class="list-group position-absolute w-100 shadow" t-if="state.filterOptions[filter.key]?.length">
                     <button class="list-group-item list-group-item-action" type="button"
                             t-foreach="state.filterOptions[filter.key]" t-as="option" t-key="option.id"
                             t-on-click="() => selectLookupOption(filter.key, option)" t-esc="option.label"/>
