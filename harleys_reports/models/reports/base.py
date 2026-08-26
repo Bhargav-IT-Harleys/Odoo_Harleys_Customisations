@@ -42,12 +42,16 @@ class ReportProvider:
     def __init__(self, env):
         self.env = env
 
+    def _default_ids_for_names(self, model_name, names, extra_domain=None):
+        if not names:
+            return []
+        domain = (extra_domain or []) + [("name", "in", list(names))]
+        return self.env[model_name].search(domain).ids
+
     def _default_category_filter(self):
-        if not self.default_category_names:
-            return {}
-        ids = self.env["product.category"].search([
-            ("parent_id", "=", False), ("name", "in", list(self.default_category_names)),
-        ]).ids
+        ids = self._default_ids_for_names(
+            "product.category", self.default_category_names, [("parent_id", "=", False)]
+        )
         return {"category_ids": ids} if ids else {}
 
     @property

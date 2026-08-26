@@ -1,15 +1,12 @@
 from collections import defaultdict
 from datetime import timedelta
-
 from odoo import fields
 from odoo.exceptions import ValidationError
-
 from .base import PRODUCT_RELATION_FILTERS, PRODUCT_SEARCH_FILTER, ReportProvider, SqlRowsReportMixin
 from .date_utils import date_boundary
 from .registry import register_report
 
 _DEFAULT_WINDOW_DAYS = 15
-
 
 @register_report
 class PhysicalInventoryReport(SqlRowsReportMixin, ReportProvider):
@@ -80,8 +77,6 @@ class PhysicalInventoryReport(SqlRowsReportMixin, ReportProvider):
             "default_page_size": self.default_page_size,
             "maximum_page_size": self.maximum_page_size,
             "export_formats": ["csv", "xlsx"],
-            # Tells the frontend to render this report as collapsible Location -> Date groups
-            # (get_grouped_rows below) instead of the shared flat/paginated table.
             "grouped": True,
         }
 
@@ -125,14 +120,6 @@ class PhysicalInventoryReport(SqlRowsReportMixin, ReportProvider):
                 all_location_ids.append(location_id)
         if not all_location_ids:
             return []
-
-        # "System Qty" reconstructs what Odoo's own ledger said the quantity was right before
-        # each count - not today's stock.quant snapshot, which only remembers the latest count.
-        # This replays the full move-line history per (product, location) via a running-balance
-        # window function rather than a correlated subquery re-scanning history for every event
-        # independently - same result (verified against the naive per-row approach: 0 mismatches
-        # across real spot-checked events), ~13x faster (1.6s vs 20.5s for a 15-day/25k-row
-        # window), because it's one sorted pass instead of O(events x history) rescans.
         self.env.cr.execute("""
             WITH move_legs AS (
                 SELECT sml.id, sml.product_id, sml.location_dest_id AS location_id,
@@ -193,10 +180,6 @@ class PhysicalInventoryReport(SqlRowsReportMixin, ReportProvider):
             location.id: location.complete_name
             for location in self.env["stock.location"].browse({row[3] for row in event_rows})
         }
-
-        # Cost is company-dependent (Harleys has 5 regional companies with genuinely different
-        # costs for the same product) - read per warehouse's own company via with_company, not a
-        # raw SQL read of the underlying jsonb column.
         product_data_by_company = {}
         rows = []
         for (inventory_line_id, adjustment_date, product_id, location_id,
@@ -239,9 +222,6 @@ class PhysicalInventoryReport(SqlRowsReportMixin, ReportProvider):
         return rows
 
     def _group_rows(self, rows):
-        # Two levels, same shape at both: {key, count, adjustment_total, total_cost, ...}.
-        # Location groups nest date groups, which hold the actual rows - the running totals let
-        # the frontend show a meaningful summary on a collapsed header, not just a count.
         by_location = defaultdict(lambda: defaultdict(list))
         for row in rows:
             by_location[row["location"]][row["date"][:10]].append(row)

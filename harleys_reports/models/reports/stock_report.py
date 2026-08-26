@@ -26,6 +26,10 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         {"key": "warehouse_ids", "label": "Warehouses", "type": "multi_relation", "group": "primary",
          "required_for_search": True},
         {"key": "category_ids", "label": "Product Categories", "type": "multi_relation", "group": "advanced"},
+        # No "no value" state here either, but unlike adu_window/adu_visibility below this one
+        # legitimately allows an empty selection (see _default_reason_tag_filter) - it means
+        # "exclude every scrap/Inv Adjustment move from ADU", not "show all".
+        {"key": "reason_tag_ids", "label": "Inv Adj Reason", "type": "multi_relation", "group": "advanced"},
         # "required" tells the frontend not to offer a blank "All" choice for this one - unlike
         # a genuine optional filter (e.g. a Status filter elsewhere), there's no "no value" state
         # here: ADU is always computed over *some* window, and is always either visible or not.
@@ -59,7 +63,8 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         {"key": "total_value", "label": "Stock Value", "type": "float", "sortable": True, "align": "end",
          "help": "Quantity x AVCO Unit Cost."},
         {"key": "avg_daily_usage", "label": "ADU", "type": "float", "sortable": True, "align": "end",
-         "help": "Average daily usage over the selected ADU Window, excluding inventory adjustments and vendor returns."},
+         "help": "Average daily usage over the selected ADU Window, excluding inventory adjustments and vendor "
+                 "returns. Scrap/Inv Adjustment moves only count when their Inv Adj Reason is selected."},
         {"key": "days_of_supply", "label": "DOS", "type": "float", "sortable": True, "align": "end",
          "help": "Days of Supply = Quantity / Average Daily Usage (recalculates with the ADU Window filter). Blank when there is no recent usage to project from."},
         # Hidden by default - available via the Columns picker, same idea as Odoo's own
@@ -67,8 +72,14 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         {"key": "stock_location", "label": "Stock Location", "type": "text", "sortable": True, "optional": True,
          "help": "The specific internal location within the warehouse - hidden by default since Warehouse already identifies the outlet."},
     )
-    relation_filters = PRODUCT_RELATION_FILTERS
+    relation_filters = {**PRODUCT_RELATION_FILTERS, "reason_tag_ids": ("stock.scrap.reason.tag", [])}
     default_category_names = ("RAWMATERIAL", "PACKAGING MATERIALS")
+    # Scrap/"Inv Adjustments" (harleys_customization's relabeled stock.scrap) moves are a separate
+    # mechanism from true is_inventory=TRUE corrections and aren't caught by that exclusion below -
+    # every reason (Damaged, Expired, wastage, ...) was silently counting as ADU consumption until
+    # this filter. Consumed/R&D are genuine usage (issued to Housekeeping/Production/R&D); the rest
+    # default to excluded. See _default_reason_tag_filter.
+    default_reason_tag_names = ("Consumed", "R&D")
     default_sort = {"key": "days_of_supply", "direction": "asc"}
     sort_fields = {
         "warehouse": "warehouse", "stock_location": "stock_location", "sku": "sku",
@@ -77,11 +88,21 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         "avg_daily_usage": "avg_daily_usage", "days_of_supply": "days_of_supply",
     }
 
+    def _default_reason_tag_filter(self):
+        # Unlike _default_category_filter, always emit the key (even as []) rather than omitting
+        # it when nothing matches - an omitted key falls back to "select every option" on the
+        # frontend, which for this filter means "count every scrap reason as consumption again",
+        # exactly the bug this filter exists to fix. A missing/renamed Consumed/R&D tag should
+        # fail toward "exclude all scrap", not toward reproducing the old behavior.
+        ids = self._default_ids_for_names("stock.scrap.reason.tag", self.default_reason_tag_names)
+        return {"reason_tag_ids": ids}
+
     def metadata(self):
         default_filters = {
             "adu_window": str(_DEFAULT_TRAILING_DAYS),
             "adu_visibility": _DEFAULT_ADU_VISIBILITY,
             **self._default_category_filter(),
+            **self._default_reason_tag_filter(),
         }
         return {
             **self.summary(),
@@ -95,7 +116,10 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             "export_formats": ["csv", "xlsx"],
             "sidebar_note": (
                 "Zero and negative ADU items are excluded by default. "
-                "Switch \"ADU Visibility\" to \"Show All\" to include them."
+                "Switch \"ADU Visibility\" to \"Show All\" to include them. "
+                "Scrapped/Inv Adjustment moves only count toward ADU when their Inv Adj Reason is "
+                "selected - Consumed and R&D are selected by default; unselect all to exclude scrap "
+                "entirely, or add reasons like Damaged/Expired/wastage to count those too."
             ),
         }
 
@@ -110,6 +134,16 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             value = values.get(key)
             if value:
                 normalized[key] = self._validate_id_list(value, label)
+        # Unlike warehouse_ids/category_ids above, an explicit [] here is meaningful (see the
+        # filter's own comment) and must be told apart from "key wasn't sent at all" - a request
+        # that omits the key entirely (e.g. a stale API caller) falls back to the Consumed/R&D
+        # default instead of silently excluding everything.
+        if "reason_tag_ids" in values:
+            normalized["reason_tag_ids"] = self._validate_id_list(
+                values.get("reason_tag_ids") or [], "inv adj reason"
+            )
+        else:
+            normalized["reason_tag_ids"] = self._default_reason_tag_filter()["reason_tag_ids"]
         search_term = values.get("search")
         if search_term:
             if not isinstance(search_term, str) or len(search_term) > 100:
@@ -130,6 +164,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             return []
         category_ids = values.get("category_ids")
         search_term = values.get("search")
+        reason_tag_ids = values["reason_tag_ids"]
         trailing_days = int(values["adu_window"])
         adu_visibility = values["adu_visibility"]
         cutoff = date_boundary(self.env, fields.Date.context_today(self.model), end=True)
@@ -186,6 +221,12 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             loc_ids = self._warehouse_location_ids(warehouse)
             if not loc_ids:
                 continue
+            # Scrap/"Inv Adjustments" moves (harleys_customization's relabeled stock.scrap) are a
+            # separate mechanism from is_inventory=TRUE corrections above - they pass every other
+            # exclusion here regardless of reason, so a plain move (scrap_id IS NULL) counts as
+            # before, but a scrap-linked move only counts if it carries a selected reason tag. An
+            # empty reason_tag_ids therefore excludes every scrap move, not "no filter" - the
+            # explicit ::int[] cast avoids relying on Postgres to infer a type for an empty array.
             self.env.cr.execute("""
                 SELECT sml.product_id, COALESCE(SUM(sml.quantity), 0) AS outflow
                 FROM stock_move_line sml
@@ -196,8 +237,19 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
                   AND sml.product_id = ANY(%(products)s)
                   AND sm.is_inventory IS NOT TRUE
                   AND dest_loc.usage IS DISTINCT FROM 'supplier'
+                  AND (
+                        sm.scrap_id IS NULL
+                        OR EXISTS (
+                            SELECT 1 FROM stock_scrap_stock_scrap_reason_tag_rel rel
+                            WHERE rel.stock_scrap_id = sm.scrap_id
+                              AND rel.stock_scrap_reason_tag_id = ANY(%(reason_tag_ids)s::int[])
+                        )
+                      )
                 GROUP BY sml.product_id
-            """, {"locs": loc_ids, "cutoff": cutoff, "start": trailing_start, "products": list(allowed_product_ids)})
+            """, {
+                "locs": loc_ids, "cutoff": cutoff, "start": trailing_start,
+                "products": list(allowed_product_ids), "reason_tag_ids": reason_tag_ids,
+            })
             for product_id, outflow in self.env.cr.fetchall():
                 outflow_by_warehouse_product[(warehouse.id, product_id)] = outflow
 

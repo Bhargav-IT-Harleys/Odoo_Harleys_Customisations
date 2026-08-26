@@ -525,6 +525,8 @@ class IndentRequestLine(models.Model):
         comodel_name="product.product",
         string="Product",
         tracking=True,
+        required=True,
+        ondelete="restrict",
     )
 
     categ_id = fields.Many2one(string="Product Category", related='product_id.categ_id', readonly=True)
