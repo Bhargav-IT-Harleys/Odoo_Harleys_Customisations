@@ -46,31 +46,19 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
          ]},
     )
     columns = (
-        {"key": "warehouse", "label": "Warehouse", "type": "text", "sortable": True, "filter_key": "warehouse_ids",
-         "help": "The outlet/warehouse this stock belongs to."},
-        {"key": "sku", "label": "Product Code", "type": "text", "sortable": True,
-         "help": "Product internal reference."},
-        {"key": "product", "label": "Product", "type": "text", "sortable": True, "filter_key": "search",
-         "help": "Product name."},
-        {"key": "category", "label": "Product Category", "type": "text", "sortable": True, "filter_key": "category_ids",
-         "help": "The product's category (leaf level)."},
-        {"key": "uom", "label": "UoM", "type": "text", "sortable": True,
-         "help": "Unit of measure."},
-        {"key": "qoh", "label": "Quantity", "type": "float", "sortable": True, "align": "end",
-         "help": "Current quantity on hand at this stock location, as maintained by Odoo (stock.quant). Locations with zero quantity are not shown."},
-        {"key": "unit_cost", "label": "Unit Cost", "type": "float", "sortable": True, "align": "end",
-         "help": "The product's cost in this outlet's company (standard_price)."},
-        {"key": "total_value", "label": "Stock Value", "type": "float", "sortable": True, "align": "end",
-         "help": "Quantity x AVCO Unit Cost."},
-        {"key": "avg_daily_usage", "label": "ADU", "type": "float", "sortable": True, "align": "end",
-         "help": "Average daily usage over the selected ADU Window, excluding inventory adjustments and vendor "
-                 "returns. Scrap/Inv Adjustment moves only count when their Inv Adj Reason is selected."},
-        {"key": "days_of_supply", "label": "DOS", "type": "float", "sortable": True, "align": "end",
-         "help": "Days of Supply = Quantity / Average Daily Usage (recalculates with the ADU Window filter). Blank when there is no recent usage to project from."},
+        {"key": "warehouse", "label": "Warehouse", "type": "text", "sortable": True, "filter_key": "warehouse_ids"},
+        {"key": "sku", "label": "Product Code", "type": "text", "sortable": True},
+        {"key": "product", "label": "Product", "type": "text", "sortable": True, "filter_key": "search"},
+        {"key": "category", "label": "Product Category", "type": "text", "sortable": True, "filter_key": "category_ids"},
+        {"key": "uom", "label": "UoM", "type": "text", "sortable": True},
+        {"key": "qoh", "label": "Quantity", "type": "float", "sortable": True, "align": "end"},
+        {"key": "unit_cost", "label": "Unit Cost", "type": "float", "sortable": True, "align": "end"},
+        {"key": "total_value", "label": "Stock Value", "type": "float", "sortable": True, "align": "end"},
+        {"key": "avg_daily_usage", "label": "ADU", "type": "float", "sortable": True, "align": "end"},
+        {"key": "days_of_supply", "label": "DOS", "type": "float", "sortable": True, "align": "end"},
         # Hidden by default - available via the Columns picker, same idea as Odoo's own
         # list-view "optional fields" toggle.
-        {"key": "stock_location", "label": "Stock Location", "type": "text", "sortable": True, "optional": True,
-         "help": "The specific internal location within the warehouse - hidden by default since Warehouse already identifies the outlet."},
+        {"key": "stock_location", "label": "Stock Location", "type": "text", "sortable": True, "optional": True},
     )
     relation_filters = {**PRODUCT_RELATION_FILTERS, "reason_tag_ids": ("stock.scrap.reason.tag", [])}
     default_category_names = ("RAWMATERIAL", "PACKAGING MATERIALS")

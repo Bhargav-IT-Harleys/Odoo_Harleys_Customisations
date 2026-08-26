@@ -6,8 +6,8 @@ from .registry import register_report
 _LOCATION_ID_MULTIPLIER = 1_000_000
 _STATUS_OPTIONS = (
     {"value": "expired", "label": "Expired"},
-    {"value": "expires_today", "label": "Expires Today"},
-    {"value": "days_1_7", "label": "1-7 Days"},
+    {"value": "expires_tomorrow", "label": "Expires Tomorrow"},
+    {"value": "days_2_7", "label": "2-7 Days"},
     {"value": "days_8_15", "label": "8-15 Days"},
     {"value": "days_16_30", "label": "16-30 Days"},
     {"value": "days_31_45", "label": "31-45 Days"},
@@ -39,8 +39,7 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
         {"key": "uom", "label": "UOM", "type": "text", "sortable": True},
         {"key": "quantity", "label": "Quantity", "type": "float", "sortable": True, "align": "end"},
         {"key": "expiration_date", "label": "Expiration Date", "type": "text", "sortable": True},
-        {"key": "days_to_expiry", "label": "Days to Exp", "type": "float", "sortable": True, "align": "end",
-         "help": "Negative means already expired."},
+        {"key": "days_to_expiry", "label": "Days to Exp", "type": "float", "sortable": True, "align": "end"},
         {"key": "status", "label": "Status", "type": "badge", "sortable": True, "options": list(_STATUS_OPTIONS)},
     )
     relation_filters = PRODUCT_RELATION_FILTERS
@@ -123,9 +122,9 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
             SELECT location_id, product_id, lot_id, qty, expiration_date,
                    expiration_date - CURRENT_DATE AS days_to_expiry,
                    CASE
-                       WHEN expiration_date < CURRENT_DATE THEN 'expired'
-                       WHEN expiration_date = CURRENT_DATE THEN 'expires_today'
-                       WHEN expiration_date <= CURRENT_DATE + 7 THEN 'days_1_7'
+                       WHEN expiration_date <= CURRENT_DATE THEN 'expired'
+                       WHEN expiration_date = CURRENT_DATE + 1 THEN 'expires_tomorrow'
+                       WHEN expiration_date <= CURRENT_DATE + 7 THEN 'days_2_7'
                        WHEN expiration_date <= CURRENT_DATE + 15 THEN 'days_8_15'
                        WHEN expiration_date <= CURRENT_DATE + 30 THEN 'days_16_30'
                        WHEN expiration_date <= CURRENT_DATE + 45 THEN 'days_31_45'

@@ -4,12 +4,12 @@
 
 
 {
-    "name": "Harleys Stock Disallow Negative",
+    "name": "Harley's Stock Disallow Negative",
     "version": "19.0.1.0.0",
     "category": "Inventory, Logistic, Storage",
     "license": "AGPL-3",
     "summary": "Disallow negative stock levels by default",
-    "author": "Harleys",
+    "author": "Harley's",
     "depends": ["stock"],
     "data": [
         "views/product_product_views.xml",

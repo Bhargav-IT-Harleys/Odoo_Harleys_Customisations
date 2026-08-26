@@ -1,9 +1,9 @@
 {
-    'name': "Harleys Customization",
+    'name': "Harley's Customization",
 
     'summary': "Harleys Customization",
     "version": "19.0.0.0.2",
-    'author': "Harleys",
+    'author': "Harley's",
     'description': """
            Harleys Customization
     """,

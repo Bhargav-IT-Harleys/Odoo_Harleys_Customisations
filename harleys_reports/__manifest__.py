@@ -1,9 +1,9 @@
 {
-    "name": "Harleys Reports",
-    "summary": "Read-only business reporting for Harleys",
+    "name": "Harley's Reports",
+    "summary": "Read-only business reporting for Harley's",
     "version": "19.0.1.0.0",
     "category": "Customizations",
-    "author": "Harleys",
+    "author": "Harley's",
     "license": "LGPL-3",
     "depends": ["base", "web", "stock"],
     "data": [

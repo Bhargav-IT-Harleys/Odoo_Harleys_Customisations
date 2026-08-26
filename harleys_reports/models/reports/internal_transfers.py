@@ -40,10 +40,8 @@ class InternalTransfersReport(OrmSearchReportMixin, ReportProvider):
         # list-view "optional fields" toggle.
         {"key": "contact", "label": "Contact", "type": "text", "sortable": True, "optional": True},
         {"key": "responsible", "label": "Responsible", "type": "text", "sortable": True, "optional": True},
-        {"key": "back_order_of", "label": "Back Order Of", "type": "text", "sortable": True, "optional": True,
-         "help": "Set when this transfer was split off from an earlier, partially-done one."},
-        {"key": "effective_date", "label": "Effective Date", "type": "datetime", "sortable": True, "optional": True,
-         "help": "When the transfer was actually completed (vs. Date, which is when it was scheduled)."},
+        {"key": "back_order_of", "label": "Back Order Of", "type": "text", "sortable": True, "optional": True},
+        {"key": "effective_date", "label": "Effective Date", "type": "datetime", "sortable": True, "optional": True},
     )
 
     field_names = (

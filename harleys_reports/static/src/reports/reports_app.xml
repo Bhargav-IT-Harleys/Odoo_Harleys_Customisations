@@ -299,11 +299,9 @@
                                             </th>
                                             <th t-foreach="visibleTableColumns" t-as="column" t-key="column.key"
                                                 t-att-class="column.align === 'end' ? 'text-end' : ''"
-                                                t-att-title="column.help || ''"
                                                 t-att-style="column.sortable ? 'cursor: pointer; white-space: nowrap;' : 'white-space: nowrap;'"
                                                 t-on-click="() => sortBy(column)">
                                                 <t t-esc="column.label"/>
-                                                <i t-if="column.help" class="fa fa-info-circle ms-1 text-muted" t-att-title="column.help"/>
                                                 <i t-if="state.sort.key === column.key"
                                                    t-att-class="state.sort.direction === 'asc' ? 'fa fa-sort-asc ms-1' : 'fa fa-sort-desc ms-1'"/>
                                             </th>

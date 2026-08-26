@@ -60,16 +60,12 @@ class MoveHistoryReport(OrmSearchReportMixin, ReportProvider):
         {"key": "done_by", "label": "Done By", "type": "text", "sortable": True},
         # Hidden by default - available via the Columns picker, same idea as Odoo's own
         # list-view "optional fields" toggle.
-        {"key": "transfer", "label": "Transfer", "type": "text", "sortable": True, "optional": True,
-         "help": "The picking/operation this move line belongs to."},
-        {"key": "operation_type_name", "label": "Operation Type", "type": "text", "sortable": True, "optional": True,
-         "help": "The named operation type (e.g. a specific receipt/delivery/transfer type)."},
-        {"key": "owner", "label": "Owner", "type": "text", "sortable": True, "optional": True,
-         "help": "Owner of the stock, for consignment/owned-by-others inventory."},
+        {"key": "transfer", "label": "Transfer", "type": "text", "sortable": True, "optional": True},
+        {"key": "operation_type_name", "label": "Operation Type", "type": "text", "sortable": True, "optional": True},
+        {"key": "owner", "label": "Owner", "type": "text", "sortable": True, "optional": True},
         {"key": "source_package", "label": "Source Package", "type": "text", "sortable": True, "optional": True},
         {"key": "dest_package", "label": "Destination Package", "type": "text", "sortable": True, "optional": True},
-        {"key": "source_document", "label": "Source Document", "type": "text", "sortable": True, "optional": True,
-         "help": "The originating document (e.g. sale order, indent) that triggered this move."},
+        {"key": "source_document", "label": "Source Document", "type": "text", "sortable": True, "optional": True},
     )
     field_names = (
         "date", "reference", "product_id", "lot_id", "location_id", "location_dest_id",

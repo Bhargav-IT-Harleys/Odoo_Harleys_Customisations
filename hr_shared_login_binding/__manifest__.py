@@ -1,15 +1,15 @@
 {
-    'name': "Harleys Shared Login & Audit Trail",
+    'name': "Harley's Shared Login & Audit Trail",
 
     'summary': "Attribute actions on shared/functional logins to the employee actually performing them",
     "version": "19.0.1.0.0",
-    'author': 'Harleys',
+    'author': "Harley's",
     'description': """
         Shared/functional accounts (e.g. Purchase Manager, Accountant) require an
         employee identity check at login before the session is granted, and every
         chatter message posted afterwards is tagged with that employee - see
         employee-attribution-current-state.md and docs/developer-guide.html for
-        the full design. Settings > Harleys > Portal User Mapping provides an
+        the full design. Settings > Harley's > Portal User Mapping provides an
         Excel/CSV upload for authorizing many employees against their
         functional accounts at once (requires openpyxl and xlsxwriter, both
         Python libraries rather than Odoo modules). stock.move.line also gets
