@@ -85,6 +85,7 @@ export class HarleysReportsApp extends Component {
             "onGlobalSearchInput", "onGlobalSearchFocus", "onGlobalSearchBlur",
             "toggleGlobalSearchGroup", "selectGlobalSearchOption",
             "applyGlobalSearchText", "selectGlobalSearchSelectionOption", "applyGlobalSearchDate",
+            "removeFilterChip",
         ]) {
             this[name] = this[name].bind(this);
         }
@@ -111,9 +112,8 @@ export class HarleysReportsApp extends Component {
                 this.state.error = "No reports are available for your access rights.";
                 return;
             }
-            // Each menu entry (Stock Report, Move History, ...) is its own ir.actions.client
-            // pointed at this same component, differing only by this param - falls back to the
-            // generic "Report Extraction" action's default when launched without one.
+            // Each menu entry is its own ir.actions.client pointed at this same component,
+            // differing only by this param.
             const requestedKey = this.props.action?.params?.report_key;
             const defaultReport = this.state.reports.find((report) => report.key === requestedKey)
                 || this.state.reports.find((report) => report.key === DEFAULT_REPORT_KEY)
@@ -159,9 +159,8 @@ export class HarleysReportsApp extends Component {
             this.loadFavorites();
             this.loadOptionalColumns();
             await this.ensureMultiRelationDefaults();
-            // Doesn't auto-fetch - reports gated on a required_for_search filter (Warehouses)
-            // start on the blank "select a warehouse" prompt instead of loading everything, see
-            // canSearch/_commitAppliedFilters.
+            // Reports gated on a required_for_search filter start on a blank prompt instead of
+            // loading everything - see canSearch/_commitAppliedFilters.
             await this._commitAppliedFilters();
         } catch (error) {
             this.showError(error, "The selected report could not be loaded.");
@@ -257,12 +256,10 @@ export class HarleysReportsApp extends Component {
         await this.fetchPage();
     }
 
-    // Location -> Date collapsible groups (Physical Inventory) need the full matching set at
-    // once to compute accurate counts/totals per group, not a row-count-based page - see
-    // get_grouped_rows on the backend. state.rows keeps the flattened full set (still needed by
-    // export/selectAllMatching, which operate on "every matching record" regardless of what's
-    // expanded); the header checkbox and "select all" instead work off visibleRows, which is
-    // just the currently-expanded subset - see toggleAllRows.
+    // Location -> Date collapsible groups need the full matching set at once for accurate
+    // per-group counts/totals, not a row-count-based page - see get_grouped_rows on the backend.
+    // state.rows keeps the flattened full set (needed by export/selectAllMatching); the header
+    // checkbox works off visibleRows, the currently-expanded subset - see toggleAllRows.
     async fetchGroupedRows() {
         const sequence = ++this.requestSequence;
         this.state.loading = true;
@@ -344,9 +341,8 @@ export class HarleysReportsApp extends Component {
         }
     }
 
-    // The only filter types still routed here (date, selection) fire once per complete value,
-    // not per keystroke, so auto-applying is safe - there's no separate global Apply button
-    // anymore, every filter mechanism now commits itself.
+    // Date/selection filters fire once per complete value, not per keystroke, so auto-applying
+    // is safe - every filter mechanism commits itself, there's no separate global Apply button.
     async onFilterInput(filterKey, event) {
         this.state.draftFilters[filterKey] = event.target.value;
         await this.applyFilters();
@@ -388,9 +384,8 @@ export class HarleysReportsApp extends Component {
     }
 
     // A "text + lookup" filter (e.g. Product/SKU search) stores the picked label itself as the
-    // filter value, so the backend's existing ilike-substring match still applies - it's the
-    // same filter mechanism as before, just committed on selection instead of on every
-    // keystroke. A real many2one filter stores the record id instead.
+    // filter value, so the backend's ilike-substring match still applies. A real many2one filter
+    // stores the record id instead.
     async selectLookupOption(filterKey, option) {
         const filter = this.state.metadata?.filters?.find((item) => item.key === filterKey);
         this.state.draftFilters[filterKey] = filter?.type === "text" ? option.label : option.id;
@@ -405,11 +400,8 @@ export class HarleysReportsApp extends Component {
         this.state.filterOptions[filterKey] = [];
     }
 
-    // Filters flagged required_for_search (Warehouses, on every current report) must have a
-    // real selection in draftFilters before anything is fetched - this is the single gate
-    // shared by the "Apply Filters" button's disabled state and every path that commits
-    // filters (see _commitAppliedFilters). Vacuously true for reports with no such filter
-    // (dynamic model browsers), so it never blocks them.
+    // Filters flagged required_for_search must have a real selection in draftFilters before
+    // anything is fetched - shared gate for the Apply Filters button and _commitAppliedFilters.
     get gateFilters() {
         return (this.state.metadata?.filters || []).filter((filter) => filter.required_for_search);
     }
@@ -425,9 +417,8 @@ export class HarleysReportsApp extends Component {
         });
     }
 
-    // Single commit point for every "apply the staged filters" action - the shared Apply
-    // Filters button, Reset Filters, and the initial report load all route through this so the
-    // canSearch gate (and the resulting blank-state prompt) behaves identically everywhere.
+    // Single commit point for every "apply the staged filters" action, so the canSearch gate
+    // behaves identically everywhere.
     async _commitAppliedFilters() {
         this.state.appliedFilters = { ...this.state.draftFilters };
         this.state.offset = 0;
@@ -467,10 +458,8 @@ export class HarleysReportsApp extends Component {
             }
             if (!(filter.key in this.state.draftFilters)) {
                 const options = this.state.multiRelationOptions[filter.key];
-                // Filters gated for search (Warehouses) start empty - the user must
-                // deliberately pick at least one before anything loads (see canSearch).
-                // Non-gated multi-relation filters still default to "select everything", unless
-                // they opt out via default_select:"first".
+                // Gated filters start empty (see canSearch); non-gated ones default to "select
+                // everything" unless they opt out via default_select:"first".
                 const defaultIds = filter.required_for_search
                     ? []
                     : filter.default_select === "first"
@@ -546,36 +535,29 @@ export class HarleysReportsApp extends Component {
         return selected === total ? `All ${total} ${label} selected` : `${selected} of ${total} ${label} selected`;
     }
 
-    // Multi-relation filters (Warehouses, Categories, Product Type) get their own always-visible
-    // checklist section in the sidebar, same idea as the Location panel in Odoo's own Physical
-    // Inventory screen - never hidden behind a popover that has to be found and opened.
+    // Multi-relation filters get their own always-visible checklist section in the sidebar,
+    // never hidden behind a popover.
     get multiRelationFilters() {
         return (this.state.metadata?.filters || []).filter((filter) => filter.type === "multi_relation" && !filter.hidden);
     }
 
-    // Every non-hidden filter on the current report gets a Quick Search group - not just
-    // relational ones. Each group's expanded content branches by filter.type in the template:
-    // multi_relation/many2one/lookup-text show fetched suggestions (see
-    // globalSearchLookupFilters below), selection filters match against their own static
-    // options client-side, date filters get an inline date input, and plain text filters let
-    // you apply the typed term directly - see applyGlobalSearchText/
-    // selectGlobalSearchSelectionOption/applyGlobalSearchDate.
+    // Every non-hidden filter gets a Quick Search group; the template branches rendering by
+    // filter.type (see globalSearchLookupFilters, filteredSelectionOptions, and the
+    // applyGlobalSearch*/selectGlobalSearch* handlers below).
     get eligibleGlobalSearchFilters() {
         return (this.state.metadata?.filters || []).filter((filter) => !filter.hidden);
     }
 
-    // Subset that actually needs a fetched/cached suggestion list - the other filter types
-    // (selection, date, plain text) render their own content directly from
-    // state.globalSearchTerm or the filter's own static options, no fetch involved.
+    // Subset that needs a fetched suggestion list - selection/date/plain-text filters render
+    // directly from state.globalSearchTerm or their own static options instead.
     get globalSearchLookupFilters() {
         return this.eligibleGlobalSearchFilters.filter((filter) =>
             filter.type === "multi_relation" || filter.type === "many2one" || filter.lookup === true
         );
     }
 
-    // Client-side match against a selection filter's own embedded options (same options array
-    // already used by the sidebar's plain <select>) - excludes the blank "All" option, which
-    // isn't a meaningful quick-search result.
+    // Client-side match against a selection filter's own embedded options, excluding the blank
+    // "All" option.
     filteredSelectionOptions(filter) {
         const term = (this.state.globalSearchTerm || "").trim().toLowerCase();
         const options = (filter.options || []).filter((option) => option.value !== "");
@@ -610,21 +592,15 @@ export class HarleysReportsApp extends Component {
         setTimeout(() => this.globalSearchDropdown.close(), 150);
     }
 
-    // multi_relation options are filtered client-side out of the cache every multi-select
-    // filter already loads once per report (loadMultiRelationOptions) - only lookup/many2one
-    // filters need a live server round trip.
+    // Every lookup-type filter, multi_relation included, goes through the same live server
+    // search - the cache each multi_relation filter loads once (loadMultiRelationOptions) can be
+    // narrower than what's actually searchable (e.g. Product Categories caches only root-level
+    // names, while search_filter_options widens to the full tree for a typed term - see base.py).
     async fetchGlobalSearchResults(term) {
         const sequence = ++this.globalSearchSequence;
         this.state.globalSearchLoading = true;
         try {
             const entries = await Promise.all(this.globalSearchLookupFilters.map(async (filter) => {
-                if (filter.type === "multi_relation") {
-                    const termLower = term.toLowerCase();
-                    const options = (this.state.multiRelationOptions[filter.key] || [])
-                        .filter((option) => option.label.toLowerCase().includes(termLower))
-                        .slice(0, 5);
-                    return [filter.key, options];
-                }
                 const options = this.state.mode === "dynamic"
                     ? await this.orm.call("harleys.reports.service", "search_dynamic_filter_options",
                           [this.state.dynamicModelKey, filter.key, term, 5])
@@ -651,8 +627,6 @@ export class HarleysReportsApp extends Component {
         this.state.globalSearchExpanded = this.state.globalSearchExpanded === filterKey ? null : filterKey;
     }
 
-    // Shared cleanup after any Quick Search pick, regardless of filter type - resets the search
-    // box and closes the dropdown so the next open starts fresh.
     resetGlobalSearch() {
         this.state.globalSearchTerm = "";
         this.state.globalSearchResults = {};
@@ -660,9 +634,7 @@ export class HarleysReportsApp extends Component {
         this.globalSearchDropdown.close();
     }
 
-    // Same commit semantics as selectLookupOption/toggleMultiRelationValue - writing straight
-    // into draftFilters means the sidebar's own controls (summary label, checkboxes) stay in
-    // sync for free, no separate state to maintain.
+    // Writes straight into draftFilters so the sidebar's own controls stay in sync for free.
     async selectGlobalSearchOption(filter, option) {
         if (filter.type === "multi_relation") {
             const current = this.state.draftFilters[filter.key] || [];
@@ -677,18 +649,13 @@ export class HarleysReportsApp extends Component {
         await this.applyFilters();
     }
 
-    // Plain text filters (no lookup, e.g. a free-text Reference field) have no suggestion model
-    // to query - Quick Search just applies whatever's typed directly, same ilike semantics
-    // onFilterInput already uses for that filter in the sidebar.
+    // Plain text filters have no suggestion model to query - apply whatever's typed directly.
     async applyGlobalSearchText(filter) {
         this.state.draftFilters[filter.key] = this.state.globalSearchTerm;
         this.resetGlobalSearch();
         await this.applyFilters();
     }
 
-    // Selection options come from the filter's own static list (option.value/option.label),
-    // not a fetched {id,label} pair like relational results - a distinct shape from
-    // selectGlobalSearchOption above.
     async selectGlobalSearchSelectionOption(filter, option) {
         this.state.draftFilters[filter.key] = option.value;
         this.resetGlobalSearch();
@@ -871,10 +838,9 @@ export class HarleysReportsApp extends Component {
         return this.state.metadata?.grouped ? this.groupedDisplayColumns : this.displayColumns;
     }
 
-    // Same idea as Odoo's own grouped list views: the header "select all" checkbox only ever
-    // reaches rows that are actually expanded/rendered right now, not every matching record
-    // (that's what the separate "Select all N matching records" prompt is for). In flat/paginated
-    // reports every row on the page is already "expanded", so this is just state.rows there.
+    // The header "select all" checkbox only reaches rows currently expanded/rendered, not every
+    // matching record (see the "Select all N matching records" prompt for that). In
+    // flat/paginated reports every row on the page is already "expanded", so this is state.rows.
     get visibleRows() {
         if (!(this.state.mode === "fixed" && this.state.metadata?.grouped)) {
             return this.state.rows;
@@ -946,10 +912,17 @@ export class HarleysReportsApp extends Component {
     }
 
     toggleAllRows() {
-        this.state.selectAllMatching = false;
+        if (this.state.selectAllMatching) {
+            this.clearSelection();
+            return;
+        }
         const visibleRows = this.visibleRows;
         if (!visibleRows.length) {
-            this.state.selectedRows = [];
+            // Nothing expanded (or nothing to show) - mirror native Odoo's grouped-list select
+            // all: with no group open, selecting reaches every matching record directly, not
+            // just what's currently rendered. If a group IS open, the branch below selects just
+            // that group first, offering "select all matching" via showSelectAllMatchingPrompt.
+            this.selectAllMatchingRecords();
             return;
         }
         if (this.allRowsSelected) {
@@ -1016,14 +989,57 @@ export class HarleysReportsApp extends Component {
     }
 
     get visibleFilters() {
-        // multi_relation filters get their own dedicated checklist section instead (see
-        // multiRelationFilters), and quick_search_only filters are only reachable through the
-        // unified Quick Search bar (so a report doesn't end up with two separate search boxes
-        // for the same filter) - everything else (date, text, selection, many2one) renders
-        // through the plain FilterFields inputs below.
+        // multi_relation filters get their own checklist section (multiRelationFilters);
+        // quick_search_only filters are reachable only through the unified Quick Search bar.
         return this.primaryFilters.concat(this.advancedFilters).filter(
             (filter) => filter.type !== "multi_relation" && !filter.quick_search_only
         );
+    }
+
+    // Every currently-applied filter with a real value, formatted for the facet/chip bar - shown
+    // even at its own default, so what's filtering the view is never hidden behind the sidebar.
+    get appliedFilterChips() {
+        const filters = this.state.metadata?.filters || [];
+        const chips = [];
+        for (const filter of filters) {
+            if (filter.hidden) {
+                continue;
+            }
+            const value = this.state.appliedFilters[filter.key];
+            if (value === undefined || value === null || value === "") {
+                continue;
+            }
+            if (Array.isArray(value) && value.length === 0) {
+                continue;
+            }
+            let valueLabel;
+            if (filter.type === "multi_relation") {
+                const options = this.state.multiRelationOptions[filter.key] || [];
+                const selected = options.filter((option) => value.includes(option.id)).map((option) => option.label);
+                valueLabel = selected.length && selected.length <= 3 ? selected.join(", ") : `${value.length} selected`;
+            } else if (filter.type === "selection") {
+                valueLabel = this.optionLabel(filter.key, value);
+            } else if (filter.type === "many2one" || filter.lookup) {
+                valueLabel = this.state.optionLabels[filter.key] || value;
+            } else {
+                valueLabel = String(value);
+            }
+            chips.push({ key: filter.key, label: filter.label, valueLabel });
+        }
+        return chips;
+    }
+
+    // Clears just this one filter back to its declared default (or removes it entirely if it
+    // has none) and re-applies - narrower than Reset Filters, which touches every filter.
+    async removeFilterChip(filterKey) {
+        const defaultValue = this.state.metadata?.default_filters?.[filterKey];
+        if (defaultValue !== undefined) {
+            this.state.draftFilters[filterKey] = defaultValue;
+        } else {
+            delete this.state.draftFilters[filterKey];
+        }
+        delete this.state.optionLabels[filterKey];
+        await this.applyFilters();
     }
 
     optionLabel(columnKey, value) {

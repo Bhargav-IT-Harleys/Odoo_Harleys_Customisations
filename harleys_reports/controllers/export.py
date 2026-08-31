@@ -5,10 +5,15 @@ import logging
 import re
 
 from odoo import fields, http
+from odoo.exceptions import ValidationError
 from odoo.http import content_disposition, request
 
 
 _logger = logging.getLogger(__name__)
+# ReportLab wraps every cell in its own Paragraph for word-wrapping (see _pdf below), which runs
+# at roughly 4ms/row - fine for a page or two, but a bulk export (tens of thousands of rows) takes
+# minutes and gets killed mid-request. CSV/XLSX have no such ceiling, so PDF alone is capped here.
+_PDF_ROW_LIMIT = 5000
 
 
 class HarleysReportsExport(http.Controller):
@@ -40,6 +45,12 @@ class HarleysReportsExport(http.Controller):
         if extension == "csv":
             body, content_type = self._csv(columns, rows), "text/csv;charset=utf-8"
         elif extension == "pdf":
+            if len(rows) > _PDF_ROW_LIMIT:
+                raise ValidationError(
+                    f"PDF export is limited to {_PDF_ROW_LIMIT:,} rows for reliable generation "
+                    f"({len(rows):,} selected). Narrow your filters/selection, or export as CSV "
+                    "or XLSX instead - both handle any size."
+                )
             body, content_type = self._pdf(columns, rows, provider.title, meta_line), "application/pdf"
         else:
             body, content_type = (
