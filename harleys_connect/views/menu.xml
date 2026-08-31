@@ -1,0 +1,15 @@
+<odoo>
+    <menuitem
+        id="menu_harleys_connect_root"
+        name="Harley's Connect"
+        groups="harleys_connect.group_connect_user"
+        sequence="10"/>
+    <menuitem id="menu_harleys_connect_vendors" name="Vendors" parent="menu_harleys_connect_root" sequence="10"/>
+    <menuitem
+        id="menu_harleys_connect_settings"
+        name="Settings"
+        parent="menu_harleys_connect_root"
+        action="base_setup.action_general_configuration"
+        groups="harleys_connect.group_connect_manager"
+        sequence="20"/>
+</odoo>

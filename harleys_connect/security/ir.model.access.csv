@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_vendor_platform_user,vendor.platform.user,model_vendor_platform,group_connect_user,1,0,0,0
+access_vendor_platform_manager,vendor.platform.manager,model_vendor_platform,group_connect_manager,1,1,1,1
+access_vendor_account_user,vendor.account.user,model_vendor_account,group_connect_user,1,0,0,0
+access_vendor_account_manager,vendor.account.manager,model_vendor_account,group_connect_manager,1,1,1,1
+access_vendor_outlet_user,vendor.outlet.user,model_vendor_outlet,group_connect_user,1,0,0,0
+access_vendor_outlet_manager,vendor.outlet.manager,model_vendor_outlet,group_connect_manager,1,1,1,1
+access_vendor_api_log_user,vendor.api.log.user,model_vendor_api_log,group_connect_user,1,0,0,0
+access_vendor_api_log_manager,vendor.api.log.manager,model_vendor_api_log,group_connect_manager,1,1,1,1
+access_vendor_webhook_log_user,vendor.webhook.log.user,model_vendor_webhook_log,group_connect_user,1,0,0,0
+access_vendor_webhook_log_manager,vendor.webhook.log.manager,model_vendor_webhook_log,group_connect_manager,1,1,1,1
+access_vendor_auth_wizard,vendor.auth.wizard,model_vendor_auth_wizard,group_connect_user,1,1,1,1
+access_vendor_order_confirm_wizard,vendor.order.confirm.wizard,model_vendor_order_confirm_wizard,group_connect_user,1,1,1,1
+access_vendor_order_confirm_wizard_line,vendor.order.confirm.wizard.line,model_vendor_order_confirm_wizard_line,group_connect_user,1,1,1,1

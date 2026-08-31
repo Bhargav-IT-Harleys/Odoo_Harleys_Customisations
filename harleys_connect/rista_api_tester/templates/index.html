@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rista API Tester</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Rista API Tester</h1>
+            <p class="subtitle">Local development tool for Rista API</p>
+        </header>
+
+        <main>
+            <section class="card">
+                <h2>Configuration Status</h2>
+                <div id="config-status">Loading...</div>
+            </section>
+
+            <section class="card">
+                <h2>JWT Generator</h2>
+                <div class="form-group">
+                    <label for="jwt-api-key">Rista API Key</label>
+                    <input type="text" id="jwt-api-key" placeholder="paste RISTA_API_KEY">
+                </div>
+                <div class="form-group">
+                    <label for="jwt-secret-key">Rista Secret Key</label>
+                    <input type="password" id="jwt-secret-key" placeholder="paste RISTA_SECRET_KEY">
+                    <p class="hint">Stored only in your browser for this session. Never sent anywhere except the local backend.</p>
+                </div>
+                <div class="form-group">
+                    <label for="jwt-method">HTTP Method</label>
+                    <select id="jwt-method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                <button id="btn-generate-jwt" class="btn btn-primary">Generate JWT</button>
+                <div id="jwt-result" class="result-area hidden">
+                    <label for="jwt-output">Generated JWT</label>
+                    <textarea id="jwt-output" readonly rows="4"></textarea>
+                    <button id="btn-copy-jwt" class="btn btn-secondary">Copy JWT</button>
+                    <p class="hint">This token is for local development only. Do not share it publicly.</p>
+                </div>
+                <div id="jwt-error" class="error hidden"></div>
+            </section>
+
+            <section class="card">
+                <h2>Single API Tester</h2>
+                <div class="form-group">
+                    <label for="test-method">HTTP Method</label>
+                    <select id="test-method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="test-path">Endpoint Path</label>
+                    <input type="text" id="test-path" value="/branch/list" placeholder="/branch/list">
+                </div>
+                <div class="form-group">
+                    <label for="test-query">Query Parameters</label>
+                    <textarea id="test-query" rows="3" placeholder="branch=MAIN&period=2025-08"></textarea>
+                    <p class="hint">Optional. Enter as raw query string, e.g. <code>branch=MAIN&period=2025-08</code></p>
+                </div>
+                <button id="btn-send-request" class="btn btn-primary">Send Request</button>
+                <div id="test-result" class="result-area hidden">
+                    <div class="meta">
+                        <span id="test-status" class="status"></span>
+                        <span id="test-time"></span>
+                    </div>
+                    <label for="test-response">Response</label>
+                    <textarea id="test-response" readonly rows="12"></textarea>
+                    <div class="button-row">
+                        <button id="btn-copy-response" class="btn btn-secondary">Copy Response</button>
+                        <button id="btn-export-excel" class="btn btn-secondary">Export Excel</button>
+                    </div>
+                </div>
+                <div id="test-error" class="error hidden"></div>
+            </section>
+
+            <section class="card">
+                <h2>Custom API Composer</h2>
+                <p class="hint">Choose an execution mode. For Custom Report, select the APIs and date range.</p>
+
+                <div class="form-group">
+                    <label for="run-mode">Execution Mode</label>
+                    <select id="run-mode">
+                        <option value="single">Single Request</option>
+                        <option value="iterate_by_branch">Iterate By Branch</option>
+                        <option value="custom_report">Custom Report</option>
+                    </select>
+                </div>
+
+                <div id="single-iterate-controls">
+                    <div class="form-group">
+                        <label for="run-method">HTTP Method</label>
+                        <select id="run-method">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="run-path">Endpoint Path</label>
+                        <input type="text" id="run-path" value="/analytics/sales/summary" placeholder="/analytics/sales/summary" list="endpoint-suggestions" autocomplete="off">
+                        <datalist id="endpoint-suggestions"></datalist>
+                        <p class="hint">Enter a Rista API path. Suggestions are loaded from the catalog, but you can type any path.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="common-request">Common Request Parameters / Body</label>
+                        <textarea id="common-request" rows="6" placeholder='{"period": "2026-08-01"}'></textarea>
+                        <p class="hint">Enter JSON. For Iterate By Branch, the <code>branch</code> parameter is injected automatically.</p>
+                    </div>
+                </div>
+
+                <div id="custom-report-controls" class="hidden">
+                    <div class="form-group">
+                        <label>Select APIs for Custom Report</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="api-sales-summary" value="sales_summary" checked>
+                                <span>Sales Summary</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="api-discount-transactions" value="discount_transactions" checked>
+                                <span>Discount Transactions</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="report-start-date">Start Date</label>
+                        <input type="date" id="report-start-date" value="2026-08-01">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="report-end-date">End Date</label>
+                        <input type="date" id="report-end-date" value="2026-08-31">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="report-request-data">Additional Request Parameters / Body</label>
+                        <textarea id="report-request-data" rows="4" placeholder='{}'></textarea>
+                        <p class="hint">Optional JSON. The <code>branch</code>, <code>period</code>/<code>day</code> parameters are injected automatically.</p>
+                    </div>
+                </div>
+
+                <button id="btn-execute" class="btn btn-primary">Execute</button>
+                <span id="execute-progress" class="hidden"></span>
+
+                <div id="composer-error" class="error hidden"></div>
+
+                <div id="workflow-summary" class="workflow-summary hidden"></div>
+                <div id="composer-results" class="results-container hidden"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Rista API Tester — local development use only</p>
+        </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

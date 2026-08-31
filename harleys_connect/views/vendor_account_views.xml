@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_vendor_account_list" model="ir.ui.view">
+        <field name="name">vendor.account.list</field>
+        <field name="model">vendor.account</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="platform_id"/>
+                <field name="account_id"/>
+                <field name="vendor_partner_id"/>
+                <field name="client_name"/>
+                <field name="active"/>
+                <field name="otp_verified"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_vendor_account_form" model="ir.ui.view">
+        <field name="name">vendor.account.form</field>
+        <field name="model">vendor.account</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button
+                        name="action_authenticate"
+                        type="object"
+                        string="Authenticate"
+                        class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="platform_id"/>
+                        <field name="vendor_partner_id"/>
+                        <field name="company_id"/>
+                    </group>
+
+                    <group>
+                        <field name="account_id"/>
+                        <field name="client_name"/>
+                        <field name="mobile_number"/>
+                    </group>
+
+                    <group>
+                        <field name="api_access_key" password="True"/>
+                        <field name="base_url"/>
+                        <field name="auth_url"/>
+                        <field name="order_url"/>
+                        <field name="webhook_url"/>
+                        <field name="webhook_api_key" password="True"/>
+                    </group>
+
+                    <group>
+                        <field name="user_id" readonly="1"/>
+                        <field name="access_token" password="True" readonly="1"/>
+                        <field name="otp_verified" readonly="1"/>
+                        <field name="active"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Outlets">
+                            <field name="outlet_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="outlet_id"/>
+                                    <field name="warehouse_id"/>
+                                    <field name="partner_id"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_vendor_account" model="ir.actions.act_window">
+        <field name="name">Vendor Accounts</field>
+        <field name="res_model">vendor.account</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="menu_vendor_integration_setup"
+        name="Integration Setup"
+        parent="menu_harleys_connect_root"
+        sequence="90"/>
+
+    <menuitem
+        id="menu_vendor_accounts"
+        parent="menu_vendor_integration_setup"
+        action="action_vendor_account"
+        sequence="1"/>
+
+</odoo>

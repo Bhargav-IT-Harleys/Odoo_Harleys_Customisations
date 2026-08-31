@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_vendor_outlet_list" model="ir.ui.view">
+        <field name="name">vendor.outlet.list</field>
+        <field name="model">vendor.outlet</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="vendor_account_id"/>
+                <field name="outlet_id"/>
+                <field name="company_id"/>
+                <field name="warehouse_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_vendor_outlet_form" model="ir.ui.view">
+        <field name="name">vendor.outlet.form</field>
+        <field name="model">vendor.outlet</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="vendor_account_id"/>
+                        <field name="outlet_id"/>
+                        <field name="company_id"/>
+                        <field name="warehouse_id"/>
+                        <field name="partner_id"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_vendor_outlet" model="ir.actions.act_window">
+        <field name="name">Vendor Outlets</field>
+        <field name="res_model">vendor.outlet</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="menu_vendor_outlets"
+        parent="menu_vendor_integration_setup"
+        action="action_vendor_outlet"
+        sequence="2"/>
+
+</odoo>

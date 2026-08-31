@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="module_category_harleys_connect" model="ir.module.category">
+            <field name="name">Harley's Connect</field>
+            <field name="sequence">46</field>
+        </record>
+
+        <record id="privilege_harleys_connect" model="res.groups.privilege">
+            <field name="name">Harley's Connect</field>
+            <field name="category_id" ref="module_category_harleys_connect"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="group_connect_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="sequence">10</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="privilege_id" ref="privilege_harleys_connect"/>
+        </record>
+
+        <record id="group_connect_manager" model="res.groups">
+            <field name="name">Manager</field>
+            <field name="sequence">20</field>
+            <field name="implied_ids" eval="[(4, ref('group_connect_user'))]"/>
+            <field name="privilege_id" ref="privilege_harleys_connect"/>
+            <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+        <record id="vendor_account_company_rule" model="ir.rule">
+            <field name="name">Vendor Account: multi-company</field>
+            <field name="model_id" ref="model_vendor_account"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="vendor_outlet_company_rule" model="ir.rule">
+            <field name="name">Vendor Outlet: multi-company</field>
+            <field name="model_id" ref="model_vendor_outlet"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="vendor_api_log_company_rule" model="ir.rule">
+            <field name="name">Vendor API Log: multi-company</field>
+            <field name="model_id" ref="model_vendor_api_log"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="vendor_webhook_log_company_rule" model="ir.rule">
+            <field name="name">Vendor Webhook Log: multi-company</field>
+            <field name="model_id" ref="model_vendor_webhook_log"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+    </data>
+</odoo>

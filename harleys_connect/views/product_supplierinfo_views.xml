@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Exposes the vendor-integration mapping fields on the standard Vendor
+         Pricelist grid/popup, so they can be set from the product's Purchase
+         tab instead of needing a direct DB write. Inheriting the base views
+         (not purchase's mode="primary" extension of them) so the fields flow
+         through automatically wherever supplierinfo is shown.
+
+         product_code is Odoo's own core field - it's the vendor's product
+         identifier Harley's Connect actually reads (see mapping.py), so it's
+         switched from hidden-by-default to shown-by-default here rather than
+         adding a redundant custom field for the same concept. -->
+
+    <record id="product_supplierinfo_tree_view_harleys_connect" model="ir.ui.view">
+        <field name="name">product.supplierinfo.list.harleys.connect</field>
+        <field name="model">product.supplierinfo</field>
+        <field name="inherit_id" ref="product.product_supplierinfo_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="product_code" position="attributes">
+                <attribute name="optional">show</attribute>
+            </field>
+            <field name="product_code" position="after">
+                <field name="platform_id" optional="show"/>
+                <field name="vendor_uom_code" optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="product_supplierinfo_form_view_harleys_connect" model="ir.ui.view">
+        <field name="name">product.supplierinfo.form.harleys.connect</field>
+        <field name="model">product.supplierinfo</field>
+        <field name="inherit_id" ref="product.product_supplierinfo_form_view"/>
+        <field name="arch" type="xml">
+            <field name="product_code" position="after">
+                <field name="platform_id"/>
+                <field name="vendor_uom_code"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

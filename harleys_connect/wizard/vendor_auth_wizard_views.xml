@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_vendor_auth_wizard" model="ir.ui.view">
+        <field name="name">vendor.auth.wizard.form</field>
+        <field name="model">vendor.auth.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Authenticate Vendor Account">
+                <group>
+                    <field name="account_id" readonly="1"/>
+                    <field name="available_phone_numbers" readonly="1"/>
+                    <field name="user_id" placeholder="user_id from the list above"/>
+                    <field name="otp" placeholder="OTP received on that number"/>
+                </group>
+
+                <footer>
+                    <button
+                        name="action_fetch_phones"
+                        type="object"
+                        string="Get Registered Phones"
+                        class="btn-secondary"/>
+
+                    <button
+                        name="action_send_otp"
+                        type="object"
+                        string="Send OTP"
+                        class="btn-secondary"/>
+
+                    <button
+                        name="action_verify"
+                        type="object"
+                        string="Verify &amp; Save"
+                        class="btn-primary"/>
+
+                    <button
+                        string="Close"
+                        special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

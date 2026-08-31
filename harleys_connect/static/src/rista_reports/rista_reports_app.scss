@@ -1,0 +1,25 @@
+.o_harleys_rista_reports {
+    padding: 16px;
+
+    .o_rista_toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .o_rista_param_input {
+        width: 160px;
+    }
+
+    .o_rista_description {
+        margin-left: 4px;
+    }
+
+    .o_rista_table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}

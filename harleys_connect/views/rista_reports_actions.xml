@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_harleys_connect_rista_reports" model="ir.actions.client">
+        <field name="name">Rista Reports</field>
+        <field name="tag">harleys_connect.rista_reports_app</field>
+        <field name="path">harleys-connect-rista-reports</field>
+    </record>
+
+    <menuitem
+        id="menu_harleys_connect_rista_reports"
+        name="Rista Reports"
+        parent="menu_harleys_connect_root"
+        action="action_harleys_connect_rista_reports"
+        groups="harleys_connect.group_connect_user"
+        sequence="15"/>
+
+</odoo>

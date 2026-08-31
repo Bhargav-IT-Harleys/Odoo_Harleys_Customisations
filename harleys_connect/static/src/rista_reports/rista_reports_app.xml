@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="harleys_connect.RistaReportsApp">
+        <div class="o_harleys_rista_reports">
+            <div class="o_rista_toolbar">
+                <select class="o_rista_report_select" t-on-change="onReportChange">
+                    <t t-foreach="state.catalog" t-as="report" t-key="report.id">
+                        <option t-att-value="report.id" t-att-selected="report.id === state.reportId">
+                            <t t-esc="report.name"/> (<t t-esc="report.category"/>)
+                        </option>
+                    </t>
+                </select>
+
+                <t t-if="selectedReport">
+                    <t t-foreach="selectedReport.parameters" t-as="param" t-key="param">
+                        <input
+                            type="text"
+                            class="o_rista_param_input"
+                            t-att-placeholder="param"
+                            t-on-input="(ev) => this.onParamInput(param, ev)"
+                        />
+                    </t>
+                    <span class="text-muted o_rista_description" t-esc="selectedReport.description"/>
+                </t>
+
+                <button
+                    class="btn btn-primary o_rista_fetch_btn"
+                    t-on-click="fetchReport"
+                    t-att-disabled="state.loading"
+                >
+                    <t t-if="state.loading">Fetching...</t>
+                    <t t-else="">Fetch</t>
+                </button>
+            </div>
+
+            <t t-if="state.error">
+                <div class="alert alert-danger mt8" t-esc="state.error"/>
+            </t>
+
+            <t t-if="!state.loading and state.hasSearched and !state.error">
+                <t t-if="!state.rows.length">
+                    <p class="text-muted mt8">No rows returned.</p>
+                </t>
+                <t t-else="">
+                    <p class="text-muted mt8"><t t-esc="state.rows.length"/> rows</p>
+                    <table class="table table-sm table-striped table-bordered o_rista_table">
+                        <thead>
+                            <tr>
+                                <t t-foreach="state.columns" t-as="col" t-key="col">
+                                    <th t-esc="col"/>
+                                </t>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.rows" t-as="row" t-key="row_index">
+                                <tr>
+                                    <t t-foreach="state.columns" t-as="col" t-key="col">
+                                        <td t-esc="row[col]"/>
+                                    </t>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
+            </t>
+        </div>
+    </t>
+
+</templates>

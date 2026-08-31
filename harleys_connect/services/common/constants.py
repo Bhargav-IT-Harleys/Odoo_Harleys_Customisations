@@ -1,0 +1,4 @@
+DEFAULT_TIMEOUT = 30
+DEFAULT_RETRY_ATTEMPTS = 3
+DEFAULT_RETRY_DELAY = 2
+SUPPORTED_ADAPTERS = ("hyperpure", "rista", "vendor_template")

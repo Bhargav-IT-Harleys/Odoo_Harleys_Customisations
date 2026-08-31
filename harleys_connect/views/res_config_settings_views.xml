@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form_harleys_connect" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.harleys.connect</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Harley's Connect" string="Harley's Connect" name="harleys_connect">
+                    <block title="Rista" name="rista_setting_container">
+                        <setting id="rista_credentials_setting" string="Rista API Credentials"
+                                 help="Used by the Rista Reports menu to fetch reports directly from the Rista API.">
+                            <field name="rista_base_url"/>
+                            <field name="rista_api_key" password="True"/>
+                            <field name="rista_secret_key" password="True"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
