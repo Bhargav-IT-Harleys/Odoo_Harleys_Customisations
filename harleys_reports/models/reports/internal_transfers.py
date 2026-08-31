@@ -1,7 +1,7 @@
 from odoo.exceptions import ValidationError
 
 from .base import OrmSearchReportMixin, ReportProvider
-from .date_utils import date_boundary
+from .date_utils import date_boundary, to_local_string
 from .registry import register_report
 
 
@@ -36,8 +36,6 @@ class InternalTransfersReport(OrmSearchReportMixin, ReportProvider):
         {"key": "destination", "label": "Destination", "type": "text", "sortable": True},
         {"key": "company", "label": "Company", "type": "text", "sortable": True},
         {"key": "state", "label": "State", "type": "badge", "sortable": True},
-        # Hidden by default - available via the Columns picker, same idea as Odoo's own
-        # list-view "optional fields" toggle.
         {"key": "contact", "label": "Contact", "type": "text", "sortable": True, "optional": True},
         {"key": "responsible", "label": "Responsible", "type": "text", "sortable": True, "optional": True},
         {"key": "back_order_of", "label": "Back Order Of", "type": "text", "sortable": True, "optional": True},
@@ -138,7 +136,7 @@ class InternalTransfersReport(OrmSearchReportMixin, ReportProvider):
     def _serialize(self, record):
         return {
             "id": record["id"],
-            "date": record.get("scheduled_date") or "",
+            "date": to_local_string(self.env, record.get("scheduled_date")),
             "reference": record.get("name") or "",
             "origin": record.get("origin") or "",
             "source": self._display(record.get("location_id")),
@@ -148,11 +146,10 @@ class InternalTransfersReport(OrmSearchReportMixin, ReportProvider):
             "contact": self._display(record.get("partner_id")),
             "responsible": self._display(record.get("user_id")),
             "back_order_of": self._display(record.get("backorder_id")),
-            "effective_date": record.get("date_done") or "",
+            "effective_date": to_local_string(self.env, record.get("date_done")),
         }
 
-    # Internal Transfers' export needs a tighter restriction than the base location gate alone -
-    # picking_type_code = "internal" too, since a picking id in row_ids could in principle
-    # belong to any transfer type, not just this report's own domain.
+    # A picking id in row_ids could belong to any transfer type - the base location gate alone
+    # isn't enough, since this report's own domain is also scoped to picking_type_code=internal.
     def _export_restriction_domain(self):
         return [("picking_type_code", "=", "internal")] + self._location_restriction_domain()

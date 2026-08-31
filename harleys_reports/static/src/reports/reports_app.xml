@@ -5,9 +5,7 @@
             <main class="o_hr_content flex-grow-1 overflow-hidden p-2">
                 <div class="o_hr_layout d-flex h-100 gap-2">
                     <aside class="o_hr_sidebar p-2 overflow-auto" t-if="state.metadata &amp;&amp; !state.sidebarCollapsed">
-                        <!-- Quick-add companion to the filters below, not a replacement: type once,
-                             pick a suggestion, and it's written into the same draftFilters those
-                             controls already read/write, so they stay in sync automatically. -->
+                        <!-- Writes into the same draftFilters the controls below read/write, so they stay in sync. -->
                         <div class="mb-3" t-if="eligibleGlobalSearchFilters.length">
                             <label class="form-label small fw-bold d-block">Quick Search</label>
                             <Dropdown state="globalSearchDropdown" manual="true" noClasses="true" menuClass="'o_hr_global_search_menu'">
@@ -102,12 +100,7 @@
                             </div>
                         </t>
 
-                        <!-- One collapsed dropdown per multi-select filter (Warehouses, Product
-                             Categories, Product Type, ...) - collapsed by default so the sidebar
-                             doesn't dump every option on screen at once. Checking boxes only
-                             stages the change; nothing is fetched until the shared "Apply
-                             Filters" button below is clicked, so picking values across several
-                             of these dropdowns only fires one request, not one per dropdown. -->
+                        <!-- Checking boxes only stages the change - nothing fetches until Apply Filters below. -->
                         <div class="mb-3 position-relative" t-foreach="multiRelationFilters" t-as="filter" t-key="filter.key">
                             <label class="form-label small fw-bold d-block" t-esc="filter.label"/>
                             <button class="btn btn-outline-secondary btn-sm w-100 text-start d-flex justify-content-between align-items-center" type="button"
@@ -144,10 +137,6 @@
                             </div>
                         </div>
 
-                        <!-- Single shared commit point for every staged filter change (multi-relation
-                             checkboxes above included) - also what triggers the very first load on a
-                             report gated by a required_for_search filter (see canSearch/blank state
-                             below), so nothing loads until the user has picked at least one. -->
                         <button class="btn btn-primary btn-sm w-100 mb-2" type="button" t-on-click="applyFilters"
                                 t-att-disabled="state.loading || !canSearch"
                                 t-att-title="canSearch ? '' : ('Select ' + gateFiltersLabel + ' first')">Apply Filters</button>
@@ -213,12 +202,7 @@
                                     </t>
                                 </Dropdown>
 
-                                <!-- Hidden for now - being rebuilt as a real shared/persisted model
-                                     alongside Download History instead of localStorage. Markup and
-                                     every JS method behind it (loadFavorites/applyFavorite/etc.)
-                                     are left fully intact, just not rendered, so re-enabling later
-                                     is cheap. See PLAN_download_history_and_access.md. -->
-                                <Dropdown t-if="false" position="'bottom-end'">
+                                <Dropdown position="'bottom-end'">
                                     <button class="btn btn-outline-secondary btn-sm" type="button">
                                         <i class="fa fa-star-o me-1"/> Favorites
                                         <span class="badge text-bg-secondary ms-1" t-if="state.favorites.length" t-esc="state.favorites.length"/>
@@ -270,6 +254,18 @@
                                     <t t-esc="state.total"/> records
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Every currently-applied filter shown as a removable chip, even at its own default. -->
+                        <div class="o_hr_facet_bar d-flex flex-wrap align-items-center gap-2 px-2 py-1 border-bottom small"
+                             t-if="appliedFilterChips.length">
+                            <span class="text-muted">Filters:</span>
+                            <span class="badge text-bg-light border d-inline-flex align-items-center"
+                                  t-foreach="appliedFilterChips" t-as="chip" t-key="chip.key">
+                                <t t-esc="chip.label"/>:&#160;<t t-esc="chip.valueLabel"/>
+                                <i class="fa fa-times ms-2" style="cursor: pointer;"
+                                   t-on-click="() => removeFilterChip(chip.key)" t-att-title="'Remove ' + chip.label"/>
+                            </span>
                         </div>
 
                         <div class="flex-grow-1 overflow-auto">

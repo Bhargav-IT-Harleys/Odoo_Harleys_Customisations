@@ -1,7 +1,7 @@
 from odoo.exceptions import ValidationError
 
 from .base import OrmSearchReportMixin, ReportProvider
-from .date_utils import date_boundary
+from .date_utils import date_boundary, to_local_string
 from .registry import register_report
 
 
@@ -58,8 +58,6 @@ class MoveHistoryReport(OrmSearchReportMixin, ReportProvider):
         {"key": "company", "label": "Company", "type": "text", "sortable": True},
         {"key": "state", "label": "State", "type": "badge", "sortable": True},
         {"key": "done_by", "label": "Done By", "type": "text", "sortable": True},
-        # Hidden by default - available via the Columns picker, same idea as Odoo's own
-        # list-view "optional fields" toggle.
         {"key": "transfer", "label": "Transfer", "type": "text", "sortable": True, "optional": True},
         {"key": "operation_type_name", "label": "Operation Type", "type": "text", "sortable": True, "optional": True},
         {"key": "owner", "label": "Owner", "type": "text", "sortable": True, "optional": True},
@@ -147,8 +145,6 @@ class MoveHistoryReport(OrmSearchReportMixin, ReportProvider):
         if values.get("product_id"):
             domain.append(("product_id", "=", values["product_id"]))
         if values.get("category_id"):
-            # Matches native's own move-line search panel: a flat ilike match on the category's
-            # name, not a hierarchical child_of match against category ids.
             domain.append(("product_id.categ_id.display_name", "ilike", values["category_id"]))
         for key in ("location_id", "location_dest_id", "lot_id"):
             if values.get(key):
@@ -168,7 +164,7 @@ class MoveHistoryReport(OrmSearchReportMixin, ReportProvider):
     def _serialize(self, record):
         return {
             "id": record["id"],
-            "date": record.get("date") or "",
+            "date": to_local_string(self.env, record.get("date")),
             "reference": record.get("reference") or "",
             "product": self._display(record.get("product_id")),
             "lot": self._display(record.get("lot_id")),

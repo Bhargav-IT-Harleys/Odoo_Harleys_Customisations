@@ -17,3 +17,9 @@ def date_boundary(env, value, end=False):
     user_tz = ZoneInfo(env.user.tz or "UTC")
     local = datetime.combine(parsed, time.min, tzinfo=user_tz)
     return local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+
+
+def to_local_string(env, value):
+    if not value:
+        return ""
+    return fields.Datetime.context_timestamp(env.user, value).strftime("%Y-%m-%d %H:%M:%S")

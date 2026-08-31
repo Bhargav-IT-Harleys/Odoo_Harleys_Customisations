@@ -26,13 +26,9 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         {"key": "warehouse_ids", "label": "Warehouses", "type": "multi_relation", "group": "primary",
          "required_for_search": True},
         {"key": "category_ids", "label": "Product Categories", "type": "multi_relation", "group": "advanced"},
-        # No "no value" state here either, but unlike adu_window/adu_visibility below this one
-        # legitimately allows an empty selection (see _default_reason_tag_filter) - it means
-        # "exclude every scrap/Inv Adjustment move from ADU", not "show all".
+        # An empty selection here is meaningful: exclude every scrap/Inv Adjustment move from ADU
+        # (see _default_reason_tag_filter), not "show all".
         {"key": "reason_tag_ids", "label": "Inv Adj Reason", "type": "multi_relation", "group": "advanced"},
-        # "required" tells the frontend not to offer a blank "All" choice for this one - unlike
-        # a genuine optional filter (e.g. a Status filter elsewhere), there's no "no value" state
-        # here: ADU is always computed over *some* window, and is always either visible or not.
         {"key": "adu_window", "label": "ADU Window", "type": "selection", "group": "advanced", "required": True,
          "options": [
              {"value": "30", "label": "30 Days"},
@@ -47,7 +43,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
     )
     columns = (
         {"key": "warehouse", "label": "Warehouse", "type": "text", "sortable": True, "filter_key": "warehouse_ids"},
-        {"key": "sku", "label": "Product Code", "type": "text", "sortable": True},
+        {"key": "sku", "label": "Product Code", "type": "text", "sortable": True, "optional": True},
         {"key": "product", "label": "Product", "type": "text", "sortable": True, "filter_key": "search"},
         {"key": "category", "label": "Product Category", "type": "text", "sortable": True, "filter_key": "category_ids"},
         {"key": "uom", "label": "UoM", "type": "text", "sortable": True},
@@ -61,12 +57,8 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         {"key": "stock_location", "label": "Stock Location", "type": "text", "sortable": True, "optional": True},
     )
     relation_filters = {**PRODUCT_RELATION_FILTERS, "reason_tag_ids": ("stock.scrap.reason.tag", [])}
-    default_category_names = ("RAWMATERIAL", "PACKAGING MATERIALS")
-    # Scrap/"Inv Adjustments" (harleys_customization's relabeled stock.scrap) moves are a separate
-    # mechanism from true is_inventory=TRUE corrections and aren't caught by that exclusion below -
-    # every reason (Damaged, Expired, wastage, ...) was silently counting as ADU consumption until
-    # this filter. Consumed/R&D are genuine usage (issued to Housekeeping/Production/R&D); the rest
-    # default to excluded. See _default_reason_tag_filter.
+    # Scrap ("Inv Adjustments") moves only count toward ADU when tagged with one of these reasons -
+    # Consumed/R&D are genuine usage, everything else (Damaged, Expired, wastage...) defaults out.
     default_reason_tag_names = ("Consumed", "R&D")
     default_sort = {"key": "days_of_supply", "direction": "asc"}
     sort_fields = {
@@ -77,11 +69,8 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
     }
 
     def _default_reason_tag_filter(self):
-        # Unlike _default_category_filter, always emit the key (even as []) rather than omitting
-        # it when nothing matches - an omitted key falls back to "select every option" on the
-        # frontend, which for this filter means "count every scrap reason as consumption again",
-        # exactly the bug this filter exists to fix. A missing/renamed Consumed/R&D tag should
-        # fail toward "exclude all scrap", not toward reproducing the old behavior.
+        # Always emit the key, even as [] - an omitted key means "select every option" on the
+        # frontend, which here means counting every scrap reason as ADU consumption again.
         ids = self._default_ids_for_names("stock.scrap.reason.tag", self.default_reason_tag_names)
         return {"reason_tag_ids": ids}
 
@@ -122,10 +111,8 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             value = values.get(key)
             if value:
                 normalized[key] = self._validate_id_list(value, label)
-        # Unlike warehouse_ids/category_ids above, an explicit [] here is meaningful (see the
-        # filter's own comment) and must be told apart from "key wasn't sent at all" - a request
-        # that omits the key entirely (e.g. a stale API caller) falls back to the Consumed/R&D
-        # default instead of silently excluding everything.
+        # An explicit [] is meaningful here and must be told apart from "key not sent at all",
+        # which falls back to the Consumed/R&D default instead of excluding everything.
         if "reason_tag_ids" in values:
             normalized["reason_tag_ids"] = self._validate_id_list(
                 values.get("reason_tag_ids") or [], "inv adj reason"
@@ -167,10 +154,8 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         if not all_location_ids:
             return []
 
-        # Presence-first, matching Raj's spec: only locations that actually hold stock right now,
-        # not the full product catalog padded with zeros. One flat query across every selected
-        # warehouse's locations at once - fast even with everything selected (no per-warehouse
-        # catalog listing to multiply out).
+        # Presence-first: only locations that actually hold stock right now, not the full product
+        # catalog padded with zeros. One flat query across every selected warehouse's locations.
         self.env.cr.execute("""
             SELECT location_id, product_id, SUM(quantity) AS qty
             FROM stock_quant
@@ -183,16 +168,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             return []
 
         product_ids = list({product_id for _location_id, product_id, _qty in quant_rows})
-        if category_ids:
-            product_ids = self.env["product.product"].search([
-                ("id", "in", product_ids), ("categ_id", "child_of", category_ids),
-            ]).ids
-        if search_term:
-            product_ids = self.env["product.product"].search([
-                ("id", "in", product_ids),
-                "|", ("display_name", "ilike", search_term), ("default_code", "ilike", search_term),
-            ]).ids
-        allowed_product_ids = set(product_ids)
+        allowed_product_ids = self._filter_product_ids(product_ids, category_ids, search_term)
         if not allowed_product_ids:
             return []
 
@@ -201,20 +177,15 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             for location in self.env["stock.location"].browse({location_id for location_id, _p, _q in quant_rows})
         }
 
-        # ADU/DOS outflow stays scoped to each warehouse's OWN locations, not the combined set
-        # above - it must still count a transfer from warehouse A to warehouse B as outflow for A
-        # even when both are selected, which a merged location set would wrongly stop detecting.
+        # Stays scoped to each warehouse's OWN locations, not the combined set above - a transfer
+        # from warehouse A to warehouse B must still count as outflow for A when both are selected.
         outflow_by_warehouse_product = {}
         for warehouse in warehouses:
             loc_ids = self._warehouse_location_ids(warehouse)
             if not loc_ids:
                 continue
-            # Scrap/"Inv Adjustments" moves (harleys_customization's relabeled stock.scrap) are a
-            # separate mechanism from is_inventory=TRUE corrections above - they pass every other
-            # exclusion here regardless of reason, so a plain move (scrap_id IS NULL) counts as
-            # before, but a scrap-linked move only counts if it carries a selected reason tag. An
-            # empty reason_tag_ids therefore excludes every scrap move, not "no filter" - the
-            # explicit ::int[] cast avoids relying on Postgres to infer a type for an empty array.
+            # A plain move (scrap_id IS NULL) counts as before; a scrap-linked move only counts if
+            # tagged with a selected reason, so an empty reason_tag_ids excludes every scrap move.
             self.env.cr.execute("""
                 SELECT sml.product_id, COALESCE(SUM(sml.quantity), 0) AS outflow
                 FROM stock_move_line sml
@@ -241,9 +212,8 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             for product_id, outflow in self.env.cr.fetchall():
                 outflow_by_warehouse_product[(warehouse.id, product_id)] = outflow
 
-        # Cost is company-dependent (Harleys has 5 regional companies with genuinely different
-        # costs for the same product) - read per warehouse's own company via with_company, one
-        # search_read per warehouse rather than a raw SQL read of the underlying jsonb column.
+        # Cost is company-dependent (5 regional companies price the same product differently), so
+        # read per warehouse's own company via with_company rather than a single flat search.
         product_data_by_company = {}
         rows = []
         for location_id, product_id, qty in quant_rows:
@@ -253,15 +223,9 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             if not warehouse:
                 continue
             company_id = warehouse.company_id.id
-            if company_id not in product_data_by_company:
-                product_data_by_company[company_id] = {
-                    product["id"]: product
-                    for product in self.env["product.product"].with_company(company_id).search_read(
-                        [("id", "in", list(allowed_product_ids))],
-                        ["product_tmpl_id", "categ_id", "uom_id", "default_code", "standard_price"],
-                    )
-                }
-            product = product_data_by_company[company_id].get(product_id)
+            product = self._company_scoped_products(
+                product_data_by_company, company_id, list(allowed_product_ids), ("standard_price",)
+            ).get(product_id)
             if not product:
                 continue
             cost = product.get("standard_price") or 0.0
@@ -276,7 +240,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
                 "stock_location": location_names.get(location_id, ""),
                 "sku": product.get("default_code") or "",
                 "product": self._display(product.get("product_tmpl_id")),
-                "category": self._display(product.get("categ_id")).rsplit(" / ", 1)[-1],
+                "category": self._leaf_category(product),
                 "uom": self._display(product.get("uom_id")),
                 "qoh": round(qty, 2),
                 "unit_cost": round(cost, 2),

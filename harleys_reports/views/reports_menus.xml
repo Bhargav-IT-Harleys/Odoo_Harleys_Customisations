@@ -31,6 +31,18 @@
               action="action_harleys_report_expiry"
               sequence="30"/>
 
+    <menuitem id="menu_harleys_report_in_transit_inventory"
+              name="In-Transit Inventory"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_in_transit_inventory"
+              sequence="31"/>
+
+    <menuitem id="menu_harleys_report_in_transit_reconciliation"
+              name="In-Transit Reconciliation"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_in_transit_reconciliation"
+              sequence="32"/>
+
     <!-- Not yet rebuilt to the current reporting standard - hidden rather than deleted, so
          re-enabling later is just flipping active back on, no data/config loss. -->
     <menuitem id="menu_harleys_report_move_history"

@@ -210,3 +210,39 @@ class TestStockNoNegative(BaseCommon):
             ]
         )
         self.assertEqual(quant.quantity, -100)
+
+    def test_check_constrains_decimal_precision(self):
+        """Assert that the negative-stock constraint uses the actual
+        configured 'Product Unit' precision, so a sub-unit shortfall
+        (on hand 4.0090, transacting 4.0091 out) is still caught"""
+        product = self._create_product("test_product_decimal_precision")
+        self.env["stock.quant"]._update_available_quantity(
+            product, self.location_id, 4.0090
+        )
+        picking = (
+            self.env["stock.picking"]
+            .with_context(test_stock_no_negative=True)
+            .create(
+                {
+                    "picking_type_id": self.picking_type_id.id,
+                    "move_type": "direct",
+                    "location_id": self.location_id.id,
+                    "location_dest_id": self.location_dest_id.id,
+                }
+            )
+        )
+        self.env["stock.move"].create(
+            {
+                "product_id": product.id,
+                "product_uom_qty": 4.0091,
+                "product_uom": product.uom_id.id,
+                "picking_id": picking.id,
+                "state": "draft",
+                "location_id": self.location_id.id,
+                "location_dest_id": self.location_dest_id.id,
+                "quantity": 4.0091,
+            }
+        )
+        picking.action_confirm()
+        with self.assertRaises(ValidationError):
+            picking.button_validate()

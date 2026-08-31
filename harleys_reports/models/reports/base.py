@@ -1,22 +1,23 @@
 from odoo.exceptions import AccessError, ValidationError
 
-# Shared by every SQL-built report (Stock Report, Physical Inventory, Expiry Report): Warehouses
-# (unfiltered) and top-level Product Categories only - the full category tree is too granular to
-# pick from directly, and child_of in each report's _build_rows still matches every descendant
-# once a parent is selected.
+# Shared by every SQL-built report. category_ids defaults to top-level categories only for the
+# sidebar checklist; search_filter_options widens this to the full tree for a typed Quick Search
+# term (see SqlRowsReportMixin.search_filter_options). child_of in each report's _build_rows
+# matches every descendant once a parent is selected either way.
 PRODUCT_RELATION_FILTERS = {
     "warehouse_ids": ("stock.warehouse", []),
     "category_ids": ("product.category", [("parent_id", "=", False)]),
 }
 
-# Also shared by every SQL-built report: a free-text product/SKU search. "lookup" tells the
-# frontend to show it as a type-ahead (applies once a suggestion is picked, not on every
-# keystroke); "quick_search_only" keeps it out of the sidebar's own filter list since it's
-# reachable through the unified Quick Search bar instead.
+# "lookup" renders this as a type-ahead; "quick_search_only" keeps it out of the sidebar's filter
+# list since it's reachable through Quick Search instead.
 PRODUCT_SEARCH_FILTER = {
     "key": "search", "label": "Search Product / SKU", "type": "text", "group": "primary",
     "lookup": True, "quick_search_only": True,
 }
+
+# product.product fields every SQL report reads to build its "product" columns.
+PRODUCT_DISPLAY_FIELDS = ("product_tmpl_id", "categ_id", "uom_id", "default_code")
 
 
 class ReportProvider:
@@ -26,18 +27,16 @@ class ReportProvider:
     model_name = None
     default_page_size = 80
     page_sizes = (40, 80, 200)
-    # Odoo's own list views don't hard-cap the pager either (you can type "1-17060" and it will
-    # load exactly that) - this is a sanity backstop against a pathological request, not an
-    # artificial "you can't have more than a couple hundred rows" limit. Matches the same ceiling
-    # already used for exports.
+    # Sanity backstop against a pathological request, not an artificial per-page cap - matches
+    # the ceiling used for exports.
     maximum_export_rows = 50000
     maximum_page_size = maximum_export_rows
     # {"key": ..., "direction": ...} - the sort every report falls back to when none is given,
     # and what metadata() advertises to the frontend as the initial sort. Set per-report.
     default_sort = {"key": "id", "direction": "asc"}
-    # Root category names whose ids should be pre-selected in the Product Categories filter by
-    # default (see _default_category_filter) - empty means no default selection.
-    default_category_names = ()
+    # Root category names pre-selected in the Product Categories filter by default (see
+    # _default_category_filter). Override to () on a report that shouldn't default any category.
+    default_category_names = ("RAWMATERIAL", "PACKAGING MATERIALS")
 
     def __init__(self, env):
         self.env = env
@@ -86,20 +85,17 @@ class ReportProvider:
     def _display(value):
         return value[1] if isinstance(value, (tuple, list)) and len(value) > 1 else ""
 
+    def _allowed_location_ids(self):
+        return set(self.env["stock.location"]._get_user_allowed_location_ids().ids)
+
     def _location_restriction_domain(self):
-        # Mirrors harleys_customization's location gate for standard stock screens - restricted
-        # users only see records touching a location they're allowed into. OR'd across both
-        # source and destination, since a record can be relevant via either end (e.g. an
-        # incoming receipt's source is always a vendor/transit location, never one of the
-        # user's own internal locations).
-        allowed_ids = self.env["stock.location"]._get_user_allowed_location_ids().ids
+        # OR'd across source and destination - a record can be relevant via either end (e.g. an
+        # incoming receipt's source is always a vendor/transit location, never one of the user's
+        # own internal locations).
+        allowed_ids = list(self._allowed_location_ids())
         return ["|", ("location_id", "in", allowed_ids), ("location_dest_id", "in", allowed_ids)]
 
     def _allowed_warehouses(self):
-        # Same gate, at warehouse granularity - a restricted user's allowed_warehouse_ids field
-        # (from user_warehouse_restriction) already *is* their allowed warehouse set directly,
-        # no need to reverse-map from locations. Unrestricted users fall back to every warehouse
-        # with a code in a company they currently have enabled.
         user = self.env.user
         allowed = getattr(user, "allowed_warehouse_ids", self.env["stock.warehouse"])
         if allowed:
@@ -110,8 +106,8 @@ class ReportProvider:
         ])
 
     def _resolve_warehouses(self, requested_ids=None):
-        # Never trust client-supplied warehouse ids blindly - intersect with what this user is
-        # actually allowed to see. An empty/missing selection means "all allowed", not "none".
+        # Intersect with what this user is actually allowed to see, never trust client-supplied
+        # ids blindly. An empty/missing selection means "all allowed", not "none".
         allowed = self._allowed_warehouses()
         if requested_ids:
             requested_set = set(requested_ids)
@@ -146,6 +142,31 @@ class SqlRowsReportMixin:
                 raise ValidationError(f"Invalid {label} id.")
             ids.append(item)
         return ids
+
+    def _filter_product_ids(self, product_ids, category_ids=None, search_term=None):
+        if category_ids:
+            product_ids = self.env["product.product"].search([
+                ("id", "in", product_ids), ("categ_id", "child_of", category_ids),
+            ]).ids
+        if search_term:
+            product_ids = self.env["product.product"].search([
+                ("id", "in", product_ids),
+                "|", ("display_name", "ilike", search_term), ("default_code", "ilike", search_term),
+            ]).ids
+        return set(product_ids)
+
+    def _company_scoped_products(self, cache, company_id, product_ids, extra_fields=()):
+        if company_id not in cache:
+            cache[company_id] = {
+                product["id"]: product
+                for product in self.env["product.product"].with_company(company_id).search_read(
+                    [("id", "in", product_ids)], [*PRODUCT_DISPLAY_FIELDS, *extra_fields],
+                )
+            }
+        return cache[company_id]
+
+    def _leaf_category(self, product):
+        return self._display(product.get("categ_id")).rsplit(" / ", 1)[-1]
 
     def _sort_rows(self, rows, sort):
         if not isinstance(sort, dict):
@@ -195,13 +216,6 @@ class SqlRowsReportMixin:
         if isinstance(limit, bool) or not isinstance(limit, int):
             raise ValidationError("Invalid filter option limit.")
         limit = max(1, min(limit, 200))
-        if filter_key == "warehouse_ids":
-            warehouses = self._allowed_warehouses()
-            if term:
-                term_lower = term.lower()
-                warehouses = warehouses.filtered(lambda warehouse: term_lower in warehouse.name.lower())
-            warehouses = warehouses.sorted("name")[:limit]
-            return [{"id": warehouse.id, "label": warehouse.name} for warehouse in warehouses]
         if filter_key == "search":
             if not term:
                 return []
@@ -210,6 +224,19 @@ class SqlRowsReportMixin:
             ], limit=limit)
             return [{"id": product.id, "label": product.display_name} for product in products]
         model_name, domain = self.relation_filters[filter_key]
+        if model_name == "product.category" and term:
+            # Root-only is right for the sidebar checklist, but a typed term should find any
+            # category by name - reports display leaf-level names, never root ones.
+            domain = []
+        if model_name == "stock.warehouse":
+            # Keyed off the target model, not the filter's own name, so any warehouse-type
+            # filter is restricted to warehouses this user is allowed into automatically.
+            warehouses = self._allowed_warehouses()
+            if term:
+                term_lower = term.lower()
+                warehouses = warehouses.filtered(lambda warehouse: term_lower in warehouse.name.lower())
+            warehouses = warehouses.sorted("name")[:limit]
+            return [{"id": warehouse.id, "label": warehouse.name} for warehouse in warehouses]
         model = self.env[model_name]
         if not model.has_access("read"):
             return []

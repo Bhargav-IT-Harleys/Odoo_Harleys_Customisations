@@ -43,6 +43,8 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
         {"key": "status", "label": "Status", "type": "badge", "sortable": True, "options": list(_STATUS_OPTIONS)},
     )
     relation_filters = PRODUCT_RELATION_FILTERS
+    # No default category (unlike every other report) - packaging materials don't expire.
+    default_category_names = ()
     default_sort = {"key": "expiration_date", "direction": "asc"}
     sort_fields = {
         "warehouse": "warehouse", "location": "location", "sku": "sku", "product": "product",
@@ -106,9 +108,8 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
         if not all_location_ids:
             return []
 
-        # expiration_date is stored as a UTC datetime - converting through IST before truncating
-        # to a date avoids an off-by-one-day error for Indian users, per Raj's own spec. The
-        # 45-day cutoff and day-bucket boundaries also match his spec exactly.
+        # expiration_date is stored as a UTC datetime - convert through IST before truncating to
+        # a date, or the bucket boundaries are off by one day for Indian users.
         self.env.cr.execute("""
             WITH expiry_stock AS (
                 SELECT sq.location_id, sq.product_id, sq.lot_id, SUM(sq.quantity) AS qty,
@@ -137,16 +138,7 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
             return []
 
         product_ids = list({row[1] for row in lot_rows})
-        if category_ids:
-            product_ids = self.env["product.product"].search([
-                ("id", "in", product_ids), ("categ_id", "child_of", category_ids),
-            ]).ids
-        if search_term:
-            product_ids = self.env["product.product"].search([
-                ("id", "in", product_ids),
-                "|", ("display_name", "ilike", search_term), ("default_code", "ilike", search_term),
-            ]).ids
-        allowed_product_ids = set(product_ids)
+        allowed_product_ids = self._filter_product_ids(product_ids, category_ids, search_term)
         if not allowed_product_ids:
             return []
 
@@ -159,8 +151,6 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
             for lot in self.env["stock.lot"].browse({row[2] for row in lot_rows})
         }
 
-        # Category/UoM aren't company-dependent, but batching per warehouse's own company keeps
-        # this consistent with how every other report in this module resolves product data.
         product_data_by_company = {}
         rows = []
         for location_id, product_id, lot_id, qty, expiration_date, days_to_expiry, status in lot_rows:
@@ -172,15 +162,9 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
             if not warehouse:
                 continue
             company_id = warehouse.company_id.id
-            if company_id not in product_data_by_company:
-                product_data_by_company[company_id] = {
-                    product["id"]: product
-                    for product in self.env["product.product"].with_company(company_id).search_read(
-                        [("id", "in", list(allowed_product_ids))],
-                        ["product_tmpl_id", "categ_id", "uom_id", "default_code"],
-                    )
-                }
-            product = product_data_by_company[company_id].get(product_id)
+            product = self._company_scoped_products(
+                product_data_by_company, company_id, list(allowed_product_ids)
+            ).get(product_id)
             if not product:
                 continue
             rows.append({
@@ -189,7 +173,7 @@ class ExpiryReport(SqlRowsReportMixin, ReportProvider):
                 "location": location_names.get(location_id, ""),
                 "sku": product.get("default_code") or "",
                 "product": self._display(product.get("product_tmpl_id")),
-                "category": self._display(product.get("categ_id")).rsplit(" / ", 1)[-1],
+                "category": self._leaf_category(product),
                 "lot": lot_names.get(lot_id, ""),
                 "uom": self._display(product.get("uom_id")),
                 "quantity": round(qty, 2),
