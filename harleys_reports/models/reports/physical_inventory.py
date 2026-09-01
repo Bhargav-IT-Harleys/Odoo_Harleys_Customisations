@@ -44,6 +44,12 @@ class PhysicalInventoryReport(SqlRowsReportMixin, ReportProvider):
         {"key": "reference", "label": "Ref", "type": "text", "sortable": True},
     )
     relation_filters = PRODUCT_RELATION_FILTERS
+    # Wider than every other report's Raw Material/Packaging Materials default - physical counts
+    # here are expected to cover finished/semi-finished stock too, not just incoming materials.
+    default_category_names = (
+        "FINISHED GOODS", "Food", "PACKAGING MATERIALS", "RAWMATERIAL",
+        "Returnable Containers", "SEMI FINISHED GOODS", "SEMI FINISHED GOODS/ BROWNIES",
+    )
     default_sort = {"key": "date", "direction": "desc"}
     export_row_limit_hint = "date range or warehouse selection"
     sort_fields = {

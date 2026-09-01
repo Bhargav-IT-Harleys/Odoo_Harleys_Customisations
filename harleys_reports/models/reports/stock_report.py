@@ -1,3 +1,4 @@
+import math
 from datetime import timedelta
 
 from odoo import fields
@@ -11,6 +12,8 @@ _DEFAULT_TRAILING_DAYS = 60
 _ALLOWED_TRAILING_DAYS = ("30", "60", "90")
 _DEFAULT_ADU_VISIBILITY = "positive"
 _ALLOWED_ADU_VISIBILITY = ("positive", "all")
+_DEFAULT_REQ_QTY_POLICY_DAYS = 15
+_ALLOWED_REQ_QTY_POLICY_DAYS = ("15", "30")
 _WAREHOUSE_ID_MULTIPLIER = 1_000_000
 
 
@@ -40,6 +43,12 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
              {"value": "positive", "label": "Exclude Zero/Negative ADU"},
              {"value": "all", "label": "Show All"},
          ]},
+        {"key": "req_qty_policy", "label": "Inv Stock Policy", "type": "selection", "group": "advanced",
+         "required": True,
+         "options": [
+             {"value": "15", "label": "15 Days"},
+             {"value": "30", "label": "30 Days"},
+         ]},
     )
     columns = (
         {"key": "warehouse", "label": "Warehouse", "type": "text", "sortable": True, "filter_key": "warehouse_ids"},
@@ -52,6 +61,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         {"key": "total_value", "label": "Stock Value", "type": "float", "sortable": True, "align": "end"},
         {"key": "avg_daily_usage", "label": "ADU", "type": "float", "sortable": True, "align": "end"},
         {"key": "days_of_supply", "label": "DOS", "type": "float", "sortable": True, "align": "end"},
+        {"key": "req_qty", "label": "Req Qty", "type": "float", "sortable": True, "align": "end"},
         # Hidden by default - available via the Columns picker, same idea as Odoo's own
         # list-view "optional fields" toggle.
         {"key": "stock_location", "label": "Stock Location", "type": "text", "sortable": True, "optional": True},
@@ -65,7 +75,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         "warehouse": "warehouse", "stock_location": "stock_location", "sku": "sku",
         "product": "product", "category": "category", "uom": "uom",
         "qoh": "qoh", "unit_cost": "unit_cost", "total_value": "total_value",
-        "avg_daily_usage": "avg_daily_usage", "days_of_supply": "days_of_supply",
+        "avg_daily_usage": "avg_daily_usage", "days_of_supply": "days_of_supply", "req_qty": "req_qty",
     }
 
     def _default_reason_tag_filter(self):
@@ -78,6 +88,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         default_filters = {
             "adu_window": str(_DEFAULT_TRAILING_DAYS),
             "adu_visibility": _DEFAULT_ADU_VISIBILITY,
+            "req_qty_policy": str(_DEFAULT_REQ_QTY_POLICY_DAYS),
             **self._default_category_filter(),
             **self._default_reason_tag_filter(),
         }
@@ -96,7 +107,9 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
                 "Switch \"ADU Visibility\" to \"Show All\" to include them. "
                 "Scrapped/Inv Adjustment moves only count toward ADU when their Inv Adj Reason is "
                 "selected - Consumed and R&D are selected by default; unselect all to exclude scrap "
-                "entirely, or add reasons like Damaged/Expired/wastage to count those too."
+                "entirely, or add reasons like Damaged/Expired/wastage to count those too. "
+                "Req Qty is how much to order to cover Inv Stock Policy's window at the current "
+                "ADU, minus what's already on hand - rounded up, never negative."
             ),
         }
 
@@ -130,6 +143,10 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         normalized["adu_visibility"] = (
             adu_visibility if adu_visibility in _ALLOWED_ADU_VISIBILITY else _DEFAULT_ADU_VISIBILITY
         )
+        req_qty_policy = values.get("req_qty_policy")
+        normalized["req_qty_policy"] = (
+            req_qty_policy if req_qty_policy in _ALLOWED_REQ_QTY_POLICY_DAYS else str(_DEFAULT_REQ_QTY_POLICY_DAYS)
+        )
         return normalized
 
     def _build_rows(self, filters):
@@ -142,6 +159,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         reason_tag_ids = values["reason_tag_ids"]
         trailing_days = int(values["adu_window"])
         adu_visibility = values["adu_visibility"]
+        policy_days = int(values["req_qty_policy"])
         cutoff = date_boundary(self.env, fields.Date.context_today(self.model), end=True)
         trailing_start = cutoff - timedelta(days=trailing_days)
 
@@ -234,6 +252,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
             if adu_visibility == "positive" and avg_daily_usage <= 0:
                 continue
             days_of_supply = round(qty / avg_daily_usage, 1) if avg_daily_usage > 0 else None
+            req_qty = max(0, math.ceil(policy_days * avg_daily_usage - qty))
             rows.append({
                 "id": location_id * _WAREHOUSE_ID_MULTIPLIER + product_id,
                 "warehouse": warehouse.name,
@@ -247,5 +266,6 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
                 "total_value": round(qty * cost, 2),
                 "avg_daily_usage": avg_daily_usage,
                 "days_of_supply": days_of_supply,
+                "req_qty": req_qty,
             })
         return rows

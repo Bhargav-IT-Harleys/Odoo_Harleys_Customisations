@@ -9,7 +9,7 @@
     <!-- Pure dropdown parent, no action of its own - clicking it just opens the list of
          report types below, same as how Odoo's own apps group report entries. -->
     <menuitem id="menu_harleys_reports_extraction"
-              name="Report Extraction"
+              name="Inventory Reports"
               parent="menu_harleys_reports_root"
               sequence="10"/>
 
