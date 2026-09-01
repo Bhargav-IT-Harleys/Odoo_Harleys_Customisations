@@ -28,6 +28,7 @@ _STATUS_OPTIONS = (
 _RESOLVED_STATUSES = {"matched", "fully_received"}
 _LINK_OPTIONS = (
     {"value": "confirmed", "label": "Confirmed"},
+    {"value": "pending", "label": "Pending"},
     {"value": "unlinked", "label": "Unlinked"},
 )
 
@@ -97,12 +98,15 @@ class InTransitReconciliationReport(SqlRowsReportMixin, ReportProvider):
             "maximum_page_size": self.maximum_page_size,
             "export_formats": ["csv", "xlsx"],
             "sidebar_note": (
-                "Unresolved Only (default) hides Matched and Fully Received rows. \"Likely "
-                "Misdirected\" means this dispatch's own linked receipt is still open, but "
-                "something else has already left the same transit location for this product/lot - "
-                "worth checking who actually received it. \"Unlinked\" rows have no Odoo record "
-                "tying them to a specific receipt, so Received/Pending is an estimate. Sent Date "
-                "and Warehouses are optional - leave them blank to see every dispatch."
+                "Unresolved Only (default) hides Matched and Fully Received rows. Link shows "
+                "\"Confirmed\" once the linked receipt is actually done, \"Pending\" when Odoo "
+                "knows where it's headed but that receipt is still open (Destination is shown "
+                "either way), and \"Unlinked\" when there's no Odoo record tying it to a specific "
+                "receipt at all, so Destination is blank and Received/Pending is an estimate. "
+                "\"Likely Misdirected\" means this dispatch's own linked receipt is still open, "
+                "but something else has already left the same transit location for this "
+                "product/lot - worth checking who actually received it. Sent Date and Warehouses "
+                "are optional - leave them blank to see every dispatch."
             ),
         }
 
@@ -348,9 +352,10 @@ class InTransitReconciliationReport(SqlRowsReportMixin, ReportProvider):
                 status = "likely_misdirected" if expected_balance - current_balance > 0.01 else "not_received"
                 received_quantity = 0.0
                 pending_quantity = quantity
-                # Not confirmed (receipt still open), but shown as the intended destination.
+                # Not yet received (the linked move is still open), but the link tells us exactly
+                # where it's headed - show that intended destination rather than leaving it blank.
                 destination_location_id = open_links[0]["destination_location_id"]
-                link = "confirmed"
+                link = "pending"
             else:
                 cum_sent_total = cum_sent_total_map.get(group_key, 0.0)
                 current_balance = quant_balance_map.get(group_key, 0.0)
