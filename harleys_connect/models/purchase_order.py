@@ -97,7 +97,14 @@ class PurchaseOrder(models.Model):
             # explicit commit here, the log row above would be wiped out
             # along with it, so a failed send would leave no trace at all.
             self.env.cr.commit()
-            raise UserError(str(exc)) from exc
+            error = UserError(str(exc))
+            # If this failure was a price mismatch, the vendor's real price
+            # is embedded in their structured error data - surface it so the
+            # caller (the confirm wizard) can show it instead of just a dead
+            # end, since there's no other way to learn it (search_products is
+            # broken on Hyperpure's sandbox for our account).
+            error.price_corrections = self._extract_price_corrections(exc.response_body)
+            raise error from exc
 
         self.write({
             "vendor_order_sent": True,
@@ -123,6 +130,33 @@ class PurchaseOrder(models.Model):
                 "sticky": False,
             },
         }
+
+    @staticmethod
+    def _extract_price_corrections(response_body):
+        """{vendor_product_code: vendor's real price} from a PRODUCT_PRICE_MISMATCH
+        rejection's structured error data - the only place this vendor's real
+        price is ever available to us right now."""
+        if not isinstance(response_body, dict):
+            return {}
+        error = response_body.get("error")
+        if not isinstance(error, dict):
+            return {}
+        data = error.get("data")
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except ValueError:
+                data = None
+        if not isinstance(data, list):
+            return {}
+
+        corrections = {}
+        for item in data:
+            if isinstance(item, dict) and item.get("error_type") == "PRODUCT_PRICE_MISMATCH":
+                code, price = item.get("entity_value"), item.get("expected_value")
+                if code and price is not None:
+                    corrections[str(code)] = price
+        return corrections
 
     @staticmethod
     def _safe_response_body(response):

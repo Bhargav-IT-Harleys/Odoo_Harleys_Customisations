@@ -79,8 +79,13 @@ class VendorOrderConfirmWizard(models.TransientModel):
 
     def _fetch_prices(self):
         self.ensure_one()
+        if not self.outlet_id:
+            self.price_check_summary = "Select an outlet, then click Refresh Prices to check vendor prices."
+            return
+
         codes = [line.vendor_product_code for line in self.line_ids if line.vendor_product_code]
-        if not self.outlet_id or not codes:
+        if not codes:
+            self.price_check_summary = "No vendor-mapped products on this order to check."
             return
 
         manager = VendorIntegrationManager(self.account_id)
@@ -132,4 +137,23 @@ class VendorOrderConfirmWizard(models.TransientModel):
             )
 
         omit_codes = set(mismatched.mapped("vendor_product_code")) if self.send_without_price_match else None
-        return self.purchase_order_id._send_to_vendor(self.account_id, self.outlet_id, omit_price_product_codes=omit_codes)
+        try:
+            return self.purchase_order_id._send_to_vendor(self.account_id, self.outlet_id, omit_price_product_codes=omit_codes)
+        except UserError as exc:
+            corrections = getattr(exc, "price_corrections", None)
+            if not corrections:
+                raise
+            # The send failed on a price mismatch, but the vendor's real
+            # price came back in their error response - update the lines
+            # with it and reopen instead of leaving a dead-end error, since
+            # this is the only way we ever learn their real price right now.
+            for line in self.line_ids:
+                if line.vendor_product_code in corrections:
+                    price = corrections[line.vendor_product_code]
+                    line.write({
+                        "vendor_price": price,
+                        "price_mismatch": True,
+                        "mismatch_note": "Vendor price ₹%.2f differs from our price ₹%.2f (learned from a failed send)" % (price, line.our_price),
+                    })
+            self.price_check_summary = "Send failed on a price mismatch - the vendor's real price has been filled in below. Review and try again."
+            return self._reopen()
