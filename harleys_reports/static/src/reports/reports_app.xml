@@ -354,7 +354,7 @@
                                                             t-att-class="column.align === 'end' ? 'text-end font-monospace' : ''">
                                                             <span t-if="column.type === 'badge'" t-att-class="'badge ' + badgeClass(row[column.key])"
                                                                   t-esc="optionLabel(column.key, row[column.key])"/>
-                                                            <span t-elif="column.type === 'float'" t-att-title="row[column.key]" t-esc="formatFloat(row[column.key])"/>
+                                                            <span t-elif="column.type === 'float'" t-att-title="row[column.key]" t-esc="formatFloat(row[column.key], column.decimals)"/>
                                                             <span t-else="" t-att-title="row[column.key]" t-esc="row[column.key]"/>
                                                         </td>
                                                         <td t-if="optionalColumns.length"/>
@@ -374,7 +374,7 @@
                                                 t-att-class="column.align === 'end' ? 'text-end font-monospace' : ''">
                                                 <span t-if="column.type === 'badge'" t-att-class="'badge ' + badgeClass(row[column.key])"
                                                       t-esc="optionLabel(column.key, row[column.key])"/>
-                                                <span t-elif="column.type === 'float'" t-att-title="row[column.key]" t-esc="formatFloat(row[column.key])"/>
+                                                <span t-elif="column.type === 'float'" t-att-title="row[column.key]" t-esc="formatFloat(row[column.key], column.decimals)"/>
                                                 <span t-else="" t-att-title="row[column.key]" t-esc="row[column.key]"/>
                                             </td>
                                             <td t-if="optionalColumns.length"/>

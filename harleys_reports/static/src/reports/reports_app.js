@@ -341,11 +341,9 @@ export class HarleysReportsApp extends Component {
         }
     }
 
-    // Date/selection filters fire once per complete value, not per keystroke, so auto-applying
-    // is safe - every filter mechanism commits itself, there's no separate global Apply button.
-    async onFilterInput(filterKey, event) {
+    // Stages the change only - nothing fetches until the Apply Filters button commits it.
+    onFilterInput(filterKey, event) {
         this.state.draftFilters[filterKey] = event.target.value;
-        await this.applyFilters();
     }
 
     async fetchLookupOptions(filterKey, term) {
@@ -386,12 +384,11 @@ export class HarleysReportsApp extends Component {
     // A "text + lookup" filter (e.g. Product/SKU search) stores the picked label itself as the
     // filter value, so the backend's ilike-substring match still applies. A real many2one filter
     // stores the record id instead.
-    async selectLookupOption(filterKey, option) {
+    selectLookupOption(filterKey, option) {
         const filter = this.state.metadata?.filters?.find((item) => item.key === filterKey);
         this.state.draftFilters[filterKey] = filter?.type === "text" ? option.label : option.id;
         this.state.optionLabels[filterKey] = option.label;
         this.state.filterOptions[filterKey] = [];
-        await this.applyFilters();
     }
 
     clearLookup(filterKey) {
@@ -459,12 +456,16 @@ export class HarleysReportsApp extends Component {
             if (!(filter.key in this.state.draftFilters)) {
                 const options = this.state.multiRelationOptions[filter.key];
                 // Gated filters start empty (see canSearch); non-gated ones default to "select
-                // everything" unless they opt out via default_select:"first".
+                // everything" unless they opt out via default_select:"first" (pick just the
+                // first option) or default_select:"none" (start empty without gating search -
+                // unlike required_for_search, the report still runs fine with this left blank).
                 const defaultIds = filter.required_for_search
                     ? []
                     : filter.default_select === "first"
                         ? options.slice(0, 1).map((option) => option.id)
-                        : options.map((option) => option.id);
+                        : filter.default_select === "none"
+                            ? []
+                            : options.map((option) => option.id);
                 this.state.draftFilters[filter.key] = defaultIds;
                 this.state.appliedFilters[filter.key] = defaultIds;
             }
@@ -635,7 +636,8 @@ export class HarleysReportsApp extends Component {
     }
 
     // Writes straight into draftFilters so the sidebar's own controls stay in sync for free.
-    async selectGlobalSearchOption(filter, option) {
+    // Stages the change only - nothing fetches until the Apply Filters button commits it.
+    selectGlobalSearchOption(filter, option) {
         if (filter.type === "multi_relation") {
             const current = this.state.draftFilters[filter.key] || [];
             if (!current.includes(option.id)) {
@@ -646,26 +648,22 @@ export class HarleysReportsApp extends Component {
             this.state.optionLabels[filter.key] = option.label;
         }
         this.resetGlobalSearch();
-        await this.applyFilters();
     }
 
-    // Plain text filters have no suggestion model to query - apply whatever's typed directly.
-    async applyGlobalSearchText(filter) {
+    // Plain text filters have no suggestion model to query - stage whatever's typed directly.
+    applyGlobalSearchText(filter) {
         this.state.draftFilters[filter.key] = this.state.globalSearchTerm;
         this.resetGlobalSearch();
-        await this.applyFilters();
     }
 
-    async selectGlobalSearchSelectionOption(filter, option) {
+    selectGlobalSearchSelectionOption(filter, option) {
         this.state.draftFilters[filter.key] = option.value;
         this.resetGlobalSearch();
-        await this.applyFilters();
     }
 
-    async applyGlobalSearchDate(filter, event) {
+    applyGlobalSearchDate(filter, event) {
         this.state.draftFilters[filter.key] = event.target.value;
         this.resetGlobalSearch();
-        await this.applyFilters();
     }
 
     async sortBy(column) {
@@ -1068,7 +1066,7 @@ export class HarleysReportsApp extends Component {
     // A fixed decimal count (e.g. 2) can crush a genuinely nonzero-but-tiny value (a daily
     // usage rate like 0.0004) down to a misleading "0.00" - values under 1 get enough
     // significant digits to always stay visibly nonzero, larger ones stay compact.
-    formatFloat(value) {
+    formatFloat(value, decimals = 2) {
         if (value === null || value === undefined || value === "") {
             return "";
         }
@@ -1079,7 +1077,7 @@ export class HarleysReportsApp extends Component {
         if (Math.abs(num) < 1) {
             return num.toPrecision(4).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
         }
-        return num.toFixed(2);
+        return num.toFixed(decimals);
     }
 }
 

@@ -61,7 +61,7 @@ class StockReportProvider(SqlRowsReportMixin, ReportProvider):
         {"key": "total_value", "label": "Stock Value", "type": "float", "sortable": True, "align": "end"},
         {"key": "avg_daily_usage", "label": "ADU", "type": "float", "sortable": True, "align": "end"},
         {"key": "days_of_supply", "label": "DOS", "type": "float", "sortable": True, "align": "end"},
-        {"key": "req_qty", "label": "Req Qty", "type": "float", "sortable": True, "align": "end"},
+        {"key": "req_qty", "label": "Req Qty", "type": "float", "sortable": True, "align": "end", "decimals": 4},
         # Hidden by default - available via the Columns picker, same idea as Odoo's own
         # list-view "optional fields" toggle.
         {"key": "stock_location", "label": "Stock Location", "type": "text", "sortable": True, "optional": True},

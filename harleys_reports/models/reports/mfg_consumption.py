@@ -46,14 +46,22 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
     model_name = "mrp.production"
 
     filters = (
+        # required_for_search: True on all three - the frontend's canSearch gate (see
+        # reports_app.js) will not auto-run the report until every one of them has a value,
+        # matching the same mechanism (and starts-empty behavior) already used by warehouse_ids
+        # on physical_inventory.py/in_transit_reconciliation.py/expiry_report.py, just applied to
+        # three filters here (canSearch is a plain .every() over every gated filter) instead of
+        # one. Left optional server-side in _normalize_filters below, matching how those other
+        # reports also only enforce this in the UI, not the API.
         {"key": "production_center_ids", "label": "Production Centers", "type": "multi_relation",
-         "group": "primary"},
+         "group": "primary", "required_for_search": True},
         {"key": "date_from", "label": "Mfg Date From", "type": "date", "group": "primary"},
         {"key": "date_to", "label": "Mfg Date To", "type": "date", "group": "primary"},
         PRODUCT_SEARCH_FILTER,
-        {"key": "category_ids", "label": "Product Category", "type": "multi_relation", "group": "primary"},
+        {"key": "category_ids", "label": "Product Category", "type": "multi_relation", "group": "primary",
+         "required_for_search": True},
         {"key": "production_section_ids", "label": "Production Section", "type": "multi_relation",
-         "group": "primary"},
+         "group": "primary", "required_for_search": True},
     )
     # A column's position in the table follows this declaration order exactly - the OWL app's
     # displayColumns getter filters this list in place rather than appending toggled-on optional
@@ -73,6 +81,7 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
         {"key": "material_uom", "label": "Material UOM", "type": "text", "sortable": True},
         {"key": "required", "label": "Required", "type": "float", "sortable": True, "align": "end"},
         {"key": "actual", "label": "Actual", "type": "float", "sortable": True, "align": "end"},
+        {"key": "scrap", "label": "Scrap", "type": "float", "sortable": True, "align": "end", "optional": True},
         {"key": "variance", "label": "Variance", "type": "float", "sortable": True, "align": "end"},
         {"key": "variance_pct", "label": "Variance %", "type": "float", "sortable": True, "align": "end"},
         # Label gets the company currency appended dynamically in metadata().
@@ -87,8 +96,8 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
     export_row_limit_hint = "Mfg date range"
     sort_fields = {
         "production_center": "production_center", "product_name": "product_name", "component": "component",
-        "material_uom": "material_uom", "required": "required", "actual": "actual", "variance": "variance",
-        "variance_pct": "variance_pct", "variance_value": "variance_value", "status": "status",
+        "material_uom": "material_uom", "required": "required", "actual": "actual", "scrap": "scrap",
+        "variance": "variance", "variance_pct": "variance_pct", "variance_value": "variance_value", "status": "status",
         "fg_internal_reference": "fg_internal_reference",
         "material_internal_reference": "material_internal_reference",
         "fg_category": "fg_category", "production_section": "production_section",
@@ -121,7 +130,9 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
             "maximum_page_size": self.maximum_page_size,
             "export_formats": ["csv", "xlsx"],
             "sidebar_note": (
-                "One row per Production Center + Product + Material, aggregated across every "
+                "No results load until Production Centers, Product Category, and Production "
+                "Section all have at least one selection - pick a value in each and click Apply "
+                "Filters. One row per Production Center + Product + Material, aggregated across every "
                 "qualifying Manufacturing Order. \"Qualifying\" means: Source does not reference "
                 "another MO (excludes auto-generated child/sub-assembly MOs - a Sales-Order-driven "
                 "chain is a known exception this rule does not catch, since Odoo propagates the SO "
@@ -129,7 +140,8 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
                 "and the completion date/time falls in the selected window. Required scales off "
                 "each MO's actual output including its own scrapped finished goods, not the "
                 "originally planned quantity. Actual is done raw-material consumption plus "
-                "raw-material scrap. Variance Value is the quantity variance priced at standard "
+                "raw-material scrap; the optional Scrap column breaks that scrap portion out on "
+                "its own without changing what Actual includes. Variance Value is the quantity variance priced at standard "
                 "cost. Production Centers only lists warehouses named with "
                 f"\"{_PRODUCTION_CENTER_NAME_FILTER}\"."
             ),
@@ -404,14 +416,21 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
             for material_id, qty in per_unit.items():
                 required_by_key[(warehouse_id, warehouse_name, product_id, material_id)] += qty * total_qty
 
+        # Kept separate (not merged) so raw-material scrap can be shown as its own optional
+        # column, in addition to still being folded into Actual below.
         consumption = self._consumption_by_mo_product(mo_ids, uom_cache)
-        for key, qty in self._scrap_by_mo_product(mo_ids, uom_cache).items():
-            consumption[key] += qty
+        scrap = self._scrap_by_mo_product(mo_ids, uom_cache)
         actual_by_key = defaultdict(float)
+        scrap_by_key = defaultdict(float)
         for (mo_id, material_id), qty in consumption.items():
             warehouse_id, warehouse_name = center_by_mo[mo_id]
             product_id = product_by_mo[mo_id]
             actual_by_key[(warehouse_id, warehouse_name, product_id, material_id)] += qty
+        for (mo_id, material_id), qty in scrap.items():
+            warehouse_id, warehouse_name = center_by_mo[mo_id]
+            product_id = product_by_mo[mo_id]
+            actual_by_key[(warehouse_id, warehouse_name, product_id, material_id)] += qty
+            scrap_by_key[(warehouse_id, warehouse_name, product_id, material_id)] += qty
 
         all_keys = set(required_by_key) | set(actual_by_key)
         if not all_keys:
@@ -433,6 +452,7 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
             key = (warehouse_id, warehouse_name, product_id, material_id)
             required = required_by_key.get(key, 0.0)
             actual = actual_by_key.get(key, 0.0)
+            scrap_qty = scrap_by_key.get(key, 0.0)
             variance = actual - required
             variance_pct = (variance / required) * 100 if required else None
             unit_cost = cost_by_product.get(material_id, {}).get("standard_price") or 0.0
@@ -449,6 +469,7 @@ class MfgConsumptionReport(SqlRowsReportMixin, ReportProvider):
                 "material_uom": material["uom"],
                 "required": round(required, 4),
                 "actual": round(actual, 4),
+                "scrap": round(scrap_qty, 4),
                 "variance": round(variance, 4),
                 "variance_pct": round(variance_pct, 2) if variance_pct is not None else None,
                 "variance_value": round(variance_value, 2),

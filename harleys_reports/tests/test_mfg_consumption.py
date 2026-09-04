@@ -275,7 +275,14 @@ class TestMfgConsumption(HarleysReportsCase):
         oil = self._row(self._rows(), "Oil")
         self.assertAlmostEqual(oil["required"], 0.02, places=4)
         self.assertAlmostEqual(oil["actual"], 0.04, places=4)  # 0.03 consumed + 0.01 scrap
+        self.assertAlmostEqual(oil["scrap"], 0.01, places=4)
         self.assertEqual(oil["status"], "over")
+
+    def test_scrap_column_is_zero_without_scrap(self):
+        # Flour has ordinary consumption only (no scrap fixture) - the optional Scrap column
+        # should read 0, not be missing or leak Oil's scrap onto an unrelated material.
+        flour = self._row(self._rows(), "Flour")
+        self.assertEqual(flour["scrap"], 0.0)
 
     def test_unexpected_consumption_is_shown(self):
         mystery = self._row(self._rows(), "Mystery Ingredient")
