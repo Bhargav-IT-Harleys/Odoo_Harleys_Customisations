@@ -58,6 +58,13 @@
         <field name="params" eval="{'report_key': 'in_transit_reconciliation'}"/>
     </record>
 
+    <record id="action_harleys_report_mfg_consumption" model="ir.actions.client">
+        <field name="name">Mfg Consumption Report</field>
+        <field name="tag">harleys_reports.app</field>
+        <field name="path">harleys-reports-mfg-consumption</field>
+        <field name="params" eval="{'report_key': 'mfg_consumption'}"/>
+    </record>
+
     <!-- One action per ad-hoc data model, same "model:<name>" report_key format the frontend
          already resolves via MODEL_KEY_PREFIX - no frontend changes needed to route these. -->
     <record id="action_harleys_report_model_sale_order" model="ir.actions.client">

@@ -43,6 +43,12 @@
               action="action_harleys_report_in_transit_reconciliation"
               sequence="32"/>
 
+    <menuitem id="menu_harleys_report_mfg_consumption"
+              name="Mfg Consumption Report"
+              parent="menu_harleys_reports_extraction"
+              action="action_harleys_report_mfg_consumption"
+              sequence="33"/>
+
     <!-- Not yet rebuilt to the current reporting standard - hidden rather than deleted, so
          re-enabling later is just flipping active back on, no data/config loss. -->
     <menuitem id="menu_harleys_report_move_history"

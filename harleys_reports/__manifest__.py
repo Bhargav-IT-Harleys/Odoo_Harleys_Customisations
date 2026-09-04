@@ -5,7 +5,7 @@
     "category": "Customizations",
     "author": "Harley's",
     "license": "LGPL-3",
-    "depends": ["base", "web", "stock"],
+    "depends": ["base", "web", "stock", "mrp", "harleys_customization"],
     "data": [
         "security/reports_security.xml",
         "views/reports_actions.xml",
